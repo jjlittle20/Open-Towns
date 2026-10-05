@@ -28,4 +28,11 @@ public interface WorldApi {
      * bounds of the current world.
      */
     boolean isValidPosition(WorldPosition position);
+
+    /**
+     * Returns a read-only snapshot of the cell at the supplied position.
+     *
+     * Returns null if the position is outside the current world.
+     */
+    CellView cell(WorldPosition position);
 }
