@@ -2,8 +2,10 @@ package xaos.actions;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -62,6 +64,14 @@ public class ActionManager {
                 }
             }
         }
+    }
+
+    public static Map<String, ActionManagerItem> getAllItems() {
+        if (itemList == null) {
+            loadItems();
+        }
+
+        return Collections.unmodifiableMap(itemList);
     }
 
     public static ActionManagerItem getItem(String sID) {

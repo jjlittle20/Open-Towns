@@ -2,7 +2,9 @@ package xaos.tiles.entities.buildings;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -40,6 +42,14 @@ public class BuildingManager {
                 }
             }
         }
+    }
+
+    public static Map<String, BuildingManagerItem> getAllItems() {
+        if (itemList == null) {
+            loadItems();
+        }
+
+        return Collections.unmodifiableMap(itemList);
     }
 
     public static BuildingManagerItem getItem(String sIniHeader) {
