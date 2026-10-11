@@ -11,6 +11,9 @@ import xaos.tiles.entities.items.ItemManagerItem;
 import xaos.tiles.entities.living.LivingEntityManager;
 import xaos.tiles.entities.living.LivingEntityManagerItem;
 
+import xaos.tiles.terrain.TerrainManager;
+import xaos.tiles.terrain.TerrainManagerItem;
+
 /** Default bridge from Towns' existing XML managers to the public API. */
 public final class DefaultDefinitionsApi implements DefinitionsApi {
 
@@ -39,6 +42,11 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
             EventManager::getAllItems,
             DefaultDefinitionsApi::mapEvent);
 
+    private final DefinitionRegistry<TerrainDefinition> terrain = new MappedDefinitionRegistry<>(
+            TerrainManager::getItem,
+            TerrainManager::getAllItems,
+            DefaultDefinitionsApi::mapTerrain);
+
     @Override
     public DefinitionRegistry<ItemDefinition> items() {
         return items;
@@ -62,6 +70,11 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
     @Override
     public DefinitionRegistry<EventDefinition> events() {
         return events;
+    }
+
+    @Override
+    public DefinitionRegistry<TerrainDefinition> terrain() {
+        return terrain;
     }
 
     private static ItemDefinition mapItem(ItemManagerItem item) {
@@ -132,5 +145,20 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
                 event.getAfterEvents(),
                 event.getEffects(),
                 event.getItems());
+    }
+
+    private static TerrainDefinition mapTerrain(TerrainManagerItem terrain) {
+        return new TerrainDefinition(
+                terrain.getIniHeader(),
+                terrain.getName(),
+                terrain.getTerrainID(),
+                terrain.getMineTurns(),
+                terrain.getDrop(),
+                terrain.getDropPCT(),
+                terrain.getLadderItem(),
+                terrain.isCanBeFilled(),
+                terrain.getGroup(),
+                terrain.isBlocky(),
+                terrain.getActions());
     }
 }

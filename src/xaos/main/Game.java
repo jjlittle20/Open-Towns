@@ -85,7 +85,8 @@ import xaos.zones.ZoneManager;
 import xaos.panels.UI.UIPanelInputHandler;
 import static xaos.panels.UI.UIPanelState.*;
 import static xaos.panels.UI.UIPanelInputHandler.*;
-
+import xaos.api.mods.JavaModLoader;
+import xaos.panels.UI.UiDispatcher;
 
 public final class Game {
 
@@ -315,8 +316,21 @@ public final class Game {
 
 		// Esto aquí, después de cargar las texturas, que si no empieza el contador del
 		// SMP logo a bajar antes de tiempo
-		panelMainMenu = new MainMenuPanel(0, 0, UtilsGL.getWidth(), UtilsGL.getHeight());
+		panelMainMenu = new MainMenuPanel(
+				0,
+				0,
+				UtilsGL.getWidth(),
+				UtilsGL.getHeight());
+
 		panelMainMenu.setActive(true);
+
+		/*
+		 * Load optional Java plugins from enabled mod folders.
+		 *
+		 * This happens after the main engine/UI has been initialised,
+		 * but before the main game loop begins.
+		 */
+		JavaModLoader.loadEnabledMods();
 
 		// Main loop
 		run();
@@ -713,6 +727,11 @@ public final class Game {
 		if (missionData != null && missionData.getTutorialFlows().size() > 0) {
 			UIPanel.toggleTutorialPanel(bNewGame || bForzedZip);
 		}
+		/*
+		 * The world, entities, UI and supporting game systems are now
+		 * ready for Java mods to query.
+		 */
+		JavaModLoader.notifyWorldLoaded();
 	}
 
 	public static void generateBury(Cell[][][] cells) {
@@ -1206,7 +1225,7 @@ public final class Game {
 				if (handleWorldZoomMouseWheel()) {
 					return;
 				}
-				
+
 				if (mouseWheelMoved > 0) {
 					world.keyPressed(Keyboard.KEY_NONE, UtilsKeyboard.FN_LEVEL_UP);
 				} else if (mouseWheelMoved < 0) {
@@ -1452,6 +1471,15 @@ public final class Game {
 			checkMouseEvents();
 			// Tratamos los eventos del teclado
 			checkKeyboardEvents();
+
+			/*
+			 * Process UI work requested during the current input cycle.
+			 *
+			 * Doing this after mouse/keyboard handling prevents newly
+			 * created context menus from being removed by the command
+			 * that requested them.
+			 */
+			UiDispatcher.processPending();
 
 			// Game logic
 			if (!getPanelMainMenu().isActive()) {

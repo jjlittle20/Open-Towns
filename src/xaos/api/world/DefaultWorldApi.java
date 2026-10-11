@@ -5,6 +5,14 @@ import xaos.api.definitions.DefinitionId;
 import xaos.tiles.Cell;
 import xaos.tiles.terrain.TerrainManager;
 import xaos.tiles.terrain.TerrainManagerItem;
+import java.util.ArrayList;
+import java.util.List;
+
+import xaos.api.entity.EntityId;
+import xaos.tiles.entities.Entity;
+import xaos.tiles.entities.buildings.Building;
+import xaos.tiles.entities.items.Item;
+import xaos.tiles.entities.living.LivingEntity;
 
 /**
  * Default implementation of the public World API using the
@@ -59,7 +67,9 @@ public final class DefaultWorldApi implements WorldApi {
         return mapCell(position, cell);
     }
 
-    private static CellView mapCell(WorldPosition position, Cell cell) {
+    private static CellView mapCell(
+            WorldPosition position,
+            Cell cell) {
         TerrainManagerItem terrain = TerrainManager.getItemByID(
                 cell.getTerrain().getTerrainID());
 
@@ -67,24 +77,50 @@ public final class DefaultWorldApi implements WorldApi {
                 ? null
                 : DefinitionId.towns(terrain.getIniHeader());
 
-        int livingCount = cell.getLivings() == null
-                ? 0
-                : cell.getLivings().size();
+        Entity entity = cell.getEntity();
+
+        EntityId entityId = entity == null
+                ? null
+                : new EntityId(entity.getID());
+
+        Item item = cell.getItem();
+
+        EntityId itemId = item == null
+                ? null
+                : new EntityId(item.getID());
+
+        Building building = Building.getBuilding(
+                position.x(),
+                position.y(),
+                position.z());
+
+        EntityId buildingId = building == null
+                ? null
+                : new EntityId(building.getID());
+
+        List<EntityId> livingIds = new ArrayList<>();
+
+        if (cell.getLivings() != null) {
+            for (LivingEntity living : cell.getLivings()) {
+                livingIds.add(
+                        new EntityId(living.getID()));
+            }
+        }
 
         return new CellView(
                 position,
                 terrainId,
+                entityId,
+                itemId,
+                buildingId,
+                livingIds,
                 cell.isDiscovered(),
                 cell.isCave(),
                 cell.isDiggable(),
                 cell.isEmpty(),
-                cell.hasEntity(),
-                cell.hasItem(),
-                cell.hasBuilding(),
                 cell.hasStockPile(),
                 cell.getStockPileID(),
                 cell.hasZone(),
-                cell.getZoneID(),
-                livingCount);
+                cell.getZoneID());
     }
 }

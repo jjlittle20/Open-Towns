@@ -1,0 +1,114 @@
+package xaos.api.entity;
+
+import xaos.api.definitions.DefinitionId;
+import xaos.api.world.WorldPosition;
+import xaos.main.World;
+import xaos.tiles.entities.Entity;
+import xaos.tiles.entities.buildings.Building;
+import xaos.tiles.entities.items.Item;
+import xaos.tiles.entities.living.LivingEntity;
+
+/**
+ * Default Entity API implementation backed by the existing
+ * Towns runtime entity collections.
+ */
+public final class DefaultEntityApi implements EntityApi {
+
+    @Override
+    public EntityView get(EntityId id) {
+        if (id == null) {
+            return null;
+        }
+
+        Entity entity = findEntity(id.value());
+
+        if (entity == null) {
+            return null;
+        }
+
+        return mapEntity(entity);
+    }
+
+    /**
+     * Locates an entity using the existing Towns runtime collections.
+     */
+    private static Entity findEntity(int id) {
+
+        Item item = Item.getItemByID(id, true);
+
+        if (item != null) {
+            return item;
+        }
+
+        LivingEntity living = World.getLivingEntityByID(id);
+
+        if (living != null) {
+            return living;
+        }
+
+        for (Building building : World.getBuildings()) {
+            if (building.getID() == id) {
+                return building;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts an internal Towns entity into its public API snapshot.
+     */
+    private static EntityView mapEntity(Entity entity) {
+
+        EntityType type = getEntityType(entity);
+
+        DefinitionId definitionId = getDefinitionId(entity, type);
+
+        WorldPosition position = new WorldPosition(
+                entity.getX(),
+                entity.getY(),
+                entity.getZ()
+        );
+
+        return new EntityView(
+                new EntityId(entity.getID()),
+                type,
+                definitionId,
+                position
+        );
+    }
+
+    private static EntityType getEntityType(Entity entity) {
+        if (entity instanceof Item) {
+            return EntityType.ITEM;
+        }
+
+        if (entity instanceof Building) {
+            return EntityType.BUILDING;
+        }
+
+        if (entity instanceof LivingEntity) {
+            return EntityType.LIVING;
+        }
+
+        return EntityType.SPECIAL;
+    }
+
+    private static DefinitionId getDefinitionId(
+            Entity entity,
+            EntityType type
+    ) {
+        if (type == EntityType.SPECIAL
+                || type == EntityType.UNKNOWN) {
+            return null;
+        }
+
+        String iniHeader = entity.getIniHeader();
+
+        if (iniHeader == null || iniHeader.isBlank()) {
+            return null;
+        }
+
+        return DefinitionId.towns(iniHeader);
+    }
+}

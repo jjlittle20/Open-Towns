@@ -12,4 +12,6 @@ public interface DefinitionsApi {
     DefinitionRegistry<ActionDefinition> actions();
 
     DefinitionRegistry<EventDefinition> events();
+
+    DefinitionRegistry<TerrainDefinition> terrain();
 }

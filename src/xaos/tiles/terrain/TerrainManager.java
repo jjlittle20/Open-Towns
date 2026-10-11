@@ -17,10 +17,19 @@ import xaos.utils.Log;
 import xaos.utils.Messages;
 import xaos.utils.UtilsXML;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class TerrainManager {
 
-    public final static String[] SLOPES_INIHEADER = {"", "_N", "_S", "_NS", "_E", "_NE", "_SE", "_W", "_NW", "_SW", "_EW", "_NSE", "_NSW", "_NEW", "_SEW", "_NSEW", "_nSEW", "_NsEW", "_NSeW", "_NSEw"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$ //$NON-NLS-17$ //$NON-NLS-18$ //$NON-NLS-19$ //$NON-NLS-20$
-//	public final static String[] SLOPES_INIHEADER = { "", "_N", "_S", "_NS", "_E", "_NE", "_SE", "_W", "_NW", "_SW", "_EW", "_NSE", "_NSW", "_NEW", "_SEW", "_NSEW"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$ //$NON-NLS-15$ //$NON-NLS-16$
+    public final static String[] SLOPES_INIHEADER = { "", "_N", "_S", "_NS", "_E", "_NE", "_SE", "_W", "_NW", "_SW", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
+            "_EW", "_NSE", "_NSW", "_NEW", "_SEW", "_NSEW", "_nSEW", "_NsEW", "_NSeW", "_NSEw" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
+    // public final static String[] SLOPES_INIHEADER = { "", "_N", "_S", "_NS",
+    // "_E", "_NE", "_SE", "_W", "_NW", "_SW", "_EW", "_NSE", "_NSW", "_NEW",
+    // "_SEW", "_NSEW"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    // //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
+    // //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$ //$NON-NLS-14$
+    // //$NON-NLS-15$ //$NON-NLS-16$
 
     private static HashMap<String, TerrainManagerItem> terrainList;
     private static ArrayList<Tile> terrainTiles;
@@ -44,7 +53,10 @@ public class TerrainManager {
         ArrayList<String> alMods = Game.getModsLoaded();
         if (alMods != null && alMods.size() > 0) {
             for (int i = 0; i < alMods.size(); i++) {
-                String sModActionsPath = fUserFolder.getAbsolutePath() + System.getProperty("file.separator") + Game.MODS_FOLDER1 + System.getProperty("file.separator") + alMods.get(i) + System.getProperty("file.separator") + Towns.getPropertiesString("DATA_FOLDER") + "terrain.xml"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                String sModActionsPath = fUserFolder.getAbsolutePath() + System.getProperty("file.separator") //$NON-NLS-1$
+                        + Game.MODS_FOLDER1 + System.getProperty("file.separator") + alMods.get(i) //$NON-NLS-1$
+                        + System.getProperty("file.separator") + Towns.getPropertiesString("DATA_FOLDER") //$NON-NLS-1$ //$NON-NLS-2$
+                        + "terrain.xml"; //$NON-NLS-1$
                 File fIni = new File(sModActionsPath);
                 if (fIni.exists()) {
                     loadXMLTerrain(sModActionsPath, false);
@@ -104,7 +116,8 @@ public class TerrainManager {
             if (tmi.getLadderItem() != null) {
                 // El item tiene que existir
                 if (ItemManager.getItem(tmi.getLadderItem()) == null) {
-                    Log.log(Log.LEVEL_ERROR, Messages.getString("TerrainManager.1") + tmi.getLadderItem() + "]", "TerrainManager"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    Log.log(Log.LEVEL_ERROR, Messages.getString("TerrainManager.1") + tmi.getLadderItem() + "]", //$NON-NLS-1$ //$NON-NLS-2$
+                            "TerrainManager"); //$NON-NLS-1$
                     Game.exit();
                 }
             }
@@ -117,6 +130,17 @@ public class TerrainManager {
         }
 
         return terrainList;
+    }
+
+    /**
+     * Returns a read-only view of all loaded terrain definitions.
+     */
+    public static Map<String, TerrainManagerItem> getAllItems() {
+        if (terrainList == null) {
+            loadItems();
+        }
+
+        return Collections.unmodifiableMap(terrainList);
     }
 
     public static TerrainManagerItem getItem(String sIniHeader) {
@@ -165,10 +189,11 @@ public class TerrainManager {
 
     private static void loadXMLTerrain(String sXMLName, boolean bLoadingMain) {
         try {
-            Document doc = UtilsXML.loadXMLFile(sXMLName); //$NON-NLS-1$
+            Document doc = UtilsXML.loadXMLFile(sXMLName); // $NON-NLS-1$
 
-			// Tenemos el documento XML parseado
-            // Lo recorremos entero y vamos añadiendo los terrenos (TerrainManagerItem) a la hash
+            // Tenemos el documento XML parseado
+            // Lo recorremos entero y vamos añadiendo los terrenos (TerrainManagerItem) a la
+            // hash
             NodeList nodeList = doc.getDocumentElement().getChildNodes();
             Node node;
             TerrainManagerItem item;
@@ -176,7 +201,8 @@ public class TerrainManager {
 
             // Primero de todo creamos el terrain AIR
             if (!terrainList.containsKey("_AIR")) {
-                TerrainManagerItem tmiAir = new TerrainManagerItem(TerrainManagerItem.TERRAIN_AIR_INIHEADER, Messages.getString("TerrainManager.2")); //$NON-NLS-1$
+                TerrainManagerItem tmiAir = new TerrainManagerItem(TerrainManagerItem.TERRAIN_AIR_INIHEADER,
+                        Messages.getString("TerrainManager.2")); //$NON-NLS-1$
                 tmiAir.setActions(new ArrayList<String>());
                 tmiAir.setBlocky(false);
                 terrainList.put("_AIR", tmiAir); //$NON-NLS-1$
@@ -197,7 +223,7 @@ public class TerrainManager {
                         continue;
                     }
 
-					// Building
+                    // Building
                     // Obtenemos el nameID, width i height
                     sIniHeader = node.getNodeName();
                     boolean bExists = terrainList.containsKey(sIniHeader);

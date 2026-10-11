@@ -4,6 +4,10 @@ import xaos.api.definitions.DefaultDefinitionsApi;
 import xaos.api.definitions.DefinitionsApi;
 import xaos.api.world.DefaultWorldApi;
 import xaos.api.world.WorldApi;
+import xaos.api.entity.DefaultEntityApi;
+import xaos.api.entity.EntityApi;
+import xaos.api.ui.DefaultUiApi;
+import xaos.api.ui.UiApi;
 
 /**
  * Main entry point for the public Open Towns API.
@@ -17,6 +21,8 @@ public final class GameApi {
 
     private final DefinitionsApi definitions = new DefaultDefinitionsApi();
     private final WorldApi world = new DefaultWorldApi();
+    private final EntityApi entities = new DefaultEntityApi();
+    private final UiApi ui = new DefaultUiApi();
 
     private GameApi() {
     }
@@ -41,5 +47,19 @@ public final class GameApi {
      */
     public WorldApi world() {
         return world;
+    }
+
+    /**
+     * Access to runtime entities in the current world.
+     */
+    public EntityApi entities() {
+        return entities;
+    }
+
+    /**
+     * Access to public user-interface functionality.
+     */
+    public UiApi ui() {
+        return ui;
     }
 }
