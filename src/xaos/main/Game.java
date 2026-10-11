@@ -2289,21 +2289,30 @@ public final class Game {
 	}
 
 	public static void setServers(String sServers) {
-		// Servers and names
 		alServers.clear();
 		alServerNames.clear();
 
-		if (sServers != null && sServers.trim().length() > 0) {
-			StringTokenizer tokenizer = new StringTokenizer(sServers, ","); //$NON-NLS-1$
-			while (tokenizer.hasMoreTokens()) {
-				String sServerAddress = tokenizer.nextToken();
-				if (sServerAddress.length() > 0) {
-					alServers.add(sServerAddress.trim());
+		if (sServers != null
+				&& !sServers.trim().isEmpty()) {
 
-					// Buscamos el nombre
-					alServerNames.add(UtilsServer.getServerName(sServerAddress.trim()));
+			StringTokenizer tokenizer = new StringTokenizer(
+					sServers,
+					",");
+
+			while (tokenizer.hasMoreTokens()) {
+				String serverAddress = tokenizer.nextToken().trim();
+
+				if (!serverAddress.isEmpty()) {
+					alServers.add(serverAddress);
+
+					/*
+					 * Don't perform network access during startup.
+					 * Use the address as the temporary display name.
+					 */
+					alServerNames.add(serverAddress);
 				}
 			}
+
 			sortServers();
 		}
 	}
