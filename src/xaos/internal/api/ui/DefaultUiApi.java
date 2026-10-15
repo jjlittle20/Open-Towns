@@ -1,7 +1,9 @@
-package xaos.api.ui;
+package xaos.internal.api.ui;
 
 import java.util.List;
 
+import xaos.api.ui.UiApi;
+import xaos.api.ui.UiMessageType;
 import xaos.main.Game;
 import xaos.panels.CommandPanel;
 import xaos.panels.MessagesPanel;
@@ -74,6 +76,22 @@ public final class DefaultUiApi implements UiApi {
                 () -> showInfoDialogNow(
                         title,
                         safeLines));
+    }
+
+    @Override
+    public void registerGameAction(
+            String id,
+            String label,
+            Runnable action) {
+        UiActionRegistry.register(
+                id,
+                label,
+                action);
+    }
+
+    @Override
+    public void unregisterGameAction(String id) {
+        UiActionRegistry.unregister(id);
     }
 
     private static void showInfoDialogNow(

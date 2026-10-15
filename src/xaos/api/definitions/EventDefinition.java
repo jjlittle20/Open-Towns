@@ -16,7 +16,7 @@ public final class EventDefinition extends AbstractDefinition {
     private final List<String> effects;
     private final List<String> items;
 
-    EventDefinition(
+    public EventDefinition(
             String legacyId,
             String name,
             int order,

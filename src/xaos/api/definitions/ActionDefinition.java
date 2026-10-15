@@ -10,7 +10,7 @@ public final class ActionDefinition extends AbstractDefinition {
     private final boolean killsSource;
     private final boolean inverted;
 
-    ActionDefinition(
+    public ActionDefinition(
             String legacyId,
             String name,
             String priorityId,

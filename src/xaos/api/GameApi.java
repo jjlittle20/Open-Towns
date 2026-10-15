@@ -1,13 +1,17 @@
 package xaos.api;
 
-import xaos.api.definitions.DefaultDefinitionsApi;
 import xaos.api.definitions.DefinitionsApi;
-import xaos.api.world.DefaultWorldApi;
 import xaos.api.world.WorldApi;
-import xaos.api.entity.DefaultEntityApi;
+import xaos.internal.api.definitions.DefaultDefinitionsApi;
+import xaos.internal.api.entity.DefaultEntityApi;
+import xaos.internal.api.ui.DefaultUiApi;
+import xaos.internal.api.world.DefaultWorldApi;
 import xaos.api.entity.EntityApi;
-import xaos.api.ui.DefaultUiApi;
 import xaos.api.ui.UiApi;
+import xaos.api.tasks.TaskApi;
+import xaos.internal.api.tasks.DefaultTaskApi;
+import xaos.api.selection.SelectionApi;
+import xaos.internal.api.selection.DefaultSelectionApi;
 
 /**
  * Main entry point for the public Open Towns API.
@@ -23,6 +27,8 @@ public final class GameApi {
     private final WorldApi world = new DefaultWorldApi();
     private final EntityApi entities = new DefaultEntityApi();
     private final UiApi ui = new DefaultUiApi();
+    private final TaskApi tasks = new DefaultTaskApi();
+    private final SelectionApi selection = new DefaultSelectionApi();
 
     private GameApi() {
     }
@@ -61,5 +67,13 @@ public final class GameApi {
      */
     public UiApi ui() {
         return ui;
+    }
+
+    public TaskApi tasks() {
+        return tasks;
+    }
+
+    public SelectionApi selection() {
+        return selection;
     }
 }

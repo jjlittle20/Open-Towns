@@ -17,7 +17,7 @@ public final class TerrainDefinition extends AbstractDefinition {
     private final boolean blocky;
     private final List<String> actions;
 
-    TerrainDefinition(
+    public TerrainDefinition(
             String legacyId,
             String name,
             int terrainId,

@@ -1,4 +1,4 @@
-package xaos.api.world;
+package xaos.internal.api.world;
 
 import xaos.main.World;
 import xaos.api.definitions.DefinitionId;
@@ -9,10 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import xaos.api.entity.EntityId;
+import xaos.api.world.CellView;
+import xaos.api.world.WorldApi;
+import xaos.api.world.WorldPosition;
 import xaos.tiles.entities.Entity;
 import xaos.tiles.entities.buildings.Building;
 import xaos.tiles.entities.items.Item;
 import xaos.tiles.entities.living.LivingEntity;
+
 
 /**
  * Default implementation of the public World API using the

@@ -13,7 +13,7 @@ public final class LivingDefinition extends AbstractDefinition {
     private final List<String> actions;
     private final List<String> effects;
 
-    LivingDefinition(
+    public LivingDefinition(
             String legacyId,
             String name,
             int type,

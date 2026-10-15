@@ -87,6 +87,7 @@ import static xaos.panels.UI.UIPanelState.*;
 import static xaos.panels.UI.UIPanelInputHandler.*;
 import xaos.api.mods.JavaModLoader;
 import xaos.panels.UI.UiDispatcher;
+import xaos.internal.api.selection.SelectionManager;
 
 public final class Game {
 
@@ -1173,6 +1174,14 @@ public final class Game {
 						}
 					}
 				} else if (mouseButton == 1) {
+					/*
+					 * Right-click cancels an API selection just like
+					 * it cancels normal Towns task creation.
+					 */
+					if (SelectionManager.isSelecting()) {
+						SelectionManager.cancel();
+						continue;
+					}
 					if (typingPanel != null) {
 						if (UIPanelInputHandler.isMouseOnAPanel(mouseX, mouseY) != MOUSE_NONE) {
 							UIPanelInputHandler.mousePressed(mouseX, mouseY, mouseButton);

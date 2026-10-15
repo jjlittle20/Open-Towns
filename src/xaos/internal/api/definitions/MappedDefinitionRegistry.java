@@ -1,4 +1,4 @@
-package xaos.api.definitions;
+package xaos.internal.api.definitions;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import xaos.api.definitions.Definition;
+import xaos.api.definitions.DefinitionRegistry;
+import xaos.api.definitions.DefinitionId;
 
 /** Internal adapter from the legacy static managers to read-only API snapshots. */
 final class MappedDefinitionRegistry<S, T extends Definition> implements DefinitionRegistry<T> {

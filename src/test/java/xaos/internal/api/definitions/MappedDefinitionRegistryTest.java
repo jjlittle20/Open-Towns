@@ -1,9 +1,14 @@
-package xaos.api.definitions;
+package xaos.internal.api.definitions;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+
+import xaos.api.definitions.Definition;
+import xaos.api.definitions.DefinitionId;
+import xaos.api.definitions.DefinitionRegistry;
+import xaos.internal.api.definitions.MappedDefinitionRegistry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

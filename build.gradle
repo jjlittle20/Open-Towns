@@ -701,3 +701,20 @@ tasks.named('test') {
         exceptionFormat "full"
     }
 }
+
+/*
+ * Builds the public Open Towns modding API.
+ *
+ * Only classes beneath xaos.api are included.
+ * Runtime implementations live beneath xaos.internal.api
+ * and are therefore automatically excluded.
+ */
+tasks.register('apiJar', Jar) {
+    dependsOn 'classes'
+
+    archiveFileName = 'opentowns-api.jar'
+
+    from sourceSets.main.output
+
+    include 'xaos/api/**'
+}

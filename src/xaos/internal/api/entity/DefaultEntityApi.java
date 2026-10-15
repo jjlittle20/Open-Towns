@@ -1,6 +1,10 @@
-package xaos.api.entity;
+package xaos.internal.api.entity;
 
 import xaos.api.definitions.DefinitionId;
+import xaos.api.entity.EntityApi;
+import xaos.api.entity.EntityId;
+import xaos.api.entity.EntityType;
+import xaos.api.entity.EntityView;
 import xaos.api.world.WorldPosition;
 import xaos.main.World;
 import xaos.tiles.entities.Entity;

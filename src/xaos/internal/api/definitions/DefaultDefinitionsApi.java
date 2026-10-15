@@ -1,7 +1,15 @@
-package xaos.api.definitions;
+package xaos.internal.api.definitions;
 
 import xaos.actions.ActionManager;
 import xaos.actions.ActionManagerItem;
+import xaos.api.definitions.ActionDefinition;
+import xaos.api.definitions.BuildingDefinition;
+import xaos.api.definitions.DefinitionRegistry;
+import xaos.api.definitions.DefinitionsApi;
+import xaos.api.definitions.EventDefinition;
+import xaos.api.definitions.ItemDefinition;
+import xaos.api.definitions.LivingDefinition;
+import xaos.api.definitions.TerrainDefinition;
 import xaos.events.EventManager;
 import xaos.events.EventManagerItem;
 import xaos.tiles.entities.buildings.BuildingManager;

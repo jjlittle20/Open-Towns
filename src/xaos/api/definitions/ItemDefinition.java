@@ -18,7 +18,7 @@ public final class ItemDefinition extends AbstractDefinition {
     private final boolean stackable;
     private final boolean militaryItem;
 
-    ItemDefinition(
+    public ItemDefinition(
             String legacyId,
             String name,
             String type,

@@ -1,4 +1,5 @@
 package xaos.api.ui;
+
 import java.util.List;
 
 /**
@@ -9,32 +10,37 @@ import java.util.List;
  */
 public interface UiApi {
 
-    /**
-     * Displays a message in the game's message system.
-     */
-    void showMessage(
-            UiMessageType type,
-            String message
-    );
+        /**
+         * Displays a message in the game's message system.
+         */
+        void showMessage(
+                        UiMessageType type,
+                        String message);
 
-    /**
-     * Convenience method for displaying a system message.
-     */
-    default void showMessage(String message) {
-        showMessage(
-                UiMessageType.SYSTEM,
-                message
-        );
-    }
+        /**
+         * Convenience method for displaying a system message.
+         */
+        default void showMessage(String message) {
+                showMessage(
+                                UiMessageType.SYSTEM,
+                                message);
+        }
 
-    /**
- * Displays a centered information dialog.
- *
- * The dialog contains a title, zero or more lines of text,
- * and a close button.
- */
-void showInfoDialog(
-        String title,
-        List<String> lines
-);
+        /**
+         * Displays a centered information dialog.
+         *
+         * The dialog contains a title, zero or more lines of text,
+         * and a close button.
+         */
+        void showInfoDialog(
+                        String title,
+                        List<String> lines);
+
+        void registerGameAction(
+                        String id,
+                        String label,
+                        Runnable action);
+
+        void unregisterGameAction(
+                        String id);
 }

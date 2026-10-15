@@ -11,7 +11,7 @@ public final class BuildingDefinition extends AbstractDefinition {
     private final boolean automatic;
     private final List<String> descriptions;
 
-    BuildingDefinition(
+    public BuildingDefinition(
             String legacyId,
             String name,
             String type,
