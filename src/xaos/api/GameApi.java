@@ -12,6 +12,8 @@ import xaos.api.tasks.TaskApi;
 import xaos.internal.api.tasks.DefaultTaskApi;
 import xaos.api.selection.SelectionApi;
 import xaos.internal.api.selection.DefaultSelectionApi;
+import xaos.api.events.EventApi;
+import xaos.internal.api.events.DefaultEventApi;
 
 /**
  * Main entry point for the public Open Towns API.
@@ -29,6 +31,7 @@ public final class GameApi {
     private final UiApi ui = new DefaultUiApi();
     private final TaskApi tasks = new DefaultTaskApi();
     private final SelectionApi selection = new DefaultSelectionApi();
+    private final EventApi events = new DefaultEventApi();
 
     private GameApi() {
     }
@@ -75,5 +78,9 @@ public final class GameApi {
 
     public SelectionApi selection() {
         return selection;
+    }
+
+    public EventApi events() {
+        return events;
     }
 }

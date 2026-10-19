@@ -94,7 +94,8 @@ import xaos.zones.ZoneManager;
 import xaos.zones.ZoneManagerItem;
 import xaos.zones.ZonePersonal;
 import xaos.panels.UI.UIPanelInputHandler;
-
+import xaos.api.events.DayStartedEvent;
+import xaos.internal.api.events.EventBus;
 
 public final class World implements Externalizable {
 
@@ -1585,6 +1586,17 @@ public final class World implements Externalizable {
 			turn = 0;
 			date.addDay();
 
+			/*
+			 * Notify the public modding API that a new
+			 * in-game day has started.
+			 */
+			EventBus.publish(
+					new DayStartedEvent(
+							date.getDay(),
+							date.getMonth(),
+							date.getYear()));
+
+			// Autosave?
 			// Autosave?
 			int iSave = Game.getAutosaveDays();
 			if (iSave > 0) {
