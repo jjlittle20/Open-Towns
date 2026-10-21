@@ -22,6 +22,8 @@ import xaos.api.items.ItemQueryApi;
 import xaos.internal.api.items.DefaultItemQueryApi;
 import xaos.api.buildings.BuildingApi;
 import xaos.internal.api.buildings.DefaultBuildingApi;
+import xaos.api.fluids.FluidApi;
+import xaos.internal.api.fluids.DefaultFluidApi;
 
 /**
  * Main entry point for the public Open Towns API.
@@ -44,6 +46,7 @@ public final class GameApi {
     private final StockpileApi stockpiles = new DefaultStockpileApi();
     private final ItemQueryApi items = new DefaultItemQueryApi();
     private final BuildingApi buildings = new DefaultBuildingApi();
+    private final FluidApi fluids = new DefaultFluidApi();
 
     private GameApi() {
     }
@@ -110,5 +113,9 @@ public final class GameApi {
 
     public BuildingApi buildings() {
         return buildings;
+    }
+
+    public FluidApi fluids() {
+        return fluids;
     }
 }
