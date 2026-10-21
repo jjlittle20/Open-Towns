@@ -14,6 +14,14 @@ import xaos.api.selection.SelectionApi;
 import xaos.internal.api.selection.DefaultSelectionApi;
 import xaos.api.events.EventApi;
 import xaos.internal.api.events.DefaultEventApi;
+import xaos.api.inventory.InventoryApi;
+import xaos.internal.api.inventory.DefaultInventoryApi;
+import xaos.api.stockpiles.StockpileApi;
+import xaos.internal.api.stockpiles.DefaultStockpileApi;
+import xaos.api.items.ItemQueryApi;
+import xaos.internal.api.items.DefaultItemQueryApi;
+import xaos.api.buildings.BuildingApi;
+import xaos.internal.api.buildings.DefaultBuildingApi;
 
 /**
  * Main entry point for the public Open Towns API.
@@ -32,6 +40,10 @@ public final class GameApi {
     private final TaskApi tasks = new DefaultTaskApi();
     private final SelectionApi selection = new DefaultSelectionApi();
     private final EventApi events = new DefaultEventApi();
+    private final InventoryApi inventory = new DefaultInventoryApi();
+    private final StockpileApi stockpiles = new DefaultStockpileApi();
+    private final ItemQueryApi items = new DefaultItemQueryApi();
+    private final BuildingApi buildings = new DefaultBuildingApi();
 
     private GameApi() {
     }
@@ -82,5 +94,21 @@ public final class GameApi {
 
     public EventApi events() {
         return events;
+    }
+
+    public InventoryApi inventory() {
+        return inventory;
+    }
+
+    public StockpileApi stockpiles() {
+        return stockpiles;
+    }
+
+    public ItemQueryApi items() {
+        return items;
+    }
+
+    public BuildingApi buildings() {
+        return buildings;
     }
 }
