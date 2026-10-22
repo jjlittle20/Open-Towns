@@ -3,7 +3,8 @@ package xaos.api.definitions;
 import java.util.List;
 
 /** Read-only snapshot of an item definition. */
-public final class ItemDefinition extends AbstractDefinition {
+public final class ItemDefinition
+        extends AbstractDefinition {
 
     private final String type;
     private final int level;
@@ -18,6 +19,12 @@ public final class ItemDefinition extends AbstractDefinition {
     private final boolean stackable;
     private final boolean militaryItem;
 
+    /*
+     * Legacy constructor.
+     *
+     * Existing Towns definitions continue to default
+     * to the "towns" namespace.
+     */
     public ItemDefinition(
             String legacyId,
             String name,
@@ -32,8 +39,47 @@ public final class ItemDefinition extends AbstractDefinition {
             boolean door,
             boolean container,
             boolean stackable,
-            boolean militaryItem) {
-        super(legacyId, name);
+            boolean militaryItem
+    ) {
+        this(
+                DefinitionId.towns(legacyId),
+                name,
+                type,
+                level,
+                building,
+                buildingTime,
+                value,
+                tags,
+                actions,
+                wall,
+                door,
+                container,
+                stackable,
+                militaryItem
+        );
+    }
+
+    /*
+     * Namespaced constructor.
+     */
+    public ItemDefinition(
+            DefinitionId id,
+            String name,
+            String type,
+            int level,
+            String building,
+            int buildingTime,
+            int value,
+            List<String> tags,
+            List<String> actions,
+            boolean wall,
+            boolean door,
+            boolean container,
+            boolean stackable,
+            boolean militaryItem
+    ) {
+        super(id, name);
+
         this.type = type;
         this.level = level;
         this.building = building;
@@ -48,20 +94,59 @@ public final class ItemDefinition extends AbstractDefinition {
         this.militaryItem = militaryItem;
     }
 
-    public String type() { return type; }
-    public int level() { return level; }
-    public String building() { return building; }
-    public int buildingTime() { return buildingTime; }
-    public int value() { return value; }
-    public List<String> tags() { return tags; }
-    public List<String> actions() { return actions; }
-    public boolean wall() { return wall; }
-    public boolean door() { return door; }
-    public boolean container() { return container; }
-    public boolean stackable() { return stackable; }
-    public boolean militaryItem() { return militaryItem; }
+    public String type() {
+        return type;
+    }
 
-    private static List<String> copy(List<String> values) {
-        return values == null ? List.of() : List.copyOf(values);
+    public int level() {
+        return level;
+    }
+
+    public String building() {
+        return building;
+    }
+
+    public int buildingTime() {
+        return buildingTime;
+    }
+
+    public int value() {
+        return value;
+    }
+
+    public List<String> tags() {
+        return tags;
+    }
+
+    public List<String> actions() {
+        return actions;
+    }
+
+    public boolean wall() {
+        return wall;
+    }
+
+    public boolean door() {
+        return door;
+    }
+
+    public boolean container() {
+        return container;
+    }
+
+    public boolean stackable() {
+        return stackable;
+    }
+
+    public boolean militaryItem() {
+        return militaryItem;
+    }
+
+    private static List<String> copy(
+            List<String> values
+    ) {
+        return values == null
+                ? List.of()
+                : List.copyOf(values);
     }
 }

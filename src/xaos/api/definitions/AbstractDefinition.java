@@ -6,10 +6,29 @@ abstract class AbstractDefinition implements Definition {
     private final String legacyId;
     private final String name;
 
-    AbstractDefinition(String legacyId, String name) {
-        this.id = DefinitionId.towns(legacyId);
-        this.legacyId = legacyId;
+    AbstractDefinition(
+            DefinitionId id,
+            String name
+    ) {
+        if (id == null) {
+            throw new IllegalArgumentException(
+                    "Definition ID cannot be null"
+            );
+        }
+
+        this.id = id;
+        this.legacyId = id.path();
         this.name = name;
+    }
+
+    AbstractDefinition(
+            String legacyId,
+            String name
+    ) {
+        this(
+                DefinitionId.towns(legacyId),
+                name
+        );
     }
 
     @Override

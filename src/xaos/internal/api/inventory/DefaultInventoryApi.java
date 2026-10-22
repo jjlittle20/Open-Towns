@@ -7,6 +7,9 @@ import xaos.api.entity.EntityId;
 import xaos.api.inventory.ContainerView;
 import xaos.api.inventory.InventoryApi;
 import xaos.api.inventory.InventoryMutationResult;
+
+import xaos.internal.api.definitions.DefinitionResolver;
+
 import xaos.main.Game;
 import xaos.tiles.entities.items.Container;
 import xaos.tiles.entities.items.Item;
@@ -18,51 +21,60 @@ public final class DefaultInventoryApi
 
     @Override
     public ContainerView container(
-            EntityId containerId) {
+            EntityId containerId
+    ) {
         if (containerId == null) {
             return null;
         }
 
-        Container container = Game.getWorld()
-                .getContainer(
-                        containerId.value());
+        Container container =
+                Game.getWorld()
+                        .getContainer(
+                                containerId.value()
+                        );
 
         if (container == null) {
             return null;
         }
 
-        List<EntityId> items = container.getItemsInside()
-                .stream()
-                .map(Item::getID)
-                .map(EntityId::new)
-                .toList();
+        List<EntityId> items =
+                container.getItemsInside()
+                        .stream()
+                        .map(Item::getID)
+                        .map(EntityId::new)
+                        .toList();
 
         return new ContainerView(
                 containerId,
                 items,
-                container.isFull());
+                container.isFull()
+        );
     }
 
     @Override
     public int count(
             EntityId containerId,
-            DefinitionId itemDefinitionId) {
+            DefinitionId itemDefinitionId
+    ) {
         if (containerId == null
                 || itemDefinitionId == null) {
             return 0;
         }
 
-        /*
-         * Existing Towns item definitions currently use
-         * the default towns namespace.
-         */
-        if (!itemDefinitionId.isDefaultNamespace()) {
+        String legacyId =
+                DefinitionResolver.resolveItem(
+                        itemDefinitionId
+                );
+
+        if (legacyId == null) {
             return 0;
         }
 
-        Container container = Game.getWorld()
-                .getContainer(
-                        containerId.value());
+        Container container =
+                Game.getWorld()
+                        .getContainer(
+                                containerId.value()
+                        );
 
         if (container == null) {
             return 0;
@@ -71,10 +83,9 @@ public final class DefaultInventoryApi
         int count = 0;
 
         for (Item item : container.getItemsInside()) {
-
-            if (itemDefinitionId.path()
-                    .equals(item.getIniHeader())) {
-
+            if (legacyId.equals(
+                    item.getIniHeader()
+            )) {
                 count++;
             }
         }
@@ -86,12 +97,14 @@ public final class DefaultInventoryApi
     public InventoryMutationResult consume(
             EntityId containerId,
             DefinitionId itemDefinitionId,
-            int quantity) {
+            int quantity
+    ) {
         if (quantity <= 0) {
             return new InventoryMutationResult(
                     Math.max(quantity, 0),
                     0,
-                    "Quantity must be greater than zero");
+                    "Quantity must be greater than zero"
+            );
         }
 
         if (containerId == null
@@ -100,32 +113,46 @@ public final class DefaultInventoryApi
             return new InventoryMutationResult(
                     quantity,
                     0,
-                    "Container and item definition are required");
+                    "Container and item definition are required"
+            );
         }
 
-        if (!itemDefinitionId.isDefaultNamespace()) {
+        String legacyId =
+                DefinitionResolver.resolveItem(
+                        itemDefinitionId
+                );
+
+        if (legacyId == null) {
             return new InventoryMutationResult(
                     quantity,
                     0,
-                    "Only Towns item definitions are supported currently");
+                    "Unknown item definition: "
+                            + itemDefinitionId
+            );
         }
 
-        Container container = Game.getWorld()
-                .getContainer(
-                        containerId.value());
+        Container container =
+                Game.getWorld()
+                        .getContainer(
+                                containerId.value()
+                        );
 
         if (container == null) {
             return new InventoryMutationResult(
                     quantity,
                     0,
-                    "Container was not found");
+                    "Container was not found"
+            );
         }
 
         int removed = 0;
 
         for (int i = 0; i < quantity; i++) {
-            Item item = container.removeItem(
-                    itemDefinitionId.path());
+
+            Item item =
+                    container.removeItem(
+                            legacyId
+                    );
 
             if (item == null) {
                 break;
@@ -139,19 +166,22 @@ public final class DefaultInventoryApi
                 removed,
                 removed == quantity
                         ? null
-                        : "Not enough matching items");
+                        : "Not enough matching items"
+        );
     }
 
     @Override
     public InventoryMutationResult create(
             EntityId containerId,
             DefinitionId itemDefinitionId,
-            int quantity) {
+            int quantity
+    ) {
         if (quantity <= 0) {
             return new InventoryMutationResult(
                     Math.max(quantity, 0),
                     0,
-                    "Quantity must be greater than zero");
+                    "Quantity must be greater than zero"
+            );
         }
 
         if (containerId == null
@@ -160,50 +190,68 @@ public final class DefaultInventoryApi
             return new InventoryMutationResult(
                     quantity,
                     0,
-                    "Container and item definition are required");
+                    "Container and item definition are required"
+            );
         }
 
-        if (!itemDefinitionId.isDefaultNamespace()) {
+        String legacyId =
+                DefinitionResolver.resolveItem(
+                        itemDefinitionId
+                );
+
+        if (legacyId == null) {
             return new InventoryMutationResult(
                     quantity,
                     0,
-                    "Only Towns item definitions are supported currently");
+                    "Unknown item definition: "
+                            + itemDefinitionId
+            );
         }
 
-        ItemManagerItem definition = ItemManager.getItem(
-                itemDefinitionId.path());
+        ItemManagerItem definition =
+                ItemManager.getItem(
+                        legacyId
+                );
 
         if (definition == null) {
             return new InventoryMutationResult(
                     quantity,
                     0,
                     "Unknown item definition: "
-                            + itemDefinitionId);
+                            + itemDefinitionId
+            );
         }
 
-        Container container = Game.getWorld()
-                .getContainer(
-                        containerId.value());
+        Container container =
+                Game.getWorld()
+                        .getContainer(
+                                containerId.value()
+                        );
 
         if (container == null) {
             return new InventoryMutationResult(
                     quantity,
                     0,
-                    "Container was not found");
+                    "Container was not found"
+            );
         }
 
         int created = 0;
 
         for (int i = 0; i < quantity; i++) {
 
-            Item item = Item.createItem(definition);
+            Item item =
+                    Item.createItem(
+                            definition
+                    );
 
             if (item == null) {
                 break;
             }
 
             /*
-             * Let Towns enforce container size/type rules.
+             * Let the existing Towns container rules
+             * decide whether this item can be stored.
              */
             if (!container.itemAllowed(item)) {
                 break;
@@ -218,6 +266,7 @@ public final class DefaultInventoryApi
                 created,
                 created == quantity
                         ? null
-                        : "Container could not accept all requested items");
+                        : "Container could not accept all requested items"
+        );
     }
 }

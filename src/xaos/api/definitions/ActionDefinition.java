@@ -1,7 +1,8 @@
 package xaos.api.definitions;
 
 /** Read-only snapshot of an action definition. */
-public final class ActionDefinition extends AbstractDefinition {
+public final class ActionDefinition
+        extends AbstractDefinition {
 
     private final String priorityId;
     private final int turns;
@@ -10,6 +11,12 @@ public final class ActionDefinition extends AbstractDefinition {
     private final boolean killsSource;
     private final boolean inverted;
 
+    /*
+     * Legacy constructor.
+     *
+     * Existing Towns actions default to the "towns"
+     * namespace.
+     */
     public ActionDefinition(
             String legacyId,
             String name,
@@ -18,8 +25,35 @@ public final class ActionDefinition extends AbstractDefinition {
             String effect,
             String generatedItem,
             boolean killsSource,
-            boolean inverted) {
-        super(legacyId, name);
+            boolean inverted
+    ) {
+        this(
+                DefinitionId.towns(legacyId),
+                name,
+                priorityId,
+                turns,
+                effect,
+                generatedItem,
+                killsSource,
+                inverted
+        );
+    }
+
+    /*
+     * Namespaced constructor.
+     */
+    public ActionDefinition(
+            DefinitionId id,
+            String name,
+            String priorityId,
+            int turns,
+            String effect,
+            String generatedItem,
+            boolean killsSource,
+            boolean inverted
+    ) {
+        super(id, name);
+
         this.priorityId = priorityId;
         this.turns = turns;
         this.effect = effect;
@@ -28,10 +62,27 @@ public final class ActionDefinition extends AbstractDefinition {
         this.inverted = inverted;
     }
 
-    public String priorityId() { return priorityId; }
-    public int turns() { return turns; }
-    public String effect() { return effect; }
-    public String generatedItem() { return generatedItem; }
-    public boolean killsSource() { return killsSource; }
-    public boolean inverted() { return inverted; }
+    public String priorityId() {
+        return priorityId;
+    }
+
+    public int turns() {
+        return turns;
+    }
+
+    public String effect() {
+        return effect;
+    }
+
+    public String generatedItem() {
+        return generatedItem;
+    }
+
+    public boolean killsSource() {
+        return killsSource;
+    }
+
+    public boolean inverted() {
+        return inverted;
+    }
 }

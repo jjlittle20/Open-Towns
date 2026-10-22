@@ -9,6 +9,8 @@ import xaos.api.items.ItemLocationType;
 import xaos.api.items.ItemQueryApi;
 import xaos.api.items.ItemReference;
 
+import xaos.internal.api.definitions.DefinitionResolver;
+
 import xaos.main.Game;
 import xaos.main.World;
 import xaos.tiles.entities.items.Container;
@@ -21,9 +23,12 @@ public final class DefaultItemQueryApi
     public List<ItemReference> find(
             DefinitionId definitionId
     ) {
-        if (definitionId == null
-                || !definitionId.isDefaultNamespace()) {
+        String legacyId =
+                DefinitionResolver.resolveItem(
+                        definitionId
+                );
 
+        if (legacyId == null) {
             return List.of();
         }
 
@@ -36,14 +41,17 @@ public final class DefaultItemQueryApi
         for (Item item
                 : World.getItems().values()) {
 
-            if (!definitionId.path()
-                    .equals(item.getIniHeader())) {
+            if (!legacyId.equals(
+                    item.getIniHeader()
+            )) {
                 continue;
             }
 
             result.add(
                     new ItemReference(
-                            new EntityId(item.getID()),
+                            new EntityId(
+                                    item.getID()
+                            ),
                             definitionId,
                             ItemLocationType.WORLD,
                             null
@@ -61,14 +69,17 @@ public final class DefaultItemQueryApi
             for (Item item
                     : container.getItemsInside()) {
 
-                if (!definitionId.path()
-                        .equals(item.getIniHeader())) {
+                if (!legacyId.equals(
+                        item.getIniHeader()
+                )) {
                     continue;
                 }
 
                 result.add(
                         new ItemReference(
-                                new EntityId(item.getID()),
+                                new EntityId(
+                                        item.getID()
+                                ),
                                 definitionId,
                                 ItemLocationType.CONTAINER,
                                 new EntityId(

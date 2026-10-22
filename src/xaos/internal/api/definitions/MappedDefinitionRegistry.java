@@ -4,61 +4,122 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import xaos.api.definitions.Definition;
-import xaos.api.definitions.DefinitionRegistry;
 import xaos.api.definitions.DefinitionId;
+import xaos.api.definitions.DefinitionRegistry;
 
-/** Internal adapter from the legacy static managers to read-only API snapshots. */
-final class MappedDefinitionRegistry<S, T extends Definition> implements DefinitionRegistry<T> {
+/**
+ * Internal adapter from legacy Towns managers
+ * to read-only public API snapshots.
+ */
+final class MappedDefinitionRegistry<
+        S,
+        T extends Definition
+> implements DefinitionRegistry<T> {
 
-    private final Function<String, S> finder;
-    private final Supplier<? extends Map<String, S>> allSupplier;
-    private final Function<S, T> mapper;
+    private final DefinitionKind kind;
+
+    private final Supplier<
+            ? extends Map<String, S>
+    > allSupplier;
+
+    private final BiFunction<
+            DefinitionId,
+            S,
+            T
+    > mapper;
 
     MappedDefinitionRegistry(
-            Function<String, S> finder,
+            DefinitionKind kind,
             Supplier<? extends Map<String, S>> allSupplier,
-            Function<S, T> mapper) {
-        this.finder = finder;
+            BiFunction<DefinitionId, S, T> mapper
+    ) {
+        this.kind = kind;
         this.allSupplier = allSupplier;
         this.mapper = mapper;
     }
 
     @Override
     public T get(String id) {
-        DefinitionId definitionId;
+        DefinitionId requested;
+
         try {
-            definitionId = DefinitionId.parse(id);
+            requested = DefinitionId.parse(id);
         } catch (IllegalArgumentException exception) {
             return null;
         }
 
-        // Current XML managers use unqualified IDs. Non-default namespaces will
-        // become resolvable when the loader starts tracking definition sources.
-        if (!definitionId.isDefaultNamespace()) {
+        DefinitionId actual =
+                DefinitionOwnershipRegistry.idFor(
+                        kind,
+                        requested.path()
+                );
+
+        /*
+         * Check that the requested namespace matches
+         * the actual owner of the legacy definition.
+         */
+        if (!actual.equals(requested)) {
             return null;
         }
 
-        S source = finder.apply(definitionId.path());
-        return source == null ? null : mapper.apply(source);
+        Map<String, S> definitions =
+                allSupplier.get();
+
+        S source =
+                definitions.get(
+                        requested.path()
+                );
+
+        if (source == null) {
+            return null;
+        }
+
+        return mapper.apply(
+                actual,
+                source
+        );
     }
 
     @Override
     public List<T> all() {
-        return allSupplier.get().values().stream()
-                .map(mapper)
+        return allSupplier.get()
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    DefinitionId id =
+                            DefinitionOwnershipRegistry.idFor(
+                                    kind,
+                                    entry.getKey()
+                            );
+
+                    return mapper.apply(
+                            id,
+                            entry.getValue()
+                    );
+                })
                 .toList();
     }
 
     @Override
     public Set<DefinitionId> ids() {
-        LinkedHashSet<DefinitionId> ids = new LinkedHashSet<>();
-        for (String legacyId : allSupplier.get().keySet()) {
-            ids.add(DefinitionId.towns(legacyId));
+        LinkedHashSet<DefinitionId> ids =
+                new LinkedHashSet<>();
+
+        for (String legacyId
+                : allSupplier.get().keySet()) {
+
+            ids.add(
+                    DefinitionOwnershipRegistry.idFor(
+                            kind,
+                            legacyId
+                    )
+            );
         }
+
         return Set.copyOf(ids);
     }
 }

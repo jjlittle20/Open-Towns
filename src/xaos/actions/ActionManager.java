@@ -17,6 +17,11 @@ import xaos.utils.Log;
 import xaos.utils.Messages;
 import xaos.utils.UtilsXML;
 
+import xaos.api.definitions.DefinitionId;
+import xaos.internal.api.definitions.DefinitionKind;
+import xaos.internal.api.definitions.DefinitionOwnershipRegistry;
+import xaos.internal.api.mods.ModNamespaceResolver;
+
 public class ActionManager {
 
     private static HashMap<String, ActionManagerItem> itemList;
@@ -24,8 +29,11 @@ public class ActionManager {
     public static void loadItems() {
         itemList = new HashMap<>();
 
-        // Cargar de fichero
-        loadXMLActions(Towns.getPropertiesString("DATA_FOLDER") + "actions.xml", true);
+        loadXMLActions(
+                Towns.getPropertiesString("DATA_FOLDER")
+                        + "actions.xml",
+                true,
+                DefinitionId.DEFAULT_NAMESPACE);
 
         // Mods
         File fUserFolder = new File(Game.getUserFolder());
@@ -36,15 +44,24 @@ public class ActionManager {
         ArrayList<String> alMods = Game.getModsLoaded();
         if (alMods != null && alMods.size() > 0) {
             for (int i = 0; i < alMods.size(); i++) {
-                String sModActionsPath = fUserFolder.getAbsolutePath() + System.getProperty("file.separator") + Game.MODS_FOLDER1 + System.getProperty("file.separator") + alMods.get(i) + System.getProperty("file.separator") + Towns.getPropertiesString("DATA_FOLDER") + "actions.xml";
+                String sModActionsPath = fUserFolder.getAbsolutePath() + System.getProperty("file.separator")
+                        + Game.MODS_FOLDER1 + System.getProperty("file.separator") + alMods.get(i)
+                        + System.getProperty("file.separator") + Towns.getPropertiesString("DATA_FOLDER")
+                        + "actions.xml";
                 File fIni = new File(sModActionsPath);
                 if (fIni.exists()) {
-                    loadXMLActions(sModActionsPath, false);
+                    String namespace = ModNamespaceResolver.resolve(
+                            alMods.get(i));
+
+                    loadXMLActions(
+                            sModActionsPath,
+                            false,
+                            namespace);
                 }
             }
         }
 
-		// Una vez todo cargado hacemos comprobaciones
+        // Una vez todo cargado hacemos comprobaciones
         // PriorityID
         Iterator<String> iterator = itemList.keySet().iterator();
         String sAux, priorityID;
@@ -59,7 +76,9 @@ public class ActionManager {
 
             if (priorityID != null) {
                 if (ActionPriorityManager.getItem(priorityID) == null) {
-                    Log.log(Log.LEVEL_ERROR, Messages.getString("ActionManagerItem.2") + sAux + "] [" + priorityID + "]", "ActionManager"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    Log.log(Log.LEVEL_ERROR,
+                            Messages.getString("ActionManagerItem.2") + sAux + "] [" + priorityID + "]", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                            "ActionManager"); //$NON-NLS-1$
                     Game.exit();
                 }
             }
@@ -82,12 +101,15 @@ public class ActionManager {
         return itemList.get(sID);
     }
 
-    private static void loadXMLActions(String sPath, boolean bLoadingMain) {
+    private static void loadXMLActions(
+            String sPath,
+            boolean bLoadingMain,
+            String namespace) {
         String sID = null;
         try {
             Document doc = UtilsXML.loadXMLFile(sPath);
 
-			// Tenemos el documento XML parseado
+            // Tenemos el documento XML parseado
             // Lo recorremos entero y vamos añadiendo a la hash
             NodeList nodeList = doc.getDocumentElement().getChildNodes();
             Node node;
@@ -102,6 +124,10 @@ public class ActionManager {
                             String sIDToDelete = node.getAttributes().getNamedItem("id").getNodeValue();
                             if (sIDToDelete != null) {
                                 itemList.remove(sIDToDelete);
+
+                                DefinitionOwnershipRegistry.unregister(
+                                        DefinitionKind.ACTION,
+                                        sIDToDelete);
                             }
                         }
                         continue;
@@ -205,15 +231,23 @@ public class ActionManager {
                         item.setQueue(readQueue(node.getChildNodes()));
                     }
 
-                    // Lo añadimos a la hash
+                    if (!bModChangingValues) {
+                        DefinitionOwnershipRegistry.register(
+                                DefinitionKind.ACTION,
+                                sID,
+                                namespace);
+                    }
                     itemList.put(sID, item);
                 }
             }
         } catch (Exception e) {
             if (sID != null) {
-                Log.log(Log.LEVEL_ERROR, Messages.getString("ActionManager.0") + sPath + "] [" + sID + "][" + e.getMessage() + "]", "ActionManager"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                Log.log(Log.LEVEL_ERROR,
+                        Messages.getString("ActionManager.0") + sPath + "] [" + sID + "][" + e.getMessage() + "]", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                        "ActionManager"); //$NON-NLS-1$
             } else {
-                Log.log(Log.LEVEL_ERROR, Messages.getString("ActionManager.0") + sPath + "] [" + e.getMessage() + "]", "ActionManager"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                Log.log(Log.LEVEL_ERROR, Messages.getString("ActionManager.0") + sPath + "] [" + e.getMessage() + "]", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        "ActionManager"); //$NON-NLS-1$
             }
             Game.exit();
         }
@@ -227,7 +261,8 @@ public class ActionManager {
         try {
             for (int i = 0; i < list.getLength(); i++) {
                 node = list.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("queue") && node.getChildNodes().item(0) != null) { //$NON-NLS-1$
+                if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals("queue") //$NON-NLS-1$
+                        && node.getChildNodes().item(0) != null) {
                     // Tenemos el tag "queue", lo recorremos entero y vamos creando la queue
                     returnQueue = new ArrayList<>();
                     NodeList nl = node.getChildNodes();
@@ -241,7 +276,9 @@ public class ActionManager {
                             }
                             if (node.getAttributes() != null) {
                                 if (node.getAttributes().getNamedItem("useSource") != null) {
-                                    if (node.getAttributes().getNamedItem("useSource").getNodeValue() != null && node.getAttributes().getNamedItem("useSource").getNodeValue().equalsIgnoreCase("TRUE")) {
+                                    if (node.getAttributes().getNamedItem("useSource").getNodeValue() != null
+                                            && node.getAttributes().getNamedItem("useSource").getNodeValue()
+                                                    .equalsIgnoreCase("TRUE")) {
                                         qi.setUseSource(true);
                                     }
                                 }
