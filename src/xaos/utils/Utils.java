@@ -40,8 +40,8 @@ import xaos.tiles.entities.items.ItemManager;
 import xaos.tiles.entities.items.ItemManagerItem;
 import xaos.tiles.entities.living.LivingEntity;
 import xaos.tiles.entities.living.LivingEntityManager;
-
 import xaos.internal.api.mods.ModSaveDataRegistry;
+import xaos.internal.api.inventory.ItemReservationRegistry;
 
 public final class Utils {
 
@@ -1262,7 +1262,7 @@ public final class Utils {
 			// Complete the entry
 			out.closeEntry();
 			Game.iError = 12022;
-
+			ItemReservationRegistry.clear();
 			/*
 			 * Java mod persistent data.
 			 *

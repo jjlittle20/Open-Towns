@@ -1,11 +1,14 @@
 package xaos.api.inventory;
 
+import java.util.List;
 import java.util.Optional;
 
 import xaos.api.definitions.DefinitionId;
 import xaos.api.entity.EntityId;
 
 public interface InventoryApi {
+
+        List<ContainerView> containers();
 
         ContainerView container(
                         EntityId containerId);
@@ -59,4 +62,22 @@ public interface InventoryApi {
                         EntityId targetContainerId,
                         DefinitionId itemDefinitionId,
                         int quantity);
+
+        InventoryReservation reserveItem(
+                        EntityId sourceContainerId,
+                        EntityId itemId);
+
+        InventoryReservation reserve(
+                        EntityId sourceContainerId,
+                        DefinitionId itemDefinitionId);
+
+        boolean releaseReservation(
+                        InventoryReservation reservation);
+
+        boolean isReserved(
+                        EntityId itemId);
+
+        InventoryMutationResult transferReserved(
+                        InventoryReservation reservation,
+                        EntityId targetContainerId);
 }

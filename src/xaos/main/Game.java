@@ -88,8 +88,8 @@ import static xaos.panels.UI.UIPanelInputHandler.*;
 import xaos.api.mods.JavaModLoader;
 import xaos.panels.UI.UiDispatcher;
 import xaos.internal.api.selection.SelectionManager;
-
 import xaos.internal.api.mods.ModSaveDataRegistry;
+import xaos.internal.api.inventory.ItemReservationRegistry;
 
 public final class Game {
 
@@ -468,6 +468,7 @@ public final class Game {
 		 * per-mod persistent state.
 		 */
 		ModSaveDataRegistry.clear();
+		ItemReservationRegistry.clear();
 		
 		world = new World(campaignID, missionID);
 		world.generateAll(campaignID, missionID);

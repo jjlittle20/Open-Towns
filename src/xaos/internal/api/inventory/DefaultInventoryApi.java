@@ -15,6 +15,7 @@ import xaos.tiles.entities.items.Container;
 import xaos.tiles.entities.items.Item;
 import xaos.tiles.entities.items.ItemManager;
 import xaos.tiles.entities.items.ItemManagerItem;
+import xaos.api.inventory.InventoryReservation;
 
 public final class DefaultInventoryApi
                 implements InventoryApi {
@@ -455,6 +456,247 @@ public final class DefaultInventoryApi
                                 quantity,
                                 moved,
                                 message);
+        }
+
+        @Override
+        public InventoryReservation reserveItem(
+                        EntityId sourceContainerId,
+                        EntityId itemId) {
+                if (sourceContainerId == null
+                                || itemId == null) {
+                        return null;
+                }
+
+                Container source = Game.getWorld()
+                                .getContainer(
+                                                sourceContainerId.value());
+
+                if (source == null) {
+                        return null;
+                }
+
+                Item item = findItem(
+                                source,
+                                itemId.value());
+
+                if (item == null) {
+                        return null;
+                }
+
+                /*
+                 * This includes both Towns' existing usage tracking
+                 * and reservations already made through this API.
+                 */
+                if (isItemInUse(
+                                item.getID())) {
+                        return null;
+                }
+
+                return ItemReservationRegistry.reserve(
+                                sourceContainerId,
+                                itemId);
+        }
+
+        @Override
+        public InventoryReservation reserve(
+                        EntityId sourceContainerId,
+                        DefinitionId itemDefinitionId) {
+                if (sourceContainerId == null
+                                || itemDefinitionId == null) {
+                        return null;
+                }
+
+                String legacyId = DefinitionResolver.resolveItem(
+                                itemDefinitionId);
+
+                if (legacyId == null) {
+                        return null;
+                }
+
+                Container source = Game.getWorld()
+                                .getContainer(
+                                                sourceContainerId.value());
+
+                if (source == null) {
+                        return null;
+                }
+
+                for (Item item : source.getItemsInside()) {
+
+                        if (!legacyId.equals(
+                                        item.getIniHeader())) {
+                                continue;
+                        }
+
+                        if (isItemInUse(
+                                        item.getID())) {
+                                continue;
+                        }
+
+                        InventoryReservation reservation = ItemReservationRegistry.reserve(
+                                        sourceContainerId,
+                                        new EntityId(
+                                                        item.getID()));
+
+                        if (reservation != null) {
+                                return reservation;
+                        }
+                }
+
+                return null;
+        }
+
+        @Override
+        public boolean releaseReservation(
+                        InventoryReservation reservation) {
+                return ItemReservationRegistry.release(
+                                reservation);
+        }
+
+        @Override
+        public boolean isReserved(
+                        EntityId itemId) {
+                return itemId != null
+                                && ItemReservationRegistry.isReserved(
+                                                itemId.value());
+        }
+
+        @Override
+        public InventoryMutationResult transferReserved(
+                        InventoryReservation reservation,
+                        EntityId targetContainerId) {
+                if (reservation == null
+                                || targetContainerId == null) {
+
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Reservation and target container are required");
+                }
+
+                if (!ItemReservationRegistry.matches(
+                                reservation)) {
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Reservation is no longer valid");
+                }
+
+                EntityId sourceContainerId = reservation.sourceContainerId();
+
+                if (sourceContainerId.equals(
+                                targetContainerId)) {
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Source and target containers must be different");
+                }
+
+                Container source = Game.getWorld()
+                                .getContainer(
+                                                sourceContainerId.value());
+
+                /*
+                 * The reservation can never become useful again if
+                 * its source container has disappeared.
+                 */
+                if (source == null) {
+
+                        ItemReservationRegistry.release(
+                                        reservation);
+
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Source container no longer exists");
+                }
+
+                Container target = Game.getWorld()
+                                .getContainer(
+                                                targetContainerId.value());
+
+                if (target == null) {
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Target container was not found");
+                }
+
+                Item item = findItem(
+                                source,
+                                reservation.itemId()
+                                                .value());
+
+                /*
+                 * Something removed the item despite the reservation.
+                 * The reservation is now stale.
+                 */
+                if (item == null) {
+
+                        ItemReservationRegistry.release(
+                                        reservation);
+
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Reserved item is no longer inside the source container");
+                }
+
+                /*
+                 * Validate before touching the source.
+                 *
+                 * If the target is merely full/incompatible, retain
+                 * the reservation so the mod can retry or explicitly
+                 * release it.
+                 */
+                if (!target.itemAllowed(
+                                item)) {
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Target container cannot accept the reserved item");
+                }
+
+                Item transferred = source.removeItem(
+                                item.getID());
+
+                if (transferred == null) {
+
+                        ItemReservationRegistry.release(
+                                        reservation);
+
+                        return new InventoryMutationResult(
+                                        1,
+                                        0,
+                                        "Reserved item could not be removed");
+                }
+
+                target.addItem(
+                                transferred);
+
+                /*
+                 * Successful transfer consumes the reservation.
+                 */
+                ItemReservationRegistry.release(
+                                reservation);
+
+                return new InventoryMutationResult(
+                                1,
+                                1,
+                                null);
+        }
+
+        @Override
+        public List<ContainerView> containers() {
+
+                return Game.getWorld()
+                                .getContainers()
+                                .stream()
+                                .map(container -> container(
+                                                new EntityId(
+                                                                container.getItemID())))
+                                .filter(view -> view != null)
+                                .toList();
         }
 
         private static Item findItem(

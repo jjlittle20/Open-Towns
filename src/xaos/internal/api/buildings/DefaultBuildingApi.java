@@ -9,6 +9,10 @@ import xaos.api.definitions.DefinitionId;
 import xaos.api.entity.EntityId;
 import xaos.api.world.WorldPosition;
 
+import xaos.internal.api.definitions.DefinitionKind;
+import xaos.internal.api.definitions.DefinitionOwnershipRegistry;
+import xaos.internal.api.definitions.DefinitionResolver;
+
 import xaos.main.World;
 import xaos.tiles.entities.buildings.Building;
 import xaos.tiles.entities.buildings.BuildingManager;
@@ -88,10 +92,20 @@ public final class DefaultBuildingApi
     public List<BuildingView> findByDefinition(
             DefinitionId definitionId
     ) {
-        if (definitionId == null
-                || !definitionId
-                        .isDefaultNamespace()) {
+        if (definitionId == null) {
+            return List.of();
+        }
 
+        /*
+         * Resolve the public namespaced ID back to the
+         * legacy ID used by BuildingManager/Building.
+         */
+        String legacyId =
+                DefinitionResolver.resolveBuilding(
+                        definitionId
+                );
+
+        if (legacyId == null) {
             return List.of();
         }
 
@@ -101,11 +115,9 @@ public final class DefaultBuildingApi
         for (Building building
                 : World.getBuildings()) {
 
-            if (!definitionId.path()
-                    .equals(
-                            building.getIniHeader()
-                    )) {
-
+            if (!legacyId.equals(
+                    building.getIniHeader()
+            )) {
                 continue;
             }
 
@@ -135,6 +147,16 @@ public final class DefaultBuildingApi
         if (definition == null) {
             return null;
         }
+
+        /*
+         * Reconstruct the correct public namespaced
+         * definition ID from ownership metadata.
+         */
+        DefinitionId definitionId =
+                DefinitionOwnershipRegistry.idFor(
+                        DefinitionKind.BUILDING,
+                        building.getIniHeader()
+                );
 
         WorldPosition origin =
                 new WorldPosition(
@@ -199,9 +221,7 @@ public final class DefaultBuildingApi
                 new EntityId(
                         building.getID()
                 ),
-                DefinitionId.towns(
-                        building.getIniHeader()
-                ),
+                definitionId,
                 origin,
                 occupied,
                 building.isOperative()
