@@ -96,6 +96,7 @@ import xaos.zones.ZonePersonal;
 import xaos.panels.UI.UIPanelInputHandler;
 import xaos.api.events.DayStartedEvent;
 import xaos.internal.api.events.EventBus;
+import xaos.api.events.SimulationTickEvent;
 
 public final class World implements Externalizable {
 
@@ -1760,6 +1761,20 @@ public final class World implements Externalizable {
 		if (turn % 128 == 0) {
 			evaporateFluids();
 		}
+		/*
+		 * Public mod simulation tick.
+		 *
+		 * This is published only after a complete world simulation
+		 * turn has finished. By this point items, buildings,
+		 * livings, tasks, pathfinding and fluids have all been
+		 * processed.
+		 *
+		 * World.nextTurn() returns earlier while paused, so this
+		 * event naturally respects the pause state.
+		 */
+		EventBus.publish(
+				new SimulationTickEvent());
+
 	}
 
 	public static void addFallItem(int iID) {
