@@ -105,9 +105,11 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
                                 item.isMilitaryItem());
         }
 
-        private static LivingDefinition mapLiving(DefinitionId id, LivingEntityManagerItem living) {
+        private static LivingDefinition mapLiving(
+                        DefinitionId id,
+                        LivingEntityManagerItem living) {
                 return new LivingDefinition(
-                                living.getIniHeader(),
+                                id,
                                 living.getName(),
                                 living.getType(),
                                 living.getLevel(),
@@ -120,7 +122,7 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
 
         private static BuildingDefinition mapBuilding(DefinitionId id, BuildingManagerItem building) {
                 return new BuildingDefinition(
-                                building.getIniHeader(),
+                                id,
                                 building.getName(),
                                 building.getType(),
                                 building.getWidth(),
@@ -143,9 +145,11 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
                                 action.isInverted());
         }
 
-        private static EventDefinition mapEvent(DefinitionId id, EventManagerItem event) {
+        private static EventDefinition mapEvent(
+                        DefinitionId id,
+                        EventManagerItem event) {
                 return new EventDefinition(
-                                event.getId(),
+                                id,
                                 event.getName(),
                                 event.getOrder(),
                                 event.getMinPopulation(),
@@ -159,9 +163,11 @@ public final class DefaultDefinitionsApi implements DefinitionsApi {
                                 event.getItems());
         }
 
-        private static TerrainDefinition mapTerrain(DefinitionId id, TerrainManagerItem terrain) {
+        private static TerrainDefinition mapTerrain(
+                        DefinitionId id,
+                        TerrainManagerItem terrain) {
                 return new TerrainDefinition(
-                                terrain.getIniHeader(),
+                                id,
                                 terrain.getName(),
                                 terrain.getTerrainID(),
                                 terrain.getMineTurns(),

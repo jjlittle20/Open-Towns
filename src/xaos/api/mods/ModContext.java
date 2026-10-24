@@ -13,11 +13,14 @@ public final class ModContext {
     private final ModMetadata metadata;
     private final GameApi api;
     private final ModLogger logger;
+    private final ModSaveData saveData;
 
     public ModContext(
             ModMetadata metadata,
             GameApi api,
-            ModLogger logger) {
+            ModLogger logger,
+            ModSaveData saveData) {
+
         if (metadata == null) {
             throw new IllegalArgumentException(
                     "Mod metadata cannot be null");
@@ -33,9 +36,15 @@ public final class ModContext {
                     "Mod logger cannot be null");
         }
 
+        if (saveData == null) {
+            throw new IllegalArgumentException(
+                    "Mod save data cannot be null");
+        }
+
         this.metadata = metadata;
         this.api = api;
         this.logger = logger;
+        this.saveData = saveData;
     }
 
     /**
@@ -64,5 +73,12 @@ public final class ModContext {
      */
     public ModLogger logger() {
         return logger;
+    }
+
+    /**
+     * Persistent data belonging exclusively to this mod.
+     */
+    public ModSaveData saveData() {
+        return saveData;
     }
 }

@@ -89,6 +89,8 @@ import xaos.api.mods.JavaModLoader;
 import xaos.panels.UI.UiDispatcher;
 import xaos.internal.api.selection.SelectionManager;
 
+import xaos.internal.api.mods.ModSaveDataRegistry;
+
 public final class Game {
 
 	private static final long serialVersionUID = 1449863524190928424L;
@@ -461,7 +463,12 @@ public final class Game {
 		if (fMapa.exists()) {
 			fMapa.delete();
 		}
-
+		/*
+		 * A newly generated world starts with fresh
+		 * per-mod persistent state.
+		 */
+		ModSaveDataRegistry.clear();
+		
 		world = new World(campaignID, missionID);
 		world.generateAll(campaignID, missionID);
 

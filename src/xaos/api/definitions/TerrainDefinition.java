@@ -17,6 +17,12 @@ public final class TerrainDefinition extends AbstractDefinition {
     private final boolean blocky;
     private final List<String> actions;
 
+    /**
+     * Legacy constructor.
+     *
+     * Unqualified IDs are treated as base Towns
+     * terrain definitions.
+     */
     public TerrainDefinition(
             String legacyId,
             String name,
@@ -29,7 +35,44 @@ public final class TerrainDefinition extends AbstractDefinition {
             String group,
             boolean blocky,
             List<String> actions) {
-        super(legacyId, name);
+
+        this(
+                DefinitionId.towns(
+                        legacyId
+                ),
+                name,
+                terrainId,
+                mineTurns,
+                drop,
+                dropPercent,
+                ladderItem,
+                canBeFilled,
+                group,
+                blocky,
+                actions
+        );
+    }
+
+    /**
+     * Namespaced constructor.
+     */
+    public TerrainDefinition(
+            DefinitionId id,
+            String name,
+            int terrainId,
+            int mineTurns,
+            String drop,
+            int dropPercent,
+            String ladderItem,
+            boolean canBeFilled,
+            String group,
+            boolean blocky,
+            List<String> actions) {
+
+        super(
+                id,
+                name
+        );
 
         this.terrainId = terrainId;
         this.mineTurns = mineTurns;
@@ -39,9 +82,11 @@ public final class TerrainDefinition extends AbstractDefinition {
         this.canBeFilled = canBeFilled;
         this.group = group;
         this.blocky = blocky;
-        this.actions = actions == null
-                ? List.of()
-                : List.copyOf(actions);
+
+        this.actions =
+                actions == null
+                        ? List.of()
+                        : List.copyOf(actions);
     }
 
     public int terrainId() {

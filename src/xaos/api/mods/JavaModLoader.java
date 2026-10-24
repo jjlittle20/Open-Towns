@@ -17,6 +17,8 @@ import xaos.utils.Log;
 
 import xaos.api.mods.ModMetadata;
 
+import xaos.internal.api.mods.ModSaveDataRegistry;
+
 /**
  * Loads optional Java plugins from enabled Towns mod folders.
  *
@@ -29,286 +31,289 @@ import xaos.api.mods.ModMetadata;
  */
 public final class JavaModLoader {
 
-    private static final String METADATA_FILE = "mod.properties";
+        private static final String METADATA_FILE = "mod.properties";
 
-    private static final List<LoadedJavaMod> loadedMods = new ArrayList<>();
+        private static final List<LoadedJavaMod> loadedMods = new ArrayList<>();
 
-    private JavaModLoader() {
-    }
-
-    /**
-     * Loads Java plugins belonging to currently enabled Towns mods.
-     */
-    public static void loadEnabledMods() {
-
-        List<String> enabledMods = Game.getModsLoaded();
-
-        if (enabledMods == null
-                || enabledMods.isEmpty()) {
-            return;
+        private JavaModLoader() {
         }
 
-        for (String folderName : enabledMods) {
-            if (!isFolderLoaded(folderName)) {
-                loadMod(folderName);
-            }
-        }
-
-        Log.log(
-                Log.LEVEL_DEBUG,
-                "Loaded "
-                        + loadedMods.size()
-                        + " Java mod(s)",
-                "JavaModLoader");
-    }
-
-    private static boolean isFolderLoaded(String folderName) {
-        for (LoadedJavaMod loadedMod : loadedMods) {
-            if (loadedMod.folderName().equals(folderName)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static void loadMod(String folderName) {
-
-        File modFolder = new File(
-                new File(
-                        Game.getUserFolder(),
-                        Game.MODS_FOLDER1),
-                folderName);
-
-        File metadataFile = new File(modFolder, METADATA_FILE);
-
-        /*
-         * No mod.properties simply means this is an existing
-         * XML/content-only mod.
+        /**
+         * Loads Java plugins belonging to currently enabled Towns mods.
          */
-        if (!metadataFile.isFile()) {
-            return;
+        public static void loadEnabledMods() {
+
+                List<String> enabledMods = Game.getModsLoaded();
+
+                if (enabledMods == null
+                                || enabledMods.isEmpty()) {
+                        return;
+                }
+
+                for (String folderName : enabledMods) {
+                        if (!isFolderLoaded(folderName)) {
+                                loadMod(folderName);
+                        }
+                }
+
+                Log.log(
+                                Log.LEVEL_DEBUG,
+                                "Loaded "
+                                                + loadedMods.size()
+                                                + " Java mod(s)",
+                                "JavaModLoader");
         }
 
-        try {
-            loadJavaMod(
-                    folderName,
-                    modFolder,
-                    metadataFile);
-        } catch (Exception | LinkageError exception) {
-            Log.log(
-                    Log.LEVEL_ERROR,
-                    "Failed to load Java mod from folder ["
-                            + folderName
-                            + "]: "
-                            + exception,
-                    "JavaModLoader");
-        }
-    }
+        private static boolean isFolderLoaded(String folderName) {
+                for (LoadedJavaMod loadedMod : loadedMods) {
+                        if (loadedMod.folderName().equals(folderName)) {
+                                return true;
+                        }
+                }
 
-    private static void loadJavaMod(
-            String folderName,
-            File modFolder,
-            File metadataFile) throws Exception {
-
-        Properties properties = loadProperties(metadataFile);
-
-        String modId = requiredProperty(properties, "id");
-
-        String jarName = requiredProperty(properties, "jar");
-
-        String mainClassName = requiredProperty(properties, "main");
-
-        String modName = optionalProperty(
-                properties,
-                "name",
-                modId);
-
-        String version = optionalProperty(
-                properties,
-                "version",
-                "unknown");
-
-        String author = optionalProperty(
-                properties,
-                "author",
-                "unknown");
-        ModMetadata metadata = new ModMetadata(
-                modId,
-                modName,
-                version,
-                author);
-        validateModId(modId);
-
-        File jarFile = new File(modFolder, jarName);
-
-        if (!jarFile.isFile()) {
-            throw new IOException(
-                    "Mod JAR does not exist: "
-                            + jarFile.getAbsolutePath());
+                return false;
         }
 
-        URL jarUrl = jarFile.toURI().toURL();
+        private static void loadMod(String folderName) {
 
-        URLClassLoader classLoader = new URLClassLoader(
-                new URL[] { jarUrl },
-                TownsMod.class.getClassLoader());
+                File modFolder = new File(
+                                new File(
+                                                Game.getUserFolder(),
+                                                Game.MODS_FOLDER1),
+                                folderName);
 
-        try {
-            TownsMod mod = createModInstance(
-                    classLoader,
-                    mainClassName);
+                File metadataFile = new File(modFolder, METADATA_FILE);
 
-            ModContext context = new ModContext(
-                    metadata,
-                    GameApi.get(),
-                    new DefaultModLogger(modId));
+                /*
+                 * No mod.properties simply means this is an existing
+                 * XML/content-only mod.
+                 */
+                if (!metadataFile.isFile()) {
+                        return;
+                }
 
-            /*
-             * Let the mod initialise before considering it
-             * successfully loaded.
-             */
-            mod.onLoad(context);
-
-            loadedMods.add(
-                    new LoadedJavaMod(
-                            folderName,
-                            modId,
-                            mod,
-                            context,
-                            classLoader));
-
-            context.logger().info(
-                    "Loaded "
-                            + metadata.name()
-                            + " v"
-                            + metadata.version()
-                            + " by "
-                            + metadata.author());
-
-        } catch (Exception | LinkageError exception) {
-            classLoader.close();
-            throw exception;
-        }
-    }
-
-    private static Properties loadProperties(
-            File file) throws IOException {
-
-        Properties properties = new Properties();
-
-        try (FileInputStream input = new FileInputStream(file)) {
-
-            properties.load(input);
+                try {
+                        loadJavaMod(
+                                        folderName,
+                                        modFolder,
+                                        metadataFile);
+                } catch (Exception | LinkageError exception) {
+                        Log.log(
+                                        Log.LEVEL_ERROR,
+                                        "Failed to load Java mod from folder ["
+                                                        + folderName
+                                                        + "]: "
+                                                        + exception,
+                                        "JavaModLoader");
+                }
         }
 
-        return properties;
-    }
+        private static void loadJavaMod(
+                        String folderName,
+                        File modFolder,
+                        File metadataFile) throws Exception {
 
-    private static String requiredProperty(
-            Properties properties,
-            String key) {
+                Properties properties = loadProperties(metadataFile);
 
-        String value = properties.getProperty(key);
+                String modId = requiredProperty(properties, "id");
 
-        if (value == null
-                || value.isBlank()) {
+                String jarName = requiredProperty(properties, "jar");
 
-            throw new IllegalArgumentException(
-                    "Missing required mod property: "
-                            + key);
+                String mainClassName = requiredProperty(properties, "main");
+
+                String modName = optionalProperty(
+                                properties,
+                                "name",
+                                modId);
+
+                String version = optionalProperty(
+                                properties,
+                                "version",
+                                "unknown");
+
+                String author = optionalProperty(
+                                properties,
+                                "author",
+                                "unknown");
+                ModMetadata metadata = new ModMetadata(
+                                modId,
+                                modName,
+                                version,
+                                author);
+                validateModId(modId);
+
+                File jarFile = new File(modFolder, jarName);
+
+                if (!jarFile.isFile()) {
+                        throw new IOException(
+                                        "Mod JAR does not exist: "
+                                                        + jarFile.getAbsolutePath());
+                }
+
+                URL jarUrl = jarFile.toURI().toURL();
+
+                URLClassLoader classLoader = new URLClassLoader(
+                                new URL[] { jarUrl },
+                                TownsMod.class.getClassLoader());
+
+                try {
+                        TownsMod mod = createModInstance(
+                                        classLoader,
+                                        mainClassName);
+
+                        ModContext context = new ModContext(
+                                        metadata,
+                                        GameApi.get(),
+                                        new DefaultModLogger(
+                                                        modId),
+                                        ModSaveDataRegistry.forMod(
+                                                        modId));
+
+                        /*
+                         * Let the mod initialise before considering it
+                         * successfully loaded.
+                         */
+                        mod.onLoad(context);
+
+                        loadedMods.add(
+                                        new LoadedJavaMod(
+                                                        folderName,
+                                                        modId,
+                                                        mod,
+                                                        context,
+                                                        classLoader));
+
+                        context.logger().info(
+                                        "Loaded "
+                                                        + metadata.name()
+                                                        + " v"
+                                                        + metadata.version()
+                                                        + " by "
+                                                        + metadata.author());
+
+                } catch (Exception | LinkageError exception) {
+                        classLoader.close();
+                        throw exception;
+                }
         }
 
-        return value.trim();
-    }
+        private static Properties loadProperties(
+                        File file) throws IOException {
 
-    private static void validateModId(String modId) {
+                Properties properties = new Properties();
 
-        if (!modId.matches("[a-z0-9_.-]+")) {
-            throw new IllegalArgumentException(
-                    "Invalid mod ID ["
-                            + modId
-                            + "]. Mod IDs may contain "
-                            + "lowercase letters, numbers, "
-                            + "underscores, hyphens and dots.");
-        }
-    }
+                try (FileInputStream input = new FileInputStream(file)) {
 
-    private static String optionalProperty(
-            Properties properties,
-            String key,
-            String defaultValue) {
+                        properties.load(input);
+                }
 
-        String value = properties.getProperty(key);
-
-        if (value == null
-                || value.isBlank()) {
-            return defaultValue;
+                return properties;
         }
 
-        return value.trim();
-    }
+        private static String requiredProperty(
+                        Properties properties,
+                        String key) {
 
-    private static TownsMod createModInstance(
-            ClassLoader classLoader,
-            String mainClassName) throws Exception {
+                String value = properties.getProperty(key);
 
-        Class<?> mainClass = Class.forName(
-                mainClassName,
-                true,
-                classLoader);
+                if (value == null
+                                || value.isBlank()) {
 
-        if (!TownsMod.class
-                .isAssignableFrom(mainClass)) {
+                        throw new IllegalArgumentException(
+                                        "Missing required mod property: "
+                                                        + key);
+                }
 
-            throw new IllegalArgumentException(
-                    "Main class ["
-                            + mainClassName
-                            + "] does not implement "
-                            + TownsMod.class.getName());
+                return value.trim();
         }
 
-        Object instance = mainClass
-                .getDeclaredConstructor()
-                .newInstance();
+        private static void validateModId(String modId) {
 
-        return (TownsMod) instance;
-    }
+                if (!modId.matches("[a-z0-9_.-]+")) {
+                        throw new IllegalArgumentException(
+                                        "Invalid mod ID ["
+                                                        + modId
+                                                        + "]. Mod IDs may contain "
+                                                        + "lowercase letters, numbers, "
+                                                        + "underscores, hyphens and dots.");
+                }
+        }
 
-    /**
-     * Notifies all currently enabled Java mods that a playable
-     * world has finished loading.
-     */
-    public static void notifyWorldLoaded() {
+        private static String optionalProperty(
+                        Properties properties,
+                        String key,
+                        String defaultValue) {
 
-        /*
-         * Pick up any Java mod that may have been enabled since
-         * the initial startup load.
+                String value = properties.getProperty(key);
+
+                if (value == null
+                                || value.isBlank()) {
+                        return defaultValue;
+                }
+
+                return value.trim();
+        }
+
+        private static TownsMod createModInstance(
+                        ClassLoader classLoader,
+                        String mainClassName) throws Exception {
+
+                Class<?> mainClass = Class.forName(
+                                mainClassName,
+                                true,
+                                classLoader);
+
+                if (!TownsMod.class
+                                .isAssignableFrom(mainClass)) {
+
+                        throw new IllegalArgumentException(
+                                        "Main class ["
+                                                        + mainClassName
+                                                        + "] does not implement "
+                                                        + TownsMod.class.getName());
+                }
+
+                Object instance = mainClass
+                                .getDeclaredConstructor()
+                                .newInstance();
+
+                return (TownsMod) instance;
+        }
+
+        /**
+         * Notifies all currently enabled Java mods that a playable
+         * world has finished loading.
          */
-        loadEnabledMods();
+        public static void notifyWorldLoaded() {
 
-        for (LoadedJavaMod loadedMod : loadedMods) {
+                /*
+                 * Pick up any Java mod that may have been enabled since
+                 * the initial startup load.
+                 */
+                loadEnabledMods();
 
-            /*
-             * A Java mod cannot safely be unloaded from the JVM once
-             * its classes have been loaded, but if the user disables
-             * it we can stop sending lifecycle callbacks to it.
-             */
-            if (!Game.isModLoaded(loadedMod.folderName())) {
-                continue;
-            }
+                for (LoadedJavaMod loadedMod : loadedMods) {
 
-            try {
-                loadedMod.instance().onWorldLoaded(
-                        loadedMod.context());
-            } catch (Exception | LinkageError exception) {
+                        /*
+                         * A Java mod cannot safely be unloaded from the JVM once
+                         * its classes have been loaded, but if the user disables
+                         * it we can stop sending lifecycle callbacks to it.
+                         */
+                        if (!Game.isModLoaded(loadedMod.folderName())) {
+                                continue;
+                        }
 
-                loadedMod.context()
-                        .logger()
-                        .error(
-                                "Error during onWorldLoaded()",
-                                exception);
-            }
+                        try {
+                                loadedMod.instance().onWorldLoaded(
+                                                loadedMod.context());
+                        } catch (Exception | LinkageError exception) {
+
+                                loadedMod.context()
+                                                .logger()
+                                                .error(
+                                                                "Error during onWorldLoaded()",
+                                                                exception);
+                        }
+                }
         }
-    }
 }
