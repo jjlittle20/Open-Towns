@@ -5,6 +5,7 @@ import xaos.api.definitions.DefinitionId;
 import xaos.api.tasks.TaskApi;
 import xaos.api.tasks.TaskResult;
 import xaos.api.world.WorldPosition;
+import xaos.internal.api.definitions.DefinitionResolver;
 import xaos.main.Game;
 import xaos.tasks.Task;
 import xaos.tasks.TaskTypes;
@@ -12,6 +13,12 @@ import xaos.utils.Point3D;
 import xaos.main.World;
 import xaos.tiles.Cell;
 import xaos.tiles.entities.buildings.Building;
+import xaos.actions.ActionManager;
+import xaos.actions.ActionManagerItem;
+import xaos.api.tasks.TaskStartResult;
+import xaos.internal.api.definitions.DefinitionResolver;
+import xaos.panels.menus.SmartMenu;
+import xaos.tiles.Tile;
 
 public final class DefaultTaskApi implements TaskApi {
 
@@ -152,6 +159,7 @@ public final class DefaultTaskApi implements TaskApi {
         public TaskResult build(
                         DefinitionId buildingId,
                         WorldPosition position) {
+
                 if (buildingId == null) {
                         return TaskResult.rejected(
                                         "Building definition cannot be null");
@@ -170,24 +178,10 @@ public final class DefaultTaskApi implements TaskApi {
                                         "Position is outside the world");
                 }
 
-                /*
-                 * The current Towns content managers only understand
-                 * legacy Towns IDs.
-                 *
-                 * Once namespaced mod-defined content is supported,
-                 * this restriction can be removed.
-                 */
-                if (!buildingId.isDefaultNamespace()) {
-                        return TaskResult.rejected(
-                                        "Building definitions from other namespaces "
-                                                        + "are not supported yet");
-                }
+                String legacyId = DefinitionResolver.resolveBuilding(
+                                buildingId);
 
-                if (!GameApi.get()
-                                .definitions()
-                                .buildings()
-                                .contains(buildingId.toString())) {
-
+                if (legacyId == null) {
                         return TaskResult.rejected(
                                         "Unknown building definition: "
                                                         + buildingId);
@@ -197,7 +191,7 @@ public final class DefaultTaskApi implements TaskApi {
                                 TaskTypes.TASK_BUILD);
 
                 task.setParameter(
-                                buildingId.path());
+                                legacyId);
 
                 task.setPointIni(
                                 new Point3D(
@@ -205,15 +199,6 @@ public final class DefaultTaskApi implements TaskApi {
                                                 position.y(),
                                                 position.z()));
 
-                /*
-                 * Uses the normal Towns build preparation:
-                 *
-                 * - checks available cells
-                 * - finds the entrance
-                 * - creates the construction building
-                 * - marks its footprint
-                 * - generates the build hot point
-                 */
                 task.prepareForQueue();
 
                 if (task.getHotPoints().isEmpty()
@@ -299,5 +284,72 @@ public final class DefaultTaskApi implements TaskApi {
                 Game.taskCreated(task);
 
                 return TaskResult.queued();
+        }
+
+        @Override
+        public TaskStartResult beginQueueAndPlace(
+                        DefinitionId actionId) {
+                if (actionId == null) {
+                        return TaskStartResult.rejected(
+                                        "Action definition cannot be null");
+                }
+
+                String legacyActionId = DefinitionResolver.resolveAction(
+                                actionId);
+
+                if (legacyActionId == null) {
+                        return TaskStartResult.rejected(
+                                        "Unknown action definition: "
+                                                        + actionId);
+                }
+
+                ActionManagerItem action = ActionManager.getItem(
+                                legacyActionId);
+
+                if (action == null) {
+                        return TaskStartResult.rejected(
+                                        "Action was not found: "
+                                                        + actionId);
+                }
+
+                String generatedItem = action.getGeneratedItem();
+
+                if (generatedItem == null
+                                || generatedItem.isBlank()) {
+
+                        return TaskStartResult.rejected(
+                                        "Action does not create a placeable item: "
+                                                        + actionId);
+                }
+
+                /*
+                 * This is the same task type used by the native
+                 * QUEUEANDPLACE command.
+                 *
+                 * Task.setParameter() will also inspect the action
+                 * queue and populate parameter2 with the item that
+                 * will eventually be created.
+                 */
+                Game.createTask(
+                                TaskTypes.TASK_QUEUE_AND_PLACE,
+                                legacyActionId);
+
+                Task task = Game.getCurrentTask();
+
+                if (task == null) {
+                        return TaskStartResult.rejected(
+                                        "Could not start item placement");
+                }
+
+                /*
+                 * Match QueueAndPlaceCommandHandler's generated-item
+                 * preview behaviour.
+                 */
+                task.setTile(
+                                new Tile(
+                                                generatedItem),
+                                SmartMenu.ICON_TYPE_ITEM);
+
+              return TaskStartResult.success();
         }
 }

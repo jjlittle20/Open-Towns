@@ -132,7 +132,7 @@ public final class DefaultBuildingApi
         return List.copyOf(result);
     }
 
-    private static BuildingView map(
+    static BuildingView map(
             Building building
     ) {
         if (building == null) {

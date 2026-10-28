@@ -18,7 +18,9 @@ import xaos.api.inventory.InventoryApi;
 import xaos.internal.api.inventory.DefaultInventoryApi;
 import xaos.api.stockpiles.StockpileApi;
 import xaos.internal.api.stockpiles.DefaultStockpileApi;
+import xaos.api.items.ItemBehaviourApi;
 import xaos.api.items.ItemQueryApi;
+import xaos.internal.api.items.DefaultItemBehaviourApi;
 import xaos.internal.api.items.DefaultItemQueryApi;
 import xaos.api.buildings.BuildingApi;
 import xaos.internal.api.buildings.DefaultBuildingApi;
@@ -28,6 +30,8 @@ import xaos.api.production.ProductionApi;
 import xaos.internal.api.production.DefaultProductionApi;
 import xaos.api.actions.ActionApi;
 import xaos.internal.api.actions.DefaultActionApi;
+import xaos.api.buildings.BuildingBehaviourApi;
+import xaos.internal.api.buildings.DefaultBuildingBehaviourApi;
 
 /**
  * Main entry point for the public Open Towns API.
@@ -49,7 +53,10 @@ public final class GameApi {
     private final InventoryApi inventory = new DefaultInventoryApi();
     private final StockpileApi stockpiles = new DefaultStockpileApi();
     private final ItemQueryApi items = new DefaultItemQueryApi();
+    private final ItemBehaviourApi itemBehaviours =
+        new DefaultItemBehaviourApi();
     private final BuildingApi buildings = new DefaultBuildingApi();
+    private final BuildingBehaviourApi buildingBehaviours = new DefaultBuildingBehaviourApi();
     private final FluidApi fluids = new DefaultFluidApi();
     private final ProductionApi production = new DefaultProductionApi();
     private final ActionApi actions = new DefaultActionApi();
@@ -117,8 +124,19 @@ public final class GameApi {
         return items;
     }
 
+    public ItemBehaviourApi itemBehaviours() {
+    return itemBehaviours;
+}
+
     public BuildingApi buildings() {
         return buildings;
+    }
+
+    /**
+     * Registers periodic behaviour for runtime building instances.
+     */
+    public BuildingBehaviourApi buildingBehaviours() {
+        return buildingBehaviours;
     }
 
     public FluidApi fluids() {
