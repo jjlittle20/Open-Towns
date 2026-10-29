@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import xaos.api.GameApi;
 import xaos.api.mods.ModContext;
@@ -34,6 +36,8 @@ public final class JavaModLoader {
         private static final String METADATA_FILE = "mod.properties";
 
         private static final List<LoadedJavaMod> loadedMods = new ArrayList<>();
+
+        private static final Set<String> worldActiveMods = new HashSet<>();
 
         private JavaModLoader() {
         }
@@ -287,6 +291,15 @@ public final class JavaModLoader {
         public static void notifyWorldLoaded() {
 
                 /*
+                 * A new world cannot become active while another world is
+                 * still considered active.
+                 *
+                 * This is also a defensive fallback for any game path that
+                 * changes worlds without going through exitToMainMenu().
+                 */
+                notifyWorldUnloaded();
+
+                /*
                  * Pick up any Java mod that may have been enabled since
                  * the initial startup load.
                  */
@@ -303,9 +316,19 @@ public final class JavaModLoader {
                                 continue;
                         }
 
+                        /*
+                         * Mark the mod active before invoking the callback.
+                         *
+                         * If onWorldLoaded() partially registers resources and
+                         * then fails, the next unload can still clean them up.
+                         */
+                        worldActiveMods.add(
+                                        loadedMod.folderName());
+
                         try {
                                 loadedMod.instance().onWorldLoaded(
                                                 loadedMod.context());
+
                         } catch (Exception | LinkageError exception) {
 
                                 loadedMod.context()
@@ -315,5 +338,99 @@ public final class JavaModLoader {
                                                                 exception);
                         }
                 }
+        }
+
+        /**
+         * Notifies mods that the current playable world is about to be
+         * unloaded, then releases all world-scoped resources.
+         */
+        public static void notifyWorldUnloaded() {
+
+                for (LoadedJavaMod loadedMod : loadedMods) {
+
+                        /*
+                         * Only mods that received onWorldLoaded() for the current
+                         * world should receive onWorldUnloaded().
+                         */
+                        if (!worldActiveMods.remove(
+                                        loadedMod.folderName())) {
+                                continue;
+                        }
+
+                        try {
+                                loadedMod.instance().onWorldUnloaded(
+                                                loadedMod.context());
+
+                        } catch (Exception | LinkageError exception) {
+
+                                loadedMod.context()
+                                                .logger()
+                                                .error(
+                                                                "Error during onWorldUnloaded()",
+                                                                exception);
+
+                        } finally {
+
+                                /*
+                                 * World-scoped resources are always released,
+                                 * even if the mod throws during its unload hook.
+                                 */
+                                loadedMod.context()
+                                                .clearWorldResources();
+                        }
+                }
+        }
+
+        /**
+         * Shuts down the Java mod loader.
+         *
+         * Any active world is unloaded first. Mods then receive onUnload()
+         * in reverse load order before remaining resources and classloaders
+         * are released.
+         */
+        public static void shutdown() {
+
+                notifyWorldUnloaded();
+
+                for (int i = loadedMods.size() - 1;
+                                i >= 0;
+                                i--) {
+
+                        LoadedJavaMod loadedMod =
+                                        loadedMods.get(i);
+
+                        try {
+                                loadedMod.instance().onUnload(
+                                                loadedMod.context());
+
+                        } catch (Exception | LinkageError exception) {
+
+                                loadedMod.context()
+                                                .logger()
+                                                .error(
+                                                                "Error during onUnload()",
+                                                                exception);
+
+                        } finally {
+
+                                loadedMod.context()
+                                                .clearAllResources();
+
+                                try {
+                                        loadedMod.classLoader().close();
+
+                                } catch (IOException exception) {
+
+                                        loadedMod.context()
+                                                        .logger()
+                                                        .error(
+                                                                        "Error closing mod class loader",
+                                                                        exception);
+                                }
+                        }
+                }
+
+                loadedMods.clear();
+                worldActiveMods.clear();
         }
 }

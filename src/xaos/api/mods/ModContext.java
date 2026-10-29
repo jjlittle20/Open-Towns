@@ -15,12 +15,15 @@ public final class ModContext {
     private final ModLogger logger;
     private final ModSaveData saveData;
 
+    private final ModResourceScope worldResources = new ModResourceScope();
+
+    private final ModResourceScope modResources = new ModResourceScope();
+
     public ModContext(
             ModMetadata metadata,
             GameApi api,
             ModLogger logger,
             ModSaveData saveData) {
-
         if (metadata == null) {
             throw new IllegalArgumentException(
                     "Mod metadata cannot be null");
@@ -76,9 +79,57 @@ public final class ModContext {
     }
 
     /**
-     * Persistent data belonging exclusively to this mod.
+     * Persistent save data belonging to this mod.
      */
     public ModSaveData saveData() {
         return saveData;
+    }
+
+    /**
+     * Tracks a resource that belongs to the currently loaded world.
+     *
+     * World resources are automatically released after
+     * onWorldUnloaded().
+     *
+     * Example:
+     *
+     * context.worldResource(
+     * context.api().events().subscribe(...)
+     * );
+     */
+    public <T extends ModResource> T worldResource(
+            T resource) {
+        return worldResources.track(resource);
+    }
+
+    /**
+     * Tracks a resource that belongs to the lifetime of the mod.
+     *
+     * Use this only for registrations that intentionally survive
+     * world changes. Most gameplay registrations should use
+     * worldResource(...).
+     */
+    public <T extends ModResource> T resource(
+            T resource) {
+        return modResources.track(resource);
+    }
+
+    /**
+     * Releases resources belonging to the current world.
+     *
+     * Called by the mod loader during world teardown.
+     */
+    void clearWorldResources() {
+        worldResources.clear();
+    }
+
+    /**
+     * Releases all resources belonging to this mod.
+     *
+     * Called by the mod loader during shutdown.
+     */
+    void clearAllResources() {
+        worldResources.clear();
+        modResources.clear();
     }
 }

@@ -1,29 +1,21 @@
 package xaos.api.items;
 
 import xaos.api.definitions.DefinitionId;
+import xaos.api.mods.ModResource;
 
-/**
- * Handle returned when registering custom item behaviour.
- */
-public interface ItemBehaviourRegistration {
+public interface ItemBehaviourRegistration
+        extends ModResource {
 
-    /**
-     * Removes this behaviour registration.
-     */
     void unregister();
 
-    /**
-     * Whether this registration is still active.
-     */
     boolean isActive();
 
-    /**
-     * Item definition this behaviour targets.
-     */
     DefinitionId definitionId();
 
-    /**
-     * Number of simulation ticks between executions.
-     */
     int intervalTicks();
+
+    @Override
+    default void close() {
+        unregister();
+    }
 }

@@ -2486,6 +2486,7 @@ public final class Game {
 	}
 
 	public static void exit() {
+		 JavaModLoader.shutdown();
 		UtilsGL.destroy();
 		UtilsAL.destroy();
 		System.exit(0);

@@ -1,29 +1,21 @@
 package xaos.api.buildings;
 
 import xaos.api.definitions.DefinitionId;
+import xaos.api.mods.ModResource;
 
-/**
- * Handle returned when registering custom building behaviour.
- */
-public interface BuildingBehaviourRegistration {
+public interface BuildingBehaviourRegistration
+        extends ModResource {
 
-    /**
-     * Removes this behaviour registration.
-     */
     void unregister();
 
-    /**
-     * Whether this registration is still active.
-     */
     boolean isActive();
 
-    /**
-     * Building definition this behaviour targets.
-     */
     DefinitionId definitionId();
 
-    /**
-     * Number of simulation ticks between executions.
-     */
     int intervalTicks();
+
+    @Override
+    default void close() {
+        unregister();
+    }
 }

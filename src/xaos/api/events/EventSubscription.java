@@ -1,8 +1,15 @@
 package xaos.api.events;
 
-public interface EventSubscription {
+import xaos.api.mods.ModResource;
+
+public interface EventSubscription extends ModResource {
 
     void unsubscribe();
 
     boolean isActive();
+
+    @Override
+    default void close() {
+        unsubscribe();
+    }
 }

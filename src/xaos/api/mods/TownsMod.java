@@ -23,4 +23,23 @@ public interface TownsMod {
      */
     default void onWorldLoaded(ModContext context) {
     }
+
+    /**
+     * Called immediately before the current playable world is cleared.
+     *
+     * The World API is still available during this callback.
+     *
+     * After this method returns, all resources registered through
+     * ModContext.worldResource(...) are automatically released.
+     */
+    default void onWorldUnloaded(ModContext context) {
+    }
+
+    /**
+     * Called once when the Java mod loader is shutting down.
+     *
+     * Mod-scoped resources are automatically released after this callback.
+     */
+    default void onUnload(ModContext context) {
+    }
 }
