@@ -17,8 +17,12 @@ import xaos.ui.rendering.opengl.TownsUiTexture;
 import xaos.ui.theme.BasicUiTheme;
 import xaos.ui.theme.ClassicTownsTheme;
 import xaos.ui.theme.UiTheme;
+import xaos.ui.theme.UiThemeRegistry;
 import xaos.utils.TextureData;
 import xaos.utils.UtilsGL;
+import xaos.ui.components.UiLabel;
+import xaos.ui.layout.UiInsets;
+import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 
 /**
  * Temporary visual test for the new UI framework.
@@ -29,23 +33,47 @@ public final class UiDebugOverlay {
 
     public static final boolean ENABLED = true;
 
-    /**
-     * Temporary theme selection for development.
-     *
-     * true  = Original Towns artwork
-     * false = Basic white-label theme
-     */
-    private static final boolean USE_CLASSIC_THEME = true;
+    private static final String CLASSIC_THEME = "classic-towns";
+    private static final String BASIC_THEME = "basic";
 
-    private static final UiTheme THEME =
-            USE_CLASSIC_THEME
-                    ? new ClassicTownsTheme()
-                    : new BasicUiTheme();
+    // Change this to select the starting theme.
+    private static final String STARTING_THEME = CLASSIC_THEME;
+
+    private static final UiThemeRegistry THEMES = createThemes();
 
     private static final UiWindow WINDOW = createWindow();
     private static final UiRoot ROOT = createRoot();
 
     private UiDebugOverlay() {
+    }
+
+    // ------------------------------------------------------------
+    // Theme registration
+    // ------------------------------------------------------------
+
+    private static UiThemeRegistry createThemes() {
+        UiThemeRegistry registry = new UiThemeRegistry();
+
+        registry.register(
+                CLASSIC_THEME,
+                new ClassicTownsTheme());
+
+        registry.register(
+                BASIC_THEME,
+                new BasicUiTheme());
+
+        registry.select(STARTING_THEME);
+
+        return registry;
+    }
+
+    /**
+     * Allows the debug overlay to change themes.
+     *
+     * Must be called on the UI/rendering thread.
+     */
+    public static void setTheme(String themeId) {
+        THEMES.select(themeId);
     }
 
     // ------------------------------------------------------------
@@ -58,12 +86,29 @@ public final class UiDebugOverlay {
         window.setPosition(new UiPoint(50, 50));
         window.setPreferredSize(new UiSize(320, 160));
 
+        // Padding and spacing for the window's content.
+        window.content().setPadding(UiInsets.all(10));
+        window.content().setSpacing(6);
+
+        // First reusable label.
+        window.content().add(new UiLabel(
+                "New UI renderer is working!",
+                TownsUiTextMetrics.INSTANCE));
+
+        // Second reusable label.
+        window.content().add(new UiLabel(
+                "This text uses automatic layout.",
+                TownsUiTextMetrics.INSTANCE));
+
         return window;
     }
 
     private static UiRoot createRoot() {
         UiContainer desktop = new UiContainer();
-        desktop.setLayoutStrategy(UiAbsoluteLayout.INSTANCE);
+
+        desktop.setLayoutStrategy(
+                UiAbsoluteLayout.INSTANCE);
+
         desktop.add(WINDOW);
 
         return new UiRoot(desktop);
@@ -83,11 +128,9 @@ public final class UiDebugOverlay {
 
         ROOT.updateLayout(new UiSize(width, height));
 
-        // Only load the original artwork when using
-        // the classic Towns theme.
         TownsUiTexture atlas = null;
 
-        if (USE_CLASSIC_THEME) {
+        if (CLASSIC_THEME.equals(THEMES.activeId())) {
             TextureData texture = UtilsGL.loadTexture(
                     "ui2.png",
                     GL11.GL_REPLACE);
@@ -104,7 +147,6 @@ public final class UiDebugOverlay {
 
         final TownsUiTexture resolvedAtlas = atlas;
 
-        // Preserve the existing game's projection.
         int previousMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
 
         GL11.glMatrixMode(GL11.GL_PROJECTION);
@@ -146,24 +188,25 @@ public final class UiDebugOverlay {
             UiElement element,
             UiRenderer renderer) {
 
+        UiTheme theme = THEMES.activeTheme();
+
         if (element == WINDOW) {
 
-            THEME.paintWindow(WINDOW, renderer);
+            theme.paintWindow(WINDOW, renderer);
 
         } else if (element == WINDOW.titleBar()) {
 
-            THEME.paintTitleBar(WINDOW, renderer);
+            theme.paintTitleBar(WINDOW, renderer);
 
-        } else if (element == WINDOW.content()) {
+        } else if (element instanceof UiLabel label) {
 
-            UiRect bounds = element.bounds();
+            UiRect bounds = label.bounds();
 
             renderer.drawText(
-                    "New UI renderer is working!",
-                    new UiPoint(
-                            bounds.x() + 10,
-                            bounds.y() + 12),
-                    THEME.textColor());
+                    label.text(),
+                    new UiPoint(bounds.x(), bounds.y()),
+                    theme.textColor());
         }
     }
+
 }
