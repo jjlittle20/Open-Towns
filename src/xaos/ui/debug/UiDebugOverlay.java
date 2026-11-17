@@ -23,6 +23,8 @@ import xaos.utils.UtilsGL;
 import xaos.ui.components.UiLabel;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
+import xaos.ui.components.UiButton;
+import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 
 /**
  * Temporary visual test for the new UI framework.
@@ -84,21 +86,40 @@ public final class UiDebugOverlay {
         UiWindow window = new UiWindow("New UI Framework");
 
         window.setPosition(new UiPoint(50, 50));
-        window.setPreferredSize(new UiSize(320, 160));
+        window.setPreferredSize(new UiSize(320, 270));
 
-        // Padding and spacing for the window's content.
-        window.content().setPadding(UiInsets.all(10));
+        window.content().setPadding(
+                xaos.ui.layout.UiInsets.all(10));
+
         window.content().setSpacing(6);
 
-        // First reusable label.
-        window.content().add(new UiLabel(
+        window.content().add(new xaos.ui.components.UiLabel(
                 "New UI renderer is working!",
                 TownsUiTextMetrics.INSTANCE));
 
-        // Second reusable label.
-        window.content().add(new UiLabel(
-                "This text uses automatic layout.",
+        window.content().add(new xaos.ui.components.UiLabel(
+                "Button rendering preview:",
                 TownsUiTextMetrics.INSTANCE));
+
+        UiButton normal = new UiButton(
+                "Normal Button",
+                TownsUiTextMetrics.INSTANCE);
+
+        UiButton selected = new UiButton(
+                "Selected Button",
+                TownsUiTextMetrics.INSTANCE);
+
+        selected.setSelected(true);
+
+        UiButton disabled = new UiButton(
+                "Disabled Button",
+                TownsUiTextMetrics.INSTANCE);
+
+        disabled.setEnabled(false);
+
+        window.content().add(normal);
+        window.content().add(selected);
+        window.content().add(disabled);
 
         return window;
     }
@@ -206,6 +227,8 @@ public final class UiDebugOverlay {
                     label.text(),
                     new UiPoint(bounds.x(), bounds.y()),
                     theme.textColor());
+        } else if (element instanceof UiButton button) {
+            theme.paintButton(button, renderer);
         }
     }
 

@@ -29,7 +29,8 @@ public class UiButton extends UiElement {
     private boolean selected;
     private boolean backgroundVisible;
 
-    private Runnable onClick = () -> {};
+    private Runnable onClick = () -> {
+    };
 
     // ------------------------------------------------------------
     // Constructors
@@ -81,6 +82,21 @@ public class UiButton extends UiElement {
 
     public String text() {
         return text;
+    }
+
+    /**
+     * Returns the actual size of the button's text.
+     *
+     * An empty string requires no text space.
+     */
+    public UiSize measuredTextSize() {
+        if (text.isEmpty()) {
+            return UiSize.ZERO;
+        }
+
+        return Objects.requireNonNull(
+                textMetrics.measure(text),
+                "textMetrics result");
     }
 
     public void setText(String text) {

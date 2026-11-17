@@ -7,6 +7,8 @@ import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.rendering.UiColor;
 import xaos.ui.rendering.UiRenderer;
+import xaos.ui.components.UiButton;
+import xaos.ui.rendering.UiButtonPainter;
 
 /**
  * Basic artwork-independent UI theme.
@@ -19,17 +21,13 @@ import xaos.ui.rendering.UiRenderer;
  */
 public final class BasicUiTheme implements UiTheme {
 
-    private static final UiColor BACKGROUND =
-            UiColor.rgb(45, 48, 55);
+    private static final UiColor BACKGROUND = UiColor.rgb(45, 48, 55);
 
-    private static final UiColor BORDER =
-            UiColor.rgb(110, 115, 125);
+    private static final UiColor BORDER = UiColor.rgb(110, 115, 125);
 
-    private static final UiColor TITLE_BACKGROUND =
-            UiColor.rgb(65, 72, 85);
+    private static final UiColor TITLE_BACKGROUND = UiColor.rgb(65, 72, 85);
 
-    private static final UiColor TEXT =
-            UiColor.rgb(240, 240, 240);
+    private static final UiColor TEXT = UiColor.rgb(240, 240, 240);
 
     private static final int BORDER_SIZE = 2;
 
@@ -100,4 +98,40 @@ public final class BasicUiTheme implements UiTheme {
     public UiColor textColor() {
         return TEXT;
     }
+
+    @Override
+    public void paintButton(
+            UiButton button,
+            UiRenderer renderer) {
+
+        UiColor background;
+
+        if (!button.enabled()) {
+            background = UiColor.rgb(55, 55, 60);
+        } else if (button.pressed()) {
+            background = UiColor.rgb(35, 90, 135);
+        } else if (button.selected()) {
+            background = UiColor.rgb(55, 105, 150);
+        } else if (button.hovered()) {
+            background = UiColor.rgb(85, 95, 115);
+        } else {
+            background = UiColor.rgb(65, 72, 85);
+        }
+
+        UiColor foreground = !button.enabled()
+                ? UiColor.rgb(140, 140, 145)
+                : button.pressed()
+                        ? UiColor.rgb(205, 225, 255)
+                        : button.hovered() || button.selected()
+                                ? UiColor.rgb(255, 245, 195)
+                                : textColor();
+
+        UiButtonPainter.paint(
+                button,
+                renderer,
+                background,
+                UiColor.rgb(115, 120, 130),
+                foreground);
+    }
+
 }
