@@ -1140,6 +1140,35 @@ public final class Game {
 			mouseY = UtilsGL.getHeight() - Mouse.getEventY() - 1;
 			int mouseButton = Mouse.getEventButton();
 
+			// ------------------------------------------------------------
+			// New UI framework input
+			// ------------------------------------------------------------
+
+			if (UiDebugOverlay.ENABLED) {
+
+				// Primary mouse button: press and release.
+				if (mouseButton == 0) {
+
+					boolean handled = Mouse.getEventButtonState()
+							? UiDebugOverlay.mousePressed(mouseX, mouseY)
+							: UiDebugOverlay.mouseReleased(mouseX, mouseY);
+
+					if (handled) {
+						// Do not send this event to the legacy UI
+						// or game world.
+						continue;
+					}
+
+				} else if (mouseButton > 0
+						&& Mouse.getEventButtonState()
+						&& UiDebugOverlay.mouseMoved(mouseX, mouseY)) {
+
+					// Other mouse presses should not pass through
+					// a new UI window into the game world.
+					continue;
+				}
+			}
+
 			if (Mouse.getEventButtonState()) {
 				// Main menu
 				if (getPanelMainMenu().isActive()) {
@@ -1231,6 +1260,12 @@ public final class Game {
 			int mouseWheelMoved = Mouse.getEventDWheel();
 
 			if (mouseWheelMoved != 0) {
+				// Prevent scrolling the game world or legacy menus
+				// through a new-framework window.
+				if (UiDebugOverlay.ENABLED
+						&& UiDebugOverlay.mouseMoved(mouseX, mouseY)) {
+					continue;
+				}
 
 				if (getPanelMainMenu().isActive()) {
 					getPanelMainMenu().mouseWheelMoved(mouseWheelMoved, mouseX, mouseY);
@@ -1253,8 +1288,28 @@ public final class Game {
 			}
 		}
 
+		// ------------------------------------------------------------
+		// Update new UI hover state using the current mouse position.
+		// ------------------------------------------------------------
+
+		boolean newUiCapturesPointer = false;
+
+		if (UiDebugOverlay.ENABLED) {
+
+			int pointerX = Mouse.getX();
+			int pointerY = UtilsGL.getHeight() - Mouse.getY() - 1;
+
+			if (Mouse.isInsideWindow()) {
+				newUiCapturesPointer = UiDebugOverlay.mouseMoved(pointerX, pointerY);
+			} else {
+				UiDebugOverlay.cancelPointer();
+			}
+		}
+
 		// Bordes (scroll de mouse)
-		if (isMouseScrollON() && Mouse.isInsideWindow()) {
+		if (isMouseScrollON()
+				&& Mouse.isInsideWindow()
+				&& !newUiCapturesPointer) {
 			if (!getPanelMainMenu().isActive()) {
 				final int BORDE = PIXELS_TO_BORDER; // Si se acerca X pixels al borde moveremos la cámara
 				if (mouseX < BORDE) {

@@ -25,6 +25,7 @@ import xaos.ui.layout.UiInsets;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.ui.components.UiButton;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
+import xaos.ui.input.UiInputRouter;
 
 /**
  * Temporary visual test for the new UI framework.
@@ -45,6 +46,7 @@ public final class UiDebugOverlay {
 
     private static final UiWindow WINDOW = createWindow();
     private static final UiRoot ROOT = createRoot();
+    private static final UiInputRouter INPUT = new UiInputRouter(ROOT);
 
     private UiDebugOverlay() {
     }
@@ -104,12 +106,14 @@ public final class UiDebugOverlay {
         UiButton normal = new UiButton(
                 "Normal Button",
                 TownsUiTextMetrics.INSTANCE);
+        normal.setOnClick(() -> window.setTitle("Normal button clicked!"));
 
         UiButton selected = new UiButton(
                 "Selected Button",
                 TownsUiTextMetrics.INSTANCE);
 
         selected.setSelected(true);
+        selected.setOnClick(() -> selected.setSelected(!selected.selected()));
 
         UiButton disabled = new UiButton(
                 "Disabled Button",
@@ -230,6 +234,54 @@ public final class UiDebugOverlay {
         } else if (element instanceof UiButton button) {
             theme.paintButton(button, renderer);
         }
+    }
+
+    // ------------------------------------------------------------
+    // Mouse input
+    // ------------------------------------------------------------
+
+    /**
+     * Ensures element positions are current before
+     * performing mouse hit testing.
+     */
+    private static boolean updateLayout() {
+        int width = UtilsGL.getWidth();
+        int height = UtilsGL.getHeight();
+
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+
+        ROOT.updateLayout(new UiSize(width, height));
+        return true;
+    }
+
+    public static boolean mouseMoved(int x, int y) {
+        if (!ENABLED || !updateLayout()) {
+            return false;
+        }
+
+        return INPUT.mouseMoved(x, y);
+    }
+
+    public static boolean mousePressed(int x, int y) {
+        if (!ENABLED || !updateLayout()) {
+            return false;
+        }
+
+        return INPUT.mousePressed(x, y);
+    }
+
+    public static boolean mouseReleased(int x, int y) {
+        if (!ENABLED || !updateLayout()) {
+            return false;
+        }
+
+        return INPUT.mouseReleased(x, y);
+    }
+
+    public static void cancelPointer() {
+        INPUT.cancelPointer();
     }
 
 }
