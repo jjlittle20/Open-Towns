@@ -91,6 +91,7 @@ import xaos.internal.api.selection.SelectionManager;
 import xaos.internal.api.mods.ModSaveDataRegistry;
 import xaos.internal.api.inventory.ItemReservationRegistry;
 import xaos.internal.api.definitions.DefinitionOwnershipRegistry;
+import xaos.ui.debug.UiDebugOverlay;
 
 public final class Game {
 
@@ -2002,6 +2003,10 @@ public final class Game {
 				// // Info panel
 				// getCurrentInfoPanel().render();
 			}
+		}
+		// Temporary visual test of the new UI framework.
+		if (UiDebugOverlay.ENABLED) {
+			UiDebugOverlay.render();
 		}
 	}
 
