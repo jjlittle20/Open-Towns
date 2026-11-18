@@ -165,4 +165,82 @@ class UiSceneRendererTest {
                 UiColor.WHITE,
                 UiColor.rgb(255, 255, 255));
     }
+
+    @Test
+    void clippedContainerWrapsChildRendering() {
+        UiContainer desktop = new UiContainer();
+
+        UiContainer clipped = new UiContainer();
+        clipped.setClipChildren(true);
+        clipped.setPreferredSize(new UiSize(100, 80));
+
+        UiElement child = new UiElement();
+        child.setPreferredSize(new UiSize(50, 30));
+
+        clipped.add(child);
+        desktop.add(clipped);
+
+        UiRoot root = new UiRoot(desktop);
+        root.updateLayout(new UiSize(400, 300));
+
+        RecordingRenderer renderer = new RecordingRenderer();
+
+        UiSceneRenderer.render(
+                root,
+                renderer,
+                (element, graphics) -> {
+                    if (element == clipped) {
+                        graphics.drawText(
+                                "container",
+                                new UiPoint(0, 0),
+                                UiColor.WHITE);
+                    }
+
+                    if (element == child) {
+                        graphics.drawText(
+                                "child",
+                                new UiPoint(0, 0),
+                                UiColor.WHITE);
+                    }
+                });
+
+        assertEquals(
+                List.of(
+                        "text:container",
+                        "pushClip",
+                        "text:child",
+                        "popClip"),
+                renderer.commands);
+    }
+
+    @Test
+    void clippingIsRestoredWhenPainterThrows() {
+        UiContainer container = new UiContainer();
+        container.setClipChildren(true);
+
+        UiElement child = new UiElement();
+        container.add(child);
+
+        UiRoot root = new UiRoot(container);
+        root.updateLayout(new UiSize(400, 300));
+
+        RecordingRenderer renderer = new RecordingRenderer();
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> UiSceneRenderer.render(
+                        root,
+                        renderer,
+                        (element, graphics) -> {
+                            if (element == child) {
+                                throw new IllegalStateException(
+                                        "Simulated painting failure");
+                            }
+                        }));
+
+        assertEquals(
+                List.of("pushClip", "popClip"),
+                renderer.commands);
+    }
+
 }

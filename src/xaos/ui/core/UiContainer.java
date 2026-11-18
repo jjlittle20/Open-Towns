@@ -27,6 +27,11 @@ public class UiContainer extends UiElement {
     private int spacing;
 
     private UiLayout layoutStrategy = UiLinearLayout.VERTICAL;
+    /**
+     * Whether child rendering is restricted to this
+     * container's bounds.
+     */
+    private boolean clipChildren;
 
     // ------------------------------------------------------------
     // Children
@@ -156,6 +161,28 @@ public class UiContainer extends UiElement {
             this.layoutStrategy = newLayout;
             invalidateLayout();
         }
+    }
+
+    // ------------------------------------------------------------
+    // Child clipping
+    // ------------------------------------------------------------
+
+    /**
+     * Returns whether children should be clipped
+     * to this container's bounds.
+     */
+    public boolean clipChildren() {
+        return clipChildren;
+    }
+
+    /**
+     * Enables or disables clipping of child elements.
+     *
+     * This affects rendering only and does not
+     * change layout measurements or child positions.
+     */
+    public void setClipChildren(boolean clipChildren) {
+        this.clipChildren = clipChildren;
     }
 
     // ------------------------------------------------------------

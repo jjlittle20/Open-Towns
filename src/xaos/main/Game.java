@@ -1257,13 +1257,20 @@ public final class Game {
 			}
 
 			// Wheel
+
+			// Wheel
 			int mouseWheelMoved = Mouse.getEventDWheel();
 
 			if (mouseWheelMoved != 0) {
-				// Prevent scrolling the game world or legacy menus
-				// through a new-framework window.
+
+				// Give the new UI first opportunity to handle
+				// scrolling before legacy panels or world controls.
 				if (UiDebugOverlay.ENABLED
-						&& UiDebugOverlay.mouseMoved(mouseX, mouseY)) {
+						&& UiDebugOverlay.mouseWheelMoved(
+								mouseX, mouseY, mouseWheelMoved)) {
+
+					// The new UI consumed this wheel event.
+					// Do not zoom or change the game world's level.
 					continue;
 				}
 

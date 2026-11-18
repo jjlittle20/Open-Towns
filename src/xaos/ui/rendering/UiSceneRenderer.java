@@ -35,23 +35,42 @@ public final class UiSceneRenderer {
         paintElement(root.content(), renderer, painter);
     }
 
-    private static void paintElement(
-            UiElement element,
-            UiRenderer renderer,
-            UiElementPainter painter) {
+    
+private static void paintElement(
+        UiElement element,
+        UiRenderer renderer,
+        UiElementPainter painter) {
 
-        if (!element.visible()) {
-            return;
+    if (!element.visible()) {
+        return;
+    }
+
+    // Paint the element itself.
+    painter.paint(element, renderer);
+
+    if (!(element instanceof UiContainer container)) {
+        return;
+    }
+
+    boolean clipped = container.clipChildren();
+
+    // Restrict child drawing to the container bounds.
+    if (clipped) {
+        renderer.pushClip(container.bounds());
+    }
+
+    try {
+        // Children render in stacking order.
+        for (UiElement child : container.children()) {
+            paintElement(child, renderer, painter);
         }
+    } finally {
 
-        // Paint this element first.
-        painter.paint(element, renderer);
-
-        // Then paint its children in stacking order.
-        if (element instanceof UiContainer container) {
-            for (UiElement child : container.children()) {
-                paintElement(child, renderer, painter);
-            }
+        // Always restore the previous clipping region.
+        if (clipped) {
+            renderer.popClip();
         }
     }
+}
+
 }

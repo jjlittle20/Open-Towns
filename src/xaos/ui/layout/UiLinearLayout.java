@@ -12,242 +12,267 @@ import java.util.List;
  */
 public final class UiLinearLayout implements UiLayout {
 
-    public static final UiLinearLayout VERTICAL = new UiLinearLayout(true);
+        public static final UiLinearLayout VERTICAL = new UiLinearLayout(true);
 
-    public static final UiLinearLayout HORIZONTAL = new UiLinearLayout(false);
+        public static final UiLinearLayout HORIZONTAL = new UiLinearLayout(false);
 
-    private final boolean vertical;
+        private final boolean vertical;
 
-    private UiLinearLayout(boolean vertical) {
-        this.vertical = vertical;
-    }
-
-    // ------------------------------------------------------------
-    // Measurement
-    // ------------------------------------------------------------
-
-    @Override
-    public UiSize measure(UiContainer container, UiSize available) {
-        Objects.requireNonNull(container, "container");
-        Objects.requireNonNull(available, "available");
-
-        UiInsets padding = container.padding();
-
-        int innerWidth = Math.max(
-                0, available.width() - padding.horizontal());
-
-        int innerHeight = Math.max(
-                0, available.height() - padding.vertical());
-
-        int primary = 0;
-        int secondary = 0;
-        boolean first = true;
-
-        for (UiElement child : container.children()) {
-
-            if (!child.visible()) {
-                continue;
-            }
-
-            if (!first) {
-                primary = Math.addExact(
-                        primary, container.spacing());
-            }
-
-            first = false;
-
-            UiSize childAvailable = vertical
-                    ? new UiSize(
-                            innerWidth,
-                            Math.max(0, innerHeight - primary))
-                    : new UiSize(
-                            Math.max(0, innerWidth - primary),
-                            innerHeight);
-
-            UiSize desired = child.measure(childAvailable);
-
-            primary = Math.addExact(
-                    primary,
-                    vertical ? desired.height() : desired.width());
-
-            secondary = Math.max(
-                    secondary,
-                    vertical ? desired.width() : desired.height());
-        }
-
-        int contentWidth = vertical ? secondary : primary;
-        int contentHeight = vertical ? primary : secondary;
-
-        int requestedWidth = Math.addExact(
-                contentWidth, padding.horizontal());
-
-        int requestedHeight = Math.addExact(
-                contentHeight, padding.vertical());
-
-        return new UiSize(
-                Math.max(
-                        container.minimumSize().width(),
-                        Math.max(
-                                container.preferredSize().width(),
-                                requestedWidth)),
-                Math.max(
-                        container.minimumSize().height(),
-                        Math.max(
-                                container.preferredSize().height(),
-                                requestedHeight)));
-    }
-
-    // ------------------------------------------------------------
-    // Layout
-    // ------------------------------------------------------------
-
-    @Override
-    public void layout(UiContainer container, UiRect bounds) {
-        Objects.requireNonNull(container, "container");
-        Objects.requireNonNull(bounds, "bounds");
-
-        UiInsets padding = container.padding();
-
-        int x = Math.addExact(bounds.x(), padding.left());
-        int y = Math.addExact(bounds.y(), padding.top());
-
-        int innerWidth = Math.max(
-                0, bounds.width() - padding.horizontal());
-
-        int innerHeight = Math.max(
-                0, bounds.height() - padding.vertical());
-
-        // ------------------------------------------------------------
-        // Pass 1: Measure visible children
-        // ------------------------------------------------------------
-
-        List<UiSize> measuredSizes = new ArrayList<>();
-
-        int usedPrimary = 0;
-        int fillCount = 0;
-        boolean first = true;
-
-        for (UiElement child : container.children()) {
-            if (!child.visible()) {
-                continue;
-            }
-
-            if (!first) {
-                usedPrimary = Math.addExact(
-                        usedPrimary, container.spacing());
-            }
-
-            first = false;
-
-            UiSize available = vertical
-                    ? new UiSize(
-                            innerWidth,
-                            Math.max(0, innerHeight - usedPrimary))
-                    : new UiSize(
-                            Math.max(0, innerWidth - usedPrimary),
-                            innerHeight);
-
-            UiSize desired = child.measure(available);
-
-            measuredSizes.add(desired);
-
-            usedPrimary = Math.addExact(
-                    usedPrimary,
-                    vertical ? desired.height() : desired.width());
-
-            boolean fillsPrimary = vertical
-                    ? child.verticalSizePolicy() == UiSizePolicy.FILL
-                    : child.horizontalSizePolicy() == UiSizePolicy.FILL;
-
-            if (fillsPrimary) {
-                fillCount++;
-            }
+        private UiLinearLayout(boolean vertical) {
+                this.vertical = vertical;
         }
 
         // ------------------------------------------------------------
-        // Calculate remaining space
+        // Measurement
         // ------------------------------------------------------------
 
-        int primarySpace = vertical ? innerHeight : innerWidth;
+        @Override
+        public UiSize measure(UiContainer container, UiSize available) {
+                Objects.requireNonNull(container, "container");
+                Objects.requireNonNull(available, "available");
 
-        int remaining = Math.max(0, primarySpace - usedPrimary);
+                UiInsets padding = container.padding();
 
-        int extraPerFill = fillCount == 0
-                ? 0
-                : remaining / fillCount;
+                int innerWidth = Math.max(
+                                0, available.width() - padding.horizontal());
 
-        int extraRemainder = fillCount == 0
-                ? 0
-                : remaining % fillCount;
+                int innerHeight = Math.max(
+                                0, available.height() - padding.vertical());
 
-        // ------------------------------------------------------------
-        // Pass 2: Position children
-        // ------------------------------------------------------------
+                int primary = 0;
+                int secondary = 0;
+                boolean first = true;
 
-        int index = 0;
+                for (UiElement child : container.children()) {
 
-        for (UiElement child : container.children()) {
+                        if (!child.visible()) {
+                                continue;
+                        }
 
-            if (!child.visible()) {
-                child.layout(new UiRect(x, y, 0, 0));
-                continue;
-            }
+                        if (!first) {
+                                primary = Math.addExact(
+                                                primary, container.spacing());
+                        }
 
-            if (index > 0) {
-                if (vertical) {
-                    y = Math.addExact(y, container.spacing());
-                } else {
-                    x = Math.addExact(x, container.spacing());
+                        first = false;
+
+                        UiSize childAvailable = vertical
+                                        ? new UiSize(
+                                                        innerWidth,
+                                                        Math.max(0, innerHeight - primary))
+                                        : new UiSize(
+                                                        Math.max(0, innerWidth - primary),
+                                                        innerHeight);
+
+                        UiSize desired = child.measure(childAvailable);
+
+                        primary = Math.addExact(
+                                        primary,
+                                        vertical ? desired.height() : desired.width());
+
+                        secondary = Math.max(
+                                        secondary,
+                                        vertical ? desired.width() : desired.height());
                 }
-            }
 
-            UiSize desired = measuredSizes.get(index);
+                int contentWidth = vertical ? secondary : primary;
+                int contentHeight = vertical ? primary : secondary;
 
-            boolean fillsPrimary = vertical
-                    ? child.verticalSizePolicy() == UiSizePolicy.FILL
-                    : child.horizontalSizePolicy() == UiSizePolicy.FILL;
+                int requestedWidth = Math.addExact(
+                                contentWidth, padding.horizontal());
 
-            int extra = 0;
+                int requestedHeight = Math.addExact(
+                                contentHeight, padding.vertical());
 
-            if (fillsPrimary) {
-                extra = extraPerFill;
-
-                if (extraRemainder > 0) {
-                    extra++;
-                    extraRemainder--;
-                }
-            }
-
-            int childWidth;
-            int childHeight;
-
-            if (vertical) {
-                childWidth = child.horizontalSizePolicy() == UiSizePolicy.FILL
-                        ? Math.max(innerWidth, desired.width())
-                        : desired.width();
-
-                childHeight = Math.addExact(
-                        desired.height(), extra);
-            } else {
-                childWidth = Math.addExact(
-                        desired.width(), extra);
-
-                childHeight = child.verticalSizePolicy() == UiSizePolicy.FILL
-                        ? Math.max(innerHeight, desired.height())
-                        : desired.height();
-            }
-
-            child.layout(new UiRect(
-                    x, y, childWidth, childHeight));
-
-            if (vertical) {
-                y = Math.addExact(y, childHeight);
-            } else {
-                x = Math.addExact(x, childWidth);
-            }
-
-            index++;
+                return new UiSize(
+                                Math.max(
+                                                container.minimumSize().width(),
+                                                Math.max(
+                                                                container.preferredSize().width(),
+                                                                requestedWidth)),
+                                Math.max(
+                                                container.minimumSize().height(),
+                                                Math.max(
+                                                                container.preferredSize().height(),
+                                                                requestedHeight)));
         }
-    }
+
+        // ------------------------------------------------------------
+        // Layout
+        // ------------------------------------------------------------
+
+        @Override
+        public void layout(UiContainer container, UiRect bounds) {
+                Objects.requireNonNull(container, "container");
+                Objects.requireNonNull(bounds, "bounds");
+
+                UiInsets padding = container.padding();
+
+                int x = Math.addExact(bounds.x(), padding.left());
+                int y = Math.addExact(bounds.y(), padding.top());
+
+                int innerWidth = Math.max(
+                                0, bounds.width() - padding.horizontal());
+
+                int innerHeight = Math.max(
+                                0, bounds.height() - padding.vertical());
+
+                int contentRight = Math.addExact(x, innerWidth);
+                int contentBottom = Math.addExact(y, innerHeight);
+
+                // ------------------------------------------------------------
+                // Pass 1: Measure visible children
+                // ------------------------------------------------------------
+
+                List<UiSize> measuredSizes = new ArrayList<>();
+
+                int usedPrimary = 0;
+                int fillCount = 0;
+                boolean first = true;
+
+                for (UiElement child : container.children()) {
+                        if (!child.visible()) {
+                                continue;
+                        }
+
+                        if (!first) {
+                                usedPrimary = Math.addExact(
+                                                usedPrimary, container.spacing());
+                        }
+
+                        first = false;
+
+                        UiSize available = vertical
+                                        ? new UiSize(
+                                                        innerWidth,
+                                                        Math.max(0, innerHeight - usedPrimary))
+                                        : new UiSize(
+                                                        Math.max(0, innerWidth - usedPrimary),
+                                                        innerHeight);
+
+                        UiSize desired = child.measure(available);
+
+                        measuredSizes.add(desired);
+
+                        usedPrimary = Math.addExact(
+                                        usedPrimary,
+                                        vertical ? desired.height() : desired.width());
+
+                        boolean fillsPrimary = vertical
+                                        ? child.verticalSizePolicy() == UiSizePolicy.FILL
+                                        : child.horizontalSizePolicy() == UiSizePolicy.FILL;
+
+                        if (fillsPrimary) {
+                                fillCount++;
+                        }
+                }
+
+                // ------------------------------------------------------------
+                // Calculate remaining space
+                // ------------------------------------------------------------
+
+                int primarySpace = vertical ? innerHeight : innerWidth;
+
+                int remaining = Math.max(0, primarySpace - usedPrimary);
+
+                int extraPerFill = fillCount == 0
+                                ? 0
+                                : remaining / fillCount;
+
+                int extraRemainder = fillCount == 0
+                                ? 0
+                                : remaining % fillCount;
+
+                // ------------------------------------------------------------
+                // Pass 2: Position children
+                // ------------------------------------------------------------
+
+                int index = 0;
+
+                for (UiElement child : container.children()) {
+
+                        if (!child.visible()) {
+                                child.layout(new UiRect(x, y, 0, 0));
+                                continue;
+                        }
+
+                        if (index > 0) {
+                                if (vertical) {
+                                        y = Math.addExact(y, container.spacing());
+                                } else {
+                                        x = Math.addExact(x, container.spacing());
+                                }
+                        }
+
+                        UiSize desired = measuredSizes.get(index);
+
+                        boolean fillsPrimary = vertical
+                                        ? child.verticalSizePolicy() == UiSizePolicy.FILL
+                                        : child.horizontalSizePolicy() == UiSizePolicy.FILL;
+
+                        int extra = 0;
+
+                        if (fillsPrimary) {
+                                extra = extraPerFill;
+
+                                if (extraRemainder > 0) {
+                                        extra++;
+                                        extraRemainder--;
+                                }
+                        }
+
+                        int childWidth;
+                        int childHeight;
+
+                        if (vertical) {
+                                childWidth = child.horizontalSizePolicy() == UiSizePolicy.FILL
+                                                ? Math.max(innerWidth, desired.width())
+                                                : desired.width();
+
+                                childHeight = Math.addExact(
+                                                desired.height(), extra);
+
+                        } else {
+                                childWidth = Math.addExact(
+                                                desired.width(), extra);
+
+                                childHeight = child.verticalSizePolicy() == UiSizePolicy.FILL
+                                                ? Math.max(innerHeight, desired.height())
+                                                : desired.height();
+                        }
+
+                        // ------------------------------------------------------------
+                        // Constrain FILL elements to their available space.
+                        // ------------------------------------------------------------
+
+                        int remainingWidth = Math.max(0, contentRight - x);
+                        int remainingHeight = Math.max(0, contentBottom - y);
+
+                        if (child.horizontalSizePolicy() == UiSizePolicy.FILL) {
+                                childWidth = Math.max(
+                                                child.minimumSize().width(),
+                                                Math.min(childWidth, remainingWidth));
+                        }
+
+                        if (child.verticalSizePolicy() == UiSizePolicy.FILL) {
+                                childHeight = Math.max(
+                                                child.minimumSize().height(),
+                                                Math.min(childHeight, remainingHeight));
+                        }
+
+                        // Assign the corrected bounds.
+                        child.layout(new UiRect(
+                                        x, y, childWidth, childHeight));
+
+                        if (vertical) {
+                                y = Math.addExact(y, childHeight);
+                        } else {
+                                x = Math.addExact(x, childWidth);
+                        }
+
+                        index++;
+
+                }
+        }
 
 }

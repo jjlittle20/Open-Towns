@@ -3,6 +3,7 @@ package xaos.ui.components;
 
 import java.util.Objects;
 import xaos.ui.core.UiElement;
+import xaos.ui.core.UiFocusable;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.UiSprite;
@@ -13,7 +14,7 @@ import xaos.ui.rendering.UiTextMetrics;
  *
  * Rendering and input handling are managed separately.
  */
-public class UiButton extends UiElement {
+public class UiButton extends UiElement implements UiFocusable {
 
     private String text;
     private UiSprite icon;
@@ -180,6 +181,16 @@ public class UiButton extends UiElement {
             invalidateLayout();
         }
     }
+
+    // ------------------------------------------------------------
+    // Keyboard focus
+    // ------------------------------------------------------------
+
+    @Override
+    public boolean canReceiveFocus() {
+        return enabled;
+    }
+
 
     // ------------------------------------------------------------
     // Visual state
