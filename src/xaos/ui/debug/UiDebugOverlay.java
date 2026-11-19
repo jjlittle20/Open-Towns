@@ -1,11 +1,14 @@
 
 package xaos.ui.debug;
 
+import java.util.Objects;
+
 import org.lwjgl.opengl.GL11;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiElement;
 import xaos.ui.core.UiRoot;
+import xaos.ui.core.UiSystem;
 import xaos.ui.layout.UiAbsoluteLayout;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
@@ -44,7 +47,7 @@ import xaos.ui.rendering.UiResizeGripPainter;
  */
 public final class UiDebugOverlay {
 
-        public static final boolean ENABLED = true;
+        public static final boolean ENABLED = false;
 
         private static final String CLASSIC_THEME = "classic-towns";
         private static final String BASIC_THEME = "basic";
@@ -52,40 +55,69 @@ public final class UiDebugOverlay {
         // Change this to select the starting theme.
         private static final String STARTING_THEME = CLASSIC_THEME;
 
-        private static final UiThemeRegistry THEMES = createThemes();
-
         private static final UiWindow WINDOW = createWindow();
+
         private static final UiWindow SECOND_WINDOW = createSecondWindow();
+
         private static final UiWindow SCROLL_WINDOW = createScrollWindow();
 
-        private static final UiWindowManager WINDOWS = createWindowManager();
+        // ------------------------------------------------------------
+        // References to the game-owned UI runtime
+        // ------------------------------------------------------------
 
-        private static final UiRoot ROOT = WINDOWS.root();
+        // These are assigned by install().
+        // This class does not construct its own UiSystem.
+        private static UiSystem UI;
 
-        private static final UiInputRouter INPUT = new UiInputRouter(ROOT);
+        private static UiWindowManager WINDOWS;
+        private static UiThemeRegistry THEMES;
+
+        private static UiRoot ROOT;
+        private static UiInputRouter INPUT;
 
         private UiDebugOverlay() {
+        }
+
+        /**
+         * Attaches the debug overlay to the permanent
+         * game-owned UI system.
+         *
+         * Installs test windows only when the debug
+         * overlay is enabled.
+         *
+         * Reinstalling the same system is harmless.
+         */
+        public static void install(UiSystem system) {
+
+                Objects.requireNonNull(system, "system");
+
+                if (UI == system) {
+                        return;
+                }
+
+                if (UI != null) {
+                        throw new IllegalStateException(
+                                        "Debug overlay already installed");
+                }
+
+                UI = system;
+
+                WINDOWS = system.windows();
+                THEMES = system.themes();
+
+                ROOT = system.root();
+                INPUT = system.input();
+
+                if (ENABLED) {
+                        WINDOWS.register(WINDOW);
+                        WINDOWS.register(SECOND_WINDOW);
+                        WINDOWS.register(SCROLL_WINDOW);
+                }
         }
 
         // ------------------------------------------------------------
         // Theme registration
         // ------------------------------------------------------------
-
-        private static UiThemeRegistry createThemes() {
-                UiThemeRegistry registry = new UiThemeRegistry();
-
-                registry.register(
-                                CLASSIC_THEME,
-                                new ClassicTownsTheme());
-
-                registry.register(
-                                BASIC_THEME,
-                                new BasicUiTheme());
-
-                registry.select(STARTING_THEME);
-
-                return registry;
-        }
 
         /**
          * Allows the debug overlay to change themes.
@@ -215,17 +247,6 @@ public final class UiDebugOverlay {
                 WINDOWS.open(SECOND_WINDOW);
         }
 
-        private static UiWindowManager createWindowManager() {
-
-                UiWindowManager manager = new UiWindowManager();
-
-                manager.register(WINDOW);
-                manager.register(SECOND_WINDOW);
-                manager.register(SCROLL_WINDOW);
-
-                return manager;
-        }
-
         private static UiWindow createScrollWindow() {
 
                 UiWindow window = new UiWindow("Scrollable UI Test");
@@ -307,136 +328,9 @@ public final class UiDebugOverlay {
                 return window;
         }
 
-        // ------------------------------------------------------------
-        // Rendering
-        // ------------------------------------------------------------
+        
 
-        public static void render() {
-                int width = UtilsGL.getWidth();
-                int height = UtilsGL.getHeight();
-
-                if (width <= 0 || height <= 0) {
-                        return;
-                }
-
-                WINDOWS.updateLayout(new UiSize(width, height));
-
-                TownsUiTexture atlas = null;
-
-                if (CLASSIC_THEME.equals(THEMES.activeId())) {
-                        TextureData texture = UtilsGL.loadTexture(
-                                        "ui2.png",
-                                        GL11.GL_REPLACE);
-
-                        if (texture == null) {
-                                return;
-                        }
-
-                        atlas = new TownsUiTexture(
-                                        texture.getTextureID(),
-                                        texture.getWidth(),
-                                        texture.getHeight());
-                }
-
-                final TownsUiTexture resolvedAtlas = atlas;
-
-                int previousMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
-
-                GL11.glMatrixMode(GL11.GL_PROJECTION);
-                GL11.glPushMatrix();
-                GL11.glLoadIdentity();
-                GL11.glOrtho(0, width, height, 0, -1, 1);
-
-                GL11.glMatrixMode(GL11.GL_MODELVIEW);
-                GL11.glPushMatrix();
-                GL11.glLoadIdentity();
-
-                try (TownsUiRenderer renderer = new TownsUiRenderer(
-                                height,
-                                atlasId -> ClassicTownsTheme.UI2_ATLAS.equals(atlasId)
-                                                ? resolvedAtlas
-                                                : null)) {
-
-                        UiSceneRenderer.render(
-                                        ROOT,
-                                        renderer,
-                                        UiDebugOverlay::paint);
-
-                } finally {
-                        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-                        GL11.glPopMatrix();
-
-                        GL11.glMatrixMode(GL11.GL_PROJECTION);
-                        GL11.glPopMatrix();
-
-                        GL11.glMatrixMode(previousMode);
-                }
-        }
-
-        // ------------------------------------------------------------
-        // Element painting
-        // ------------------------------------------------------------
-
-        private static void paint(
-                        UiElement element,
-                        UiRenderer renderer) {
-
-                UiTheme theme = THEMES.activeTheme();
-
-                if (element instanceof UiWindow window) {
-
-                        theme.paintWindow(window, renderer);
-
-                        UiResizeGripPainter.paint(
-                                        window,
-                                        renderer,
-                                        theme.textColor());
-
-                } else if (element.parent() instanceof UiWindow window
-                                && element == window.titleBar()) {
-
-                        theme.paintTitleBar(window, renderer);
-                } else if (element instanceof UiTextField field) {
-
-                        UiTextFieldPainter.paint(
-                                        field,
-                                        renderer,
-                                        INPUT.focusManager().isFocused(field),
-                                        theme.textColor(),
-                                        theme.focusColor());
-
-                } else if (element instanceof UiScrollBar scrollBar) {
-
-                        UiScrollBarPainter.paint(
-                                        scrollBar,
-                                        renderer,
-                                        theme.textColor());
-
-                } else if (element instanceof UiLabel label) {
-
-                        UiRect bounds = label.bounds();
-
-                        renderer.drawText(
-                                        label.text(),
-                                        new UiPoint(bounds.x(), bounds.y()),
-                                        theme.textColor());
-
-                } else if (element instanceof UiButton button) {
-
-                        theme.paintButton(button, renderer);
-
-                        // Draw the keyboard focus indicator after
-                        // the button's normal theme rendering.
-                        if (INPUT.focusManager().isFocused(button)) {
-
-                                UiFocusPainter.paint(
-                                                button,
-                                                renderer,
-                                                theme.focusColor());
-                        }
-                }
-
-        }
+        
 
         // ------------------------------------------------------------
         // Mouse input
@@ -551,10 +445,10 @@ public final class UiDebugOverlay {
          * Cancels keyboard and mouse interactions when
          * the application loses focus.
          */
-        public static void cancelInput() {
 
+        public static void cancelInput() {
                 if (ENABLED) {
-                        INPUT.cancelInput();
+                        UI.cancelInput();
                 }
         }
 

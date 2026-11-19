@@ -1,0 +1,121 @@
+
+package xaos.ui.rendering;
+
+import java.util.Objects;
+import xaos.ui.components.UiButton;
+import xaos.ui.components.UiLabel;
+import xaos.ui.components.UiScrollBar;
+import xaos.ui.components.UiTextField;
+import xaos.ui.components.UiWindow;
+import xaos.ui.core.UiElement;
+import xaos.ui.core.UiSystem;
+import xaos.ui.layout.UiPoint;
+import xaos.ui.layout.UiRect;
+import xaos.ui.theme.UiTheme;
+
+/**
+ * Default component painter for the Open Towns UI.
+ *
+ * Supports the standard component types and uses
+ * the active theme for their appearance.
+ *
+ * Does not depend on OpenGL or game logic.
+ */
+public final class UiStandardPainter
+        implements UiElementPainter {
+
+    private final UiSystem system;
+
+    public UiStandardPainter(UiSystem system) {
+        this.system = Objects.requireNonNull(
+                system, "system");
+    }
+
+    @Override
+    public void paint(
+            UiElement element,
+            UiRenderer renderer) {
+
+        UiTheme theme = system.themes().activeTheme();
+
+        // --------------------------------------------------------
+        // Windows
+        // --------------------------------------------------------
+
+        if (element instanceof UiWindow window) {
+
+            theme.paintWindow(window, renderer);
+
+            UiResizeGripPainter.paint(
+                    window,
+                    renderer,
+                    theme.textColor());
+
+        // --------------------------------------------------------
+        // Title bars
+        // --------------------------------------------------------
+
+        } else if (element.parent() instanceof UiWindow window
+                && element == window.titleBar()) {
+
+            theme.paintTitleBar(window, renderer);
+
+        // --------------------------------------------------------
+        // Scrollbars
+        // --------------------------------------------------------
+
+        } else if (element instanceof UiScrollBar bar) {
+
+            UiScrollBarPainter.paint(
+                    bar,
+                    renderer,
+                    theme.textColor());
+
+        // --------------------------------------------------------
+        // Labels
+        // --------------------------------------------------------
+
+        } else if (element instanceof UiLabel label) {
+
+            UiRect bounds = label.bounds();
+
+            renderer.drawText(
+                    label.text(),
+                    new UiPoint(bounds.x(), bounds.y()),
+                    theme.textColor());
+
+        // --------------------------------------------------------
+        // Buttons
+        // --------------------------------------------------------
+
+        } else if (element instanceof UiButton button) {
+
+            theme.paintButton(button, renderer);
+
+            if (system.input()
+                    .focusManager()
+                    .isFocused(button)) {
+
+                UiFocusPainter.paint(
+                        button,
+                        renderer,
+                        theme.focusColor());
+            }
+
+        // --------------------------------------------------------
+        // Text fields
+        // --------------------------------------------------------
+
+        } else if (element instanceof UiTextField field) {
+
+            UiTextFieldPainter.paint(
+                    field,
+                    renderer,
+                    system.input()
+                            .focusManager()
+                            .isFocused(field),
+                    theme.textColor(),
+                    theme.focusColor());
+        }
+    }
+}

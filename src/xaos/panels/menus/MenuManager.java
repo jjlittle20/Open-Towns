@@ -192,6 +192,13 @@ public final class MenuManager {
     }
 
     private void applyXmlItemSettings(SmartMenu menuItem, MenuItemDefinition item) {
+
+        // Preserve the ID from the XML definition.
+        //
+        // This lets compatibility adapters identify
+        // menu actions independently of localisation.
+        menuItem.setID(item.getId());
+
         Color textColor = resolveTextColor(item.getTextColorName());
 
         if (textColor != null) {

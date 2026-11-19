@@ -8,6 +8,12 @@ import xaos.platform.lwjgl3.input.Mouse;
 import xaos.platform.lwjgl3.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import xaos.property.PropertyFile;
+import xaos.ui.components.UiButton;
+import xaos.ui.components.UiWindow;
+import xaos.ui.integration.UiSimpleMenuWindowBuilder;
+import xaos.ui.layout.UiInsets;
+import xaos.ui.layout.UiSize;
+import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.Towns;
 import xaos.TownsProperties;
 import xaos.main.Game;
@@ -47,6 +53,18 @@ public final class MainMenuPanel implements Runnable {
         private int imageTownsLogoHeight;
 
         private ContextMenu menu;
+
+        // ------------------------------------------------------------
+        // New UI framework: migrated Credits screen
+        // ------------------------------------------------------------
+
+        private static final String CREDITS_MENU_ITEM_ID = "main.credits";
+
+        private static final String CREDITS_MENU_ID = "main.credits.root";
+
+        private MenuDefinition creditsDefinition;
+
+        private UiWindow creditsWindow;
 
         public final ColorGL COLORGL_BLACK = new ColorGL(Color.BLACK);
         public final ColorGL COLORGL_WHITE = new ColorGL(Color.WHITE);
@@ -143,12 +161,22 @@ public final class MainMenuPanel implements Runnable {
 
         // MAIN MENU
         public void createMenu() {
+                // Rebuilding the main menu closes any migrated screen.
+                closeCreditsWindow();
                 setLoadingText(new String());
                 loadingGame = false;
                 MenuManager menuManager = new MenuManager();
                 menuManager.loadMenus(new File("data/menus/main"));
 
                 MenuDefinition menuRoot = menuManager.getMenu("main.root");
+
+                // Keep the XML Credits definition for the new UI.
+                creditsDefinition = menuManager.getMenu(CREDITS_MENU_ID);
+
+                if (creditsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Missing Credits menu: " + CREDITS_MENU_ID);
+                }
 
                 SmartMenu mainMenu = menuManager.buildSmartMenu(menuRoot, null);
 
@@ -157,6 +185,76 @@ public final class MainMenuPanel implements Runnable {
                 menu.setSmartMenu(mainMenu);
 
                 repositionMenu();
+        }
+
+        // ------------------------------------------------------------
+        // Migrated Credits window
+        // ------------------------------------------------------------
+
+        private boolean isCreditsWindowOpen() {
+                return creditsWindow != null
+                                && creditsWindow.isOpen();
+        }
+
+        /**
+         * Opens the Credits screen using the new UI framework.
+         *
+         * The contents come from the existing XML definition.
+         */
+        private void openCreditsWindow() {
+
+                if (creditsWindow == null) {
+
+                        creditsWindow = UiSimpleMenuWindowBuilder.build(
+                                        creditsDefinition,
+                                        Messages::getString,
+                                        TownsUiTextMetrics.INSTANCE,
+                                        this::closeCreditsWindow);
+
+                        // --------------------------------------------------------
+                        // Title-bar close button
+                        // --------------------------------------------------------
+
+                        UiButton closeButton = new UiButton(
+                                        "X",
+                                        TownsUiTextMetrics.INSTANCE);
+
+                        closeButton.setMinimumSize(
+                                        new UiSize(20, 20));
+
+                        closeButton.setPreferredSize(
+                                        new UiSize(20, 20));
+
+                        closeButton.setPadding(UiInsets.NONE);
+
+                        closeButton.setOnClick(
+                                        this::closeCreditsWindow);
+
+                        creditsWindow.titleBar().add(closeButton);
+
+                        // Register this real game window with the
+                        // permanent runtime, not the debug overlay.
+                        Game.uiSystem().windows().register(
+                                        creditsWindow);
+                }
+
+                // Opening also brings the window to the front.
+                Game.uiSystem().windows().open(
+                                creditsWindow);
+        }
+
+        /**
+         * Closes the new Credits window without destroying it.
+         */
+        private void closeCreditsWindow() {
+
+                if (creditsWindow != null
+                                && Game.uiSystem().windows()
+                                                .isManaged(creditsWindow)) {
+
+                        Game.uiSystem().windows().close(
+                                        creditsWindow);
+                }
         }
 
         public void resize(int renderX, int renderY, int renderWidth, int renderHeight) {
@@ -257,7 +355,6 @@ public final class MainMenuPanel implements Runnable {
 
         public void render() {
 
-      
                 GL11.glColor4f(1, 1, 1, 1);
 
                 int iMaxSize = renderWidth;
@@ -281,8 +378,8 @@ public final class MainMenuPanel implements Runnable {
                                         centerY + iMaxSize, 0, 0, 1,
                                         1, startingGameColor);
                         UtilsGL.glEnd();
-                        return;}
-               else {
+                        return;
+                } else {
                         if (deleteLogoTexture) {
                                 deleteLogoTexture = false;
 
@@ -359,7 +456,8 @@ public final class MainMenuPanel implements Runnable {
                 }
                 UtilsGL.glEnd();
 
-                if (!loadingGame && !isSettingSavegameName() && !isSettingHotkey() && !isSettingNewServer()) {
+                if (!loadingGame && !isSettingSavegameName() && !isSettingHotkey() && !isSettingNewServer()
+                                && !isCreditsWindowOpen()) {
                         // Pintamos el menú
                         menu.render();
                 }
@@ -502,6 +600,12 @@ public final class MainMenuPanel implements Runnable {
                         return;
                 }
 
+                // The migrated Credits window owns this screen.
+                // Do not interact with the underlying main menu.
+                if (isCreditsWindowOpen()) {
+                        return;
+                }
+
                 if (isSettingSavegameName()) {
                         int iMousePanel = TypingPanel.whereIsMouse(x, y);
 
@@ -549,41 +653,71 @@ public final class MainMenuPanel implements Runnable {
                 }
 
                 if (!loadingGame && menu != null) {
+
                         SmartMenu beforeMenu = menu.getSmartMenu();
 
-                        menu.mousePressed(x - menu.getX(), y - menu.getY());
+                        menu.mousePressed(
+                                        x - menu.getX(),
+                                        y - menu.getY());
 
                         SmartMenu afterMenu = menu.getSmartMenu();
 
                         if (beforeMenu != afterMenu) {
-                                repositionMenu();
+
+                                // --------------------------------------------------------
+                                // Redirect Credits to the new UI framework
+                                // --------------------------------------------------------
+
+                                if (afterMenu != null
+                                                && CREDITS_MENU_ITEM_ID.equals(
+                                                                afterMenu.getID())) {
+
+                                        // Restore the original root menu.
+                                        // It will be waiting when the player
+                                        // closes the new Credits window.
+                                        menu.setSmartMenu(beforeMenu);
+
+                                        repositionMenu();
+
+                                        openCreditsWindow();
+
+                                } else {
+
+                                        // All other menu navigation continues
+                                        // through the original SmartMenu system.
+                                        repositionMenu();
+                                }
                         }
+
                 }
         }
 
-       private void repositionMenu() {
-        if (menu == null || menu.getSmartMenu() == null) {
-                return;
+        private void repositionMenu() {
+                if (menu == null || menu.getSmartMenu() == null) {
+                        return;
+                }
+
+                menu.resize();
+
+                xMenu = renderX + (renderWidth - menu.getWidth()) / 2;
+                yMenu = renderY + (renderHeight - menu.getHeight()) / 2;
+
+                if (xMenu < renderX + 20) {
+                        xMenu = renderX + 20;
+                }
+
+                if (yMenu < renderY + 20) {
+                        yMenu = renderY + 20;
+                }
+
+                menu.setX(xMenu);
+                menu.setY(yMenu);
         }
-
-        menu.resize();
-
-        xMenu = renderX + (renderWidth - menu.getWidth()) / 2;
-        yMenu = renderY + (renderHeight - menu.getHeight()) / 2;
-
-        if (xMenu < renderX + 20) {
-                xMenu = renderX + 20;
-        }
-
-        if (yMenu < renderY + 20) {
-                yMenu = renderY + 20;
-        }
-
-        menu.setX(xMenu);
-        menu.setY(yMenu);
-}
 
         public void mouseWheelMoved(int amount, int mouseX, int mouseY) {
+                if (isCreditsWindowOpen()) {
+                        return;
+                }
                 if (menu == null || menu.getSmartMenu() == null) {
                         return;
                 }
@@ -689,9 +823,15 @@ public final class MainMenuPanel implements Runnable {
         }
 
         public void setActive(boolean bActive) {
+
                 if (bActive) {
                         createMenu();
+                } else {
+                        // Migrated main-menu windows must not
+                        // remain visible during gameplay.
+                        closeCreditsWindow();
                 }
+
                 active = bActive;
         }
 

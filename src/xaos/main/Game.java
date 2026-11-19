@@ -91,9 +91,15 @@ import xaos.internal.api.selection.SelectionManager;
 import xaos.internal.api.mods.ModSaveDataRegistry;
 import xaos.internal.api.inventory.ItemReservationRegistry;
 import xaos.internal.api.definitions.DefinitionOwnershipRegistry;
+import xaos.ui.core.UiSystem;
 import xaos.ui.debug.UiDebugOverlay;
 import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
+import xaos.ui.layout.UiSize;
+import xaos.ui.rendering.opengl.TownsUiPresentation;
+import xaos.ui.theme.BasicUiTheme;
+import xaos.ui.theme.ClassicTownsTheme;
+import xaos.ui.theme.UiThemeRegistry;
 
 public final class Game {
 
@@ -224,16 +230,63 @@ public final class Game {
 	 * Both the original Towns typing panel and the
 	 * new UI framework can own text input.
 	 */
-	public static boolean isGameplayKeyboardBlocked() {
+	
+public static boolean isGameplayKeyboardBlocked() {
 
-		// Original Towns text-entry panels.
-		if (typingPanel != null) {
-			return true;
-		}
+    // Original Towns typing panels.
+    if (typingPanel != null) {
+        return true;
+    }
 
-		// New UI framework text fields.
-		return UiDebugOverlay.ENABLED
-				&& UiDebugOverlay.textInputActive();
+    // Permanent UI text fields.
+    return UI_SYSTEM.input().textInputActive();
+}
+
+
+	// ------------------------------------------------------------
+	// New UI framework
+	// ------------------------------------------------------------
+
+	private static final UiSystem UI_SYSTEM = createUiSystem();
+
+	/**
+	 * OpenGL presentation adapter for the game-owned UI.
+	 *
+	 * Constructing this does not access OpenGL.
+	 * Actual rendering happens on the game thread.
+	 */
+	private static final TownsUiPresentation UI_PRESENTATION = new TownsUiPresentation(UI_SYSTEM);
+
+	/**
+	 * Internal UI runtime owned by the game.
+	 *
+	 * This is not the public modding UI API.
+	 */
+	public static UiSystem uiSystem() {
+		return UI_SYSTEM;
+	}
+
+	/**
+	 * Creates the permanent UI runtime and registers
+	 * the built-in themes.
+	 */
+	private static UiSystem createUiSystem() {
+
+		UiSystem system = new UiSystem();
+
+		UiThemeRegistry themes = system.themes();
+
+		themes.register(
+				"classic-towns",
+				new ClassicTownsTheme());
+
+		themes.register(
+				"basic",
+				new BasicUiTheme());
+
+		themes.select("classic-towns");
+
+		return system;
 	}
 
 	public Game() {
@@ -360,6 +413,14 @@ public final class Game {
 				UtilsGL.getHeight());
 
 		panelMainMenu.setActive(true);
+
+		// ------------------------------------------------------------
+		// Install optional UI development windows
+		// ------------------------------------------------------------
+
+		// The UI runtime already belongs to Game.
+		// The debug overlay only contributes test windows.
+		UiDebugOverlay.install(UI_SYSTEM);
 
 		/*
 		 * Load optional Java plugins from enabled mod folders.
@@ -1173,32 +1234,32 @@ public final class Game {
 			int mouseButton = Mouse.getEventButton();
 
 			// ------------------------------------------------------------
-			// New UI framework input
+			// Permanent UI framework input
 			// ------------------------------------------------------------
 
-			if (UiDebugOverlay.ENABLED) {
+			// The game-owned UI gets first opportunity to
+			// handle mouse events, regardless of whether
+			// development windows are enabled.
 
-				// Primary mouse button: press and release.
-				if (mouseButton == 0) {
+			if (mouseButton == 0) {
 
-					boolean handled = Mouse.getEventButtonState()
-							? UiDebugOverlay.mousePressed(mouseX, mouseY)
-							: UiDebugOverlay.mouseReleased(mouseX, mouseY);
+				boolean handled = Mouse.getEventButtonState()
+						? UI_SYSTEM.input().mousePressed(mouseX, mouseY)
+						: UI_SYSTEM.input().mouseReleased(mouseX, mouseY);
 
-					if (handled) {
-						// Do not send this event to the legacy UI
-						// or game world.
-						continue;
-					}
-
-				} else if (mouseButton > 0
-						&& Mouse.getEventButtonState()
-						&& UiDebugOverlay.mouseMoved(mouseX, mouseY)) {
-
-					// Other mouse presses should not pass through
-					// a new UI window into the game world.
+				if (handled) {
+					// Do not pass the event to legacy menus
+					// or the game world.
 					continue;
 				}
+
+			} else if (mouseButton > 0
+					&& Mouse.getEventButtonState()
+					&& UI_SYSTEM.input().mouseMoved(mouseX, mouseY)) {
+
+				// A different mouse button was pressed over
+				// a new-framework window.
+				continue;
 			}
 
 			if (Mouse.getEventButtonState()) {
@@ -1297,12 +1358,12 @@ public final class Game {
 
 				// Give the new UI first opportunity to handle
 				// scrolling before legacy panels or world controls.
-				if (UiDebugOverlay.ENABLED
-						&& UiDebugOverlay.mouseWheelMoved(
-								mouseX, mouseY, mouseWheelMoved)) {
 
-					// The new UI consumed this wheel event.
-					// Do not zoom or change the game world's level.
+				if (UI_SYSTEM.input().mouseWheelMoved(
+						mouseX, mouseY, mouseWheelMoved)) {
+
+					// UI consumed the event. Do not scroll
+					// legacy menus or change the world level.
 					continue;
 				}
 
@@ -1328,21 +1389,22 @@ public final class Game {
 		}
 
 		// ------------------------------------------------------------
-		// Update new UI hover state using the current mouse position.
+		// Permanent UI pointer state
 		// ------------------------------------------------------------
 
 		boolean newUiCapturesPointer = false;
 
-		if (UiDebugOverlay.ENABLED) {
+		int pointerX = Mouse.getX();
+		int pointerY = UtilsGL.getHeight() - Mouse.getY() - 1;
 
-			int pointerX = Mouse.getX();
-			int pointerY = UtilsGL.getHeight() - Mouse.getY() - 1;
+		if (Mouse.isInsideWindow()) {
 
-			if (Mouse.isInsideWindow()) {
-				newUiCapturesPointer = UiDebugOverlay.mouseMoved(pointerX, pointerY);
-			} else {
-				UiDebugOverlay.cancelPointer();
-			}
+			newUiCapturesPointer = UI_SYSTEM.input().mouseMoved(
+					pointerX, pointerY);
+
+		} else {
+
+			UI_SYSTEM.input().cancelPointer();
 		}
 
 		// Screen-edge camera movement.
@@ -1440,18 +1502,15 @@ public final class Game {
 		while (Keyboard.next()) {
 
 			// ------------------------------------------------------------
-			// Unicode text input
+			// Permanent UI Unicode text input
 			// ------------------------------------------------------------
 
-			// Character events are separate from physical key
-			// events. Do not forward them to the legacy key handler.
 			if (Keyboard.isTextInputEvent()) {
 
-				// The original typing panel retains priority.
-				if (typingPanel == null
-						&& UiDebugOverlay.ENABLED) {
+				// Original Towns typing panels retain priority.
+				if (typingPanel == null) {
 
-					UiDebugOverlay.characterTyped(
+					UI_SYSTEM.input().characterTyped(
 							Keyboard.getEventCodePoint());
 				}
 
@@ -1499,37 +1558,35 @@ public final class Game {
 
 			// Release captured keys, including when a legacy
 			// menu is active, to avoid stuck keyboard state.
-			if (!Keyboard.getEventKeyState()
-					&& uiKey != null
-					&& UiDebugOverlay.ENABLED) {
 
-				UiDebugOverlay.keyReleased(uiKey);
+			if (!Keyboard.getEventKeyState()
+					&& uiKey != null) {
+
+				UI_SYSTEM.input().keyReleased(uiKey);
 			}
 
 			if (Keyboard.getEventKeyState()) {
 				// Tecla pulsada
 				int iKEY = Keyboard.getEventKey();
 
-				// --------------------------------------------------------
-				// New UI framework keyboard input
-				// --------------------------------------------------------
+				// ------------------------------------------------------------
+				// Permanent UI keyboard input
+				// ------------------------------------------------------------
 
-				// The new UI gets first opportunity to handle
-				// navigation keys when the player has clicked
-				// inside one of its windows.
+				// The existing main-menu and typing-panel rules
+				// remain unchanged.
 				//
-				// Legacy typing panels retain their priority.
+				// The new UI consumes navigation keys only after
+				// the player has activated one of its controls.
 				if (typingPanel == null
-						&& UiDebugOverlay.ENABLED
 						&& uiKey != null) {
 
 					boolean shiftDown = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)
 							|| Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
 
-					if (UiDebugOverlay.keyPressed(
+					if (UI_SYSTEM.input().keyPressed(
 							uiKey, shiftDown)) {
 
-						// Consumed by the new UI.
 						continue;
 					}
 				}
@@ -1544,10 +1601,12 @@ public final class Game {
 				//
 				// Character insertion is handled separately by
 				// the Unicode callback above.
-				if (typingPanel == null
-						&& UiDebugOverlay.ENABLED
-						&& UiDebugOverlay.textInputActive()) {
 
+				if (typingPanel == null
+						&& UI_SYSTEM.input().textInputActive()) {
+
+					// A text field owns keyboard input.
+					// Do not trigger gameplay shortcuts.
 					continue;
 				}
 
@@ -1708,13 +1767,30 @@ public final class Game {
 		while (!Display.isCloseRequested()) {
 			handleResize();
 
+			// ------------------------------------------------------------
+			// Permanent UI layout
+			// ------------------------------------------------------------
+
+			// Update UI geometry before processing mouse input.
+			//
+			// Previously, UiDebugOverlay did this inside its
+			// mouse forwarding methods. Direct input routing
+			// must retain that behaviour.
+			int uiWidth = UtilsGL.getWidth();
+			int uiHeight = UtilsGL.getHeight();
+
+			if (uiWidth > 0 && uiHeight > 0) {
+				UI_SYSTEM.updateLayout(
+						new UiSize(uiWidth, uiHeight));
+			}
+
 			// Detect screen changes that occurred during
 			// the previous game update.
 			if (uiScreenTransitions.update(
 					getPanelMainMenu().isActive(),
 					getWorld())) {
 
-				UiDebugOverlay.cancelInput();
+				UI_SYSTEM.cancelInput();
 			}
 
 			// --------------------------------------------------------
@@ -1726,7 +1802,7 @@ public final class Game {
 				// The application is not receiving input.
 				// Release UI interactions and discard stale
 				// keyboard/mouse state.
-				UiDebugOverlay.cancelInput();
+				UI_SYSTEM.cancelInput();
 
 				Keyboard.clearInputState();
 				Mouse.clearPendingEvents();
@@ -1750,7 +1826,7 @@ public final class Game {
 					getPanelMainMenu().isActive(),
 					getWorld())) {
 
-				UiDebugOverlay.cancelInput();
+				UI_SYSTEM.cancelInput();
 			}
 
 			// Game logic
@@ -2257,10 +2333,17 @@ public final class Game {
 				// getCurrentInfoPanel().render();
 			}
 		}
-		// Temporary visual test of the new UI framework.
-		if (UiDebugOverlay.ENABLED) {
-			UiDebugOverlay.render();
-		}
+
+		// ------------------------------------------------------------
+		// Permanent Open Towns UI
+		// ------------------------------------------------------------
+
+		// Always render the new UI component tree.
+		//
+		// Debug windows are optional, but game-owned
+		// UI windows must render regardless of debug mode.
+		UI_PRESENTATION.render();
+
 	}
 
 	private static void takeScreenshot() {
