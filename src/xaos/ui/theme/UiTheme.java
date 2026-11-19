@@ -30,6 +30,16 @@ public interface UiTheme {
     UiColor textColor();
 
     /**
+     * Colour used to highlight keyboard focus.
+     *
+     * Themes may override this to provide their
+     * own visual appearance.
+     */
+    default UiColor focusColor() {
+        return UiColor.rgb(255, 220, 90);
+    }
+
+    /**
      * Draws a button using the theme's appearance.
      *
      * Must account for enabled, hovered, pressed

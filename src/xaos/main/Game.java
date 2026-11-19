@@ -92,6 +92,8 @@ import xaos.internal.api.mods.ModSaveDataRegistry;
 import xaos.internal.api.inventory.ItemReservationRegistry;
 import xaos.internal.api.definitions.DefinitionOwnershipRegistry;
 import xaos.ui.debug.UiDebugOverlay;
+import xaos.ui.input.UiKey;
+import xaos.ui.input.UiScreenTransitionTracker;
 
 public final class Game {
 
@@ -202,6 +204,36 @@ public final class Game {
 
 		godMode = !godMode;
 
+	}
+
+	/**
+	 * Returns whether the new UI currently owns text input.
+	 *
+	 * Used to prevent gameplay controls from responding
+	 * while the player types into a UI field.
+	 */
+	public static boolean isNewUiTextInputActive() {
+		return UiDebugOverlay.ENABLED
+				&& UiDebugOverlay.textInputActive();
+	}
+
+	/**
+	 * Returns whether gameplay keyboard controls should
+	 * be suspended because the player is entering text.
+	 *
+	 * Both the original Towns typing panel and the
+	 * new UI framework can own text input.
+	 */
+	public static boolean isGameplayKeyboardBlocked() {
+
+		// Original Towns text-entry panels.
+		if (typingPanel != null) {
+			return true;
+		}
+
+		// New UI framework text fields.
+		return UiDebugOverlay.ENABLED
+				&& UiDebugOverlay.textInputActive();
 	}
 
 	public Game() {
@@ -1313,10 +1345,15 @@ public final class Game {
 			}
 		}
 
-		// Bordes (scroll de mouse)
+		// Screen-edge camera movement.
+		//
+		// Do not move the camera while typing, even when
+		// the mouse is outside the focused text field.
 		if (isMouseScrollON()
 				&& Mouse.isInsideWindow()
-				&& !newUiCapturesPointer) {
+				&& !newUiCapturesPointer
+				&& !isGameplayKeyboardBlocked()) {
+
 			if (!getPanelMainMenu().isActive()) {
 				final int BORDE = PIXELS_TO_BORDER; // Si se acerca X pixels al borde moveremos la cámara
 				if (mouseX < BORDE) {
@@ -1398,14 +1435,128 @@ public final class Game {
 	/**
 	 * Obtiene los eventos de teclado y llama al World.keyPressed (int tecla)
 	 */
+
 	private void checkKeyboardEvents() {
 		while (Keyboard.next()) {
+
+			// ------------------------------------------------------------
+			// Unicode text input
+			// ------------------------------------------------------------
+
+			// Character events are separate from physical key
+			// events. Do not forward them to the legacy key handler.
+			if (Keyboard.isTextInputEvent()) {
+
+				// The original typing panel retains priority.
+				if (typingPanel == null
+						&& UiDebugOverlay.ENABLED) {
+
+					UiDebugOverlay.characterTyped(
+							Keyboard.getEventCodePoint());
+				}
+
+				continue;
+			}
+
+			// Translate platform-specific key codes into
+			// our UI framework's keyboard controls.
+
+			UiKey uiKey = switch (Keyboard.getEventKey()) {
+
+				case Keyboard.KEY_TAB ->
+					UiKey.TAB;
+
+				case Keyboard.KEY_RETURN,
+						Keyboard.KEY_NUMPADENTER ->
+					UiKey.ENTER;
+
+				case Keyboard.KEY_SPACE ->
+					UiKey.SPACE;
+
+				case Keyboard.KEY_BACK ->
+					UiKey.BACKSPACE;
+
+				case Keyboard.KEY_DELETE ->
+					UiKey.DELETE;
+
+				case Keyboard.KEY_LEFT ->
+					UiKey.LEFT;
+
+				case Keyboard.KEY_RIGHT ->
+					UiKey.RIGHT;
+
+				case Keyboard.KEY_HOME ->
+					UiKey.HOME;
+
+				case Keyboard.KEY_END ->
+					UiKey.END;
+
+				case Keyboard.KEY_ESCAPE ->
+					UiKey.ESCAPE;
+
+				default -> null;
+			};
+
+			// Release captured keys, including when a legacy
+			// menu is active, to avoid stuck keyboard state.
+			if (!Keyboard.getEventKeyState()
+					&& uiKey != null
+					&& UiDebugOverlay.ENABLED) {
+
+				UiDebugOverlay.keyReleased(uiKey);
+			}
+
 			if (Keyboard.getEventKeyState()) {
 				// Tecla pulsada
 				int iKEY = Keyboard.getEventKey();
 
-				// Main menu
+				// --------------------------------------------------------
+				// New UI framework keyboard input
+				// --------------------------------------------------------
+
+				// The new UI gets first opportunity to handle
+				// navigation keys when the player has clicked
+				// inside one of its windows.
+				//
+				// Legacy typing panels retain their priority.
+				if (typingPanel == null
+						&& UiDebugOverlay.ENABLED
+						&& uiKey != null) {
+
+					boolean shiftDown = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)
+							|| Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+
+					if (UiDebugOverlay.keyPressed(
+							uiKey, shiftDown)) {
+
+						// Consumed by the new UI.
+						continue;
+					}
+				}
+
+				// ------------------------------------------------------------
+				// Protect active text entry
+				// ------------------------------------------------------------
+
+				// A text field must not cause world commands,
+				// menu shortcuts or game actions to activate
+				// while the player is typing.
+				//
+				// Character insertion is handled separately by
+				// the Unicode callback above.
+				if (typingPanel == null
+						&& UiDebugOverlay.ENABLED
+						&& UiDebugOverlay.textInputActive()) {
+
+					continue;
+				}
+
+				// --------------------------------------------------------
+				// Original Towns main menu
+				// --------------------------------------------------------
+
 				if (getPanelMainMenu().isActive()) {
+
 					// Función
 					int iFN = UtilsKeyboard.getFN(iKEY);
 					if (iFN == UtilsKeyboard.FN_TOGGLE_FULLSCREEN) {
@@ -1416,6 +1567,7 @@ public final class Game {
 					}
 					continue;
 				}
+
 				if (typingPanel != null) {
 					// Typing
 					if (TypingPanel.keyPressed(iKEY)) {
@@ -1543,24 +1695,63 @@ public final class Game {
 		// el primer ciclo
 		// boolean bVictory = false;
 
-		// int iMissionCompletedWidth = (UtilFont.getWidth (Messages.getString
-		// ("Game.2"))) / 2; //$NON-NLS-1$
+		// Track transitions between the main menu
+		// and active game worlds.
+		UiScreenTransitionTracker uiScreenTransitions = new UiScreenTransitionTracker();
+
+		// Establish the initial state without triggering
+		// input cancellation.
+		uiScreenTransitions.update(
+				getPanelMainMenu().isActive(),
+				getWorld());
+
 		while (!Display.isCloseRequested()) {
 			handleResize();
 
-			// Tratamos los eventos del mouse
-			checkMouseEvents();
-			// Tratamos los eventos del teclado
-			checkKeyboardEvents();
+			// Detect screen changes that occurred during
+			// the previous game update.
+			if (uiScreenTransitions.update(
+					getPanelMainMenu().isActive(),
+					getWorld())) {
 
-			/*
-			 * Process UI work requested during the current input cycle.
-			 *
-			 * Doing this after mouse/keyboard handling prevents newly
-			 * created context menus from being removed by the command
-			 * that requested them.
-			 */
+				UiDebugOverlay.cancelInput();
+			}
+
+			// --------------------------------------------------------
+			// Application input focus
+			// --------------------------------------------------------
+
+			if (!Display.isFocused()) {
+
+				// The application is not receiving input.
+				// Release UI interactions and discard stale
+				// keyboard/mouse state.
+				UiDebugOverlay.cancelInput();
+
+				Keyboard.clearInputState();
+				Mouse.clearPendingEvents();
+
+			} else {
+
+				// Application is focused: process input normally.
+				checkMouseEvents();
+				checkKeyboardEvents();
+			}
+
+			// Continue processing UI work and game logic.
 			UiDispatcher.processPending();
+
+			// Mouse, keyboard or queued UI commands may have
+			// started a game, loaded a save or exited to the menu.
+			//
+			// Cancel any captured input before the next
+			// gameplay update.
+			if (uiScreenTransitions.update(
+					getPanelMainMenu().isActive(),
+					getWorld())) {
+
+				UiDebugOverlay.cancelInput();
+			}
 
 			// Game logic
 			if (!getPanelMainMenu().isActive()) {

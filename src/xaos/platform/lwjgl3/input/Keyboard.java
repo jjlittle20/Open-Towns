@@ -66,6 +66,12 @@ public final class Keyboard {
     public static final int KEY_ADD = GLFW_KEY_KP_ADD;
     public static final int KEY_SUBTRACT = GLFW_KEY_KP_SUBTRACT;
 
+    public static final int KEY_TAB = GLFW_KEY_TAB;
+    public static final int KEY_NUMPADENTER = GLFW_KEY_KP_ENTER;
+
+    public static final int KEY_HOME = GLFW_KEY_HOME;
+    public static final int KEY_END = GLFW_KEY_END;
+
     private static final boolean[] down = new boolean[GLFW_KEY_LAST + 1];
     private static final Queue<Event> events = new ArrayDeque<Event>();
     private static final Map<String, Integer> namesToKeys = new HashMap<String, Integer>();
@@ -90,8 +96,12 @@ public final class Keyboard {
         register("SLASH", KEY_SLASH);
         register("SPACE", KEY_SPACE);
         register("UP", KEY_UP);
+        register("TAB", KEY_TAB);
+        register("NUMPADENTER", KEY_NUMPADENTER);
+        register("HOME", KEY_HOME);
+        register("END", KEY_END);
         final int functionKeyCount = 12;
-        
+
         for (int functionKeyNumber = 1; functionKeyNumber <= functionKeyCount; functionKeyNumber++) {
             register("F" + functionKeyNumber, GLFW_KEY_F1 + functionKeyNumber - 1);
         }
@@ -115,21 +125,32 @@ public final class Keyboard {
                 events.add(new Event(key, action != GLFW_RELEASE, printableChar(key, mods)));
             }
         });
-        glfwSetCharCallback(window, (win, codepoint) -> {
-            if (!events.isEmpty()) {
-                Event last = ((ArrayDeque<Event>) events).peekLast();
-                if (last != null && last.state) {
-                    last.character = (char) codepoint;
-                    return;
-                }
-            }
-            events.add(new Event(KEY_NONE, true, (char) codepoint));
-        });
+
+        glfwSetCharCallback(
+                window,
+                (win, codepoint) -> enqueueCharacter(codepoint));
+
     }
 
     public static void destroy() {
         events.clear();
         currentEvent = null;
+        for (int i = 0; i < down.length; i++) {
+            down[i] = false;
+        }
+    }
+
+    /**
+     * Clears pending keyboard events and held-key state.
+     *
+     * Used when the application loses input focus.
+     * Does not uninstall GLFW callbacks.
+     */
+    public static void clearInputState() {
+
+        events.clear();
+        currentEvent = null;
+
         for (int i = 0; i < down.length; i++) {
             down[i] = false;
         }
@@ -152,6 +173,26 @@ public final class Keyboard {
         return currentEvent == null ? 0 : currentEvent.character;
     }
 
+    /**
+     * Returns true when the current event is a
+     * Unicode character event rather than a
+     * physical key press or release.
+     */
+    public static boolean isTextInputEvent() {
+        return currentEvent != null
+                && currentEvent.textInputEvent;
+    }
+
+    /**
+     * Returns the Unicode code point of the
+     * current text-input event.
+     */
+    public static int getEventCodePoint() {
+        return isTextInputEvent()
+                ? currentEvent.codePoint
+                : 0;
+    }
+
     public static boolean isKeyDown(int key) {
         return key > KEY_NONE && key < down.length && down[key];
     }
@@ -161,7 +202,7 @@ public final class Keyboard {
             return KEY_NONE;
         }
         Integer key = namesToKeys.get(name.toUpperCase());
-        if (key == null){
+        if (key == null) {
             key = parseUnknownKey(name);
             if (key != KEY_NONE)
                 register(name.toUpperCase(), key);
@@ -171,15 +212,15 @@ public final class Keyboard {
 
     public static String getKeyName(int key) {
         String name = keysToNames.get(key);
-        if  (name == null) {
-            name ="#" + key;
+        if (name == null) {
+            name = "#" + key;
             register(name, key);
         }
         return name;
     }
 
-    private static Integer parseUnknownKey(String name){
-        if (name.startsWith("#")){
+    private static Integer parseUnknownKey(String name) {
+        if (name.startsWith("#")) {
             try {
                 return Integer.parseInt(name.substring(1));
             } catch (NumberFormatException _) {
@@ -215,15 +256,86 @@ public final class Keyboard {
         return 0;
     }
 
+    /**
+     * Queues a Unicode character while preserving
+     * the legacy getEventCharacter() behaviour.
+     *
+     * Package-private so it can be unit tested
+     * without creating a GLFW window.
+     */
+    static void enqueueCharacter(int codePoint) {
+
+        if (!Character.isValidCodePoint(codePoint)
+                || (codePoint >= Character.MIN_SURROGATE
+                        && codePoint <= Character.MAX_SURROGATE)) {
+            return;
+        }
+
+        // Preserve the previous legacy behaviour:
+        // associate a printable character with the
+        // most recent key event when possible.
+        Event last = ((ArrayDeque<Event>) events).peekLast();
+
+        if (last != null
+                && last.state
+                && !last.textInputEvent) {
+
+            last.character = (char) codePoint;
+
+        } else {
+
+            // Original fallback for character input
+            // without an associated physical key.
+            events.add(new Event(
+                    KEY_NONE,
+                    true,
+                    (char) codePoint));
+        }
+
+        // Always preserve the complete Unicode value
+        // as a separate text-input event.
+        events.add(Event.textInput(codePoint));
+    }
+
     private static final class Event {
+
         final int key;
         final boolean state;
+
         char character;
 
+        final boolean textInputEvent;
+        final int codePoint;
+
+        // Existing physical key event.
         Event(int key, boolean state, char character) {
+            this(key, state, character, false, 0);
+        }
+
+        private Event(
+                int key,
+                boolean state,
+                char character,
+                boolean textInputEvent,
+                int codePoint) {
+
             this.key = key;
             this.state = state;
             this.character = character;
+            this.textInputEvent = textInputEvent;
+            this.codePoint = codePoint;
+        }
+
+        // Unicode character event.
+        static Event textInput(int codePoint) {
+
+            return new Event(
+                    KEY_NONE,
+                    true,
+                    (char) codePoint,
+                    true,
+                    codePoint);
         }
     }
+
 }

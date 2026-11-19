@@ -107,6 +107,20 @@ public final class Display {
         return window != NULL && glfwWindowShouldClose(window);
     }
 
+    /**
+     * Returns whether the game window currently
+     * has operating-system keyboard and mouse focus.
+     *
+     * Used to cancel active UI interactions
+     * when the player switches applications.
+     */
+    public static boolean isFocused() {
+        return window != NULL
+                && glfwGetWindowAttrib(
+                        window,
+                        GLFW_FOCUSED) == GLFW_TRUE;
+    }
+
     public static DisplayMode getDesktopDisplayMode() {
         if (window == NULL) {
             glfwInit();
@@ -115,7 +129,8 @@ public final class Display {
         if (mode == null) {
             return new DisplayMode(1024, 768);
         }
-        return new DisplayMode(mode.width(), mode.height(), mode.redBits() + mode.greenBits() + mode.blueBits(), mode.refreshRate());
+        return new DisplayMode(mode.width(), mode.height(), mode.redBits() + mode.greenBits() + mode.blueBits(),
+                mode.refreshRate());
     }
 
     public static DisplayMode[] getAvailableDisplayModes() {
@@ -130,7 +145,8 @@ public final class Display {
         List<DisplayMode> result = new ArrayList<DisplayMode>();
         for (int i = 0; i < modes.limit(); i++) {
             GLFWVidMode mode = modes.get(i);
-            result.add(new DisplayMode(mode.width(), mode.height(), mode.redBits() + mode.greenBits() + mode.blueBits(), mode.refreshRate()));
+            result.add(new DisplayMode(mode.width(), mode.height(), mode.redBits() + mode.greenBits() + mode.blueBits(),
+                    mode.refreshRate()));
         }
         return result.toArray(new DisplayMode[0]);
     }
@@ -220,7 +236,8 @@ public final class Display {
         if (desktop == null || displayMode == null) {
             return;
         }
-        glfwSetWindowPos(window, (desktop.width() - displayMode.getWidth()) / 2, (desktop.height() - displayMode.getHeight()) / 2);
+        glfwSetWindowPos(window, (desktop.width() - displayMode.getWidth()) / 2,
+                (desktop.height() - displayMode.getHeight()) / 2);
     }
 
     public static int[] getFramebufferSize() {

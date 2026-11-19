@@ -1535,8 +1535,11 @@ public final class World implements Externalizable {
 	 * Next turn
 	 */
 	public void nextTurn() {
-		// Cursores (si no está sacando el panel de typing)
-		if (UIPanelState.typingPanel == null) {
+
+		// Do not process movement while either UI system
+		// owns text input.
+		if (!Game.isGameplayKeyboardBlocked()) {
+
 			if (UtilsKeyboard.isFNKeyDown(UtilsKeyboard.FN_UP)) {
 				keyPressed(Keyboard.KEY_NONE, UtilsKeyboard.FN_UP);
 			} else if (UtilsKeyboard.isFNKeyDown(UtilsKeyboard.FN_DOWN)) {

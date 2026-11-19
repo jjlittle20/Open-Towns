@@ -10,9 +10,11 @@ import xaos.ui.layout.UiAbsoluteLayout;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
+import xaos.ui.rendering.UiFocusPainter;
 import xaos.ui.rendering.UiRenderer;
 import xaos.ui.rendering.UiSceneRenderer;
 import xaos.ui.rendering.UiScrollBarPainter;
+import xaos.ui.rendering.UiTextFieldPainter;
 import xaos.ui.rendering.opengl.TownsUiRenderer;
 import xaos.ui.rendering.opengl.TownsUiTexture;
 import xaos.ui.theme.BasicUiTheme;
@@ -24,12 +26,14 @@ import xaos.utils.UtilsGL;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiScrollContainer;
+import xaos.ui.components.UiTextField;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiLinearLayout;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.ui.components.UiButton;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.ui.input.UiInputRouter;
+import xaos.ui.input.UiKey;
 import xaos.ui.core.UiWindowManager;
 import xaos.ui.rendering.UiResizeGripPainter;
 
@@ -40,429 +44,518 @@ import xaos.ui.rendering.UiResizeGripPainter;
  */
 public final class UiDebugOverlay {
 
-    public static final boolean ENABLED = true;
+        public static final boolean ENABLED = true;
 
-    private static final String CLASSIC_THEME = "classic-towns";
-    private static final String BASIC_THEME = "basic";
+        private static final String CLASSIC_THEME = "classic-towns";
+        private static final String BASIC_THEME = "basic";
 
-    // Change this to select the starting theme.
-    private static final String STARTING_THEME = CLASSIC_THEME;
+        // Change this to select the starting theme.
+        private static final String STARTING_THEME = CLASSIC_THEME;
 
-    private static final UiThemeRegistry THEMES = createThemes();
+        private static final UiThemeRegistry THEMES = createThemes();
 
-    private static final UiWindow WINDOW = createWindow();
-    private static final UiWindow SECOND_WINDOW = createSecondWindow();
-    private static final UiWindow SCROLL_WINDOW = createScrollWindow();
+        private static final UiWindow WINDOW = createWindow();
+        private static final UiWindow SECOND_WINDOW = createSecondWindow();
+        private static final UiWindow SCROLL_WINDOW = createScrollWindow();
 
-    private static final UiWindowManager WINDOWS = createWindowManager();
+        private static final UiWindowManager WINDOWS = createWindowManager();
 
-    private static final UiRoot ROOT = WINDOWS.root();
+        private static final UiRoot ROOT = WINDOWS.root();
 
-    private static final UiInputRouter INPUT = new UiInputRouter(ROOT);
+        private static final UiInputRouter INPUT = new UiInputRouter(ROOT);
 
-    private UiDebugOverlay() {
-    }
-
-    // ------------------------------------------------------------
-    // Theme registration
-    // ------------------------------------------------------------
-
-    private static UiThemeRegistry createThemes() {
-        UiThemeRegistry registry = new UiThemeRegistry();
-
-        registry.register(
-                CLASSIC_THEME,
-                new ClassicTownsTheme());
-
-        registry.register(
-                BASIC_THEME,
-                new BasicUiTheme());
-
-        registry.select(STARTING_THEME);
-
-        return registry;
-    }
-
-    /**
-     * Allows the debug overlay to change themes.
-     *
-     * Must be called on the UI/rendering thread.
-     */
-    public static void setTheme(String themeId) {
-        THEMES.select(themeId);
-    }
-
-    // ------------------------------------------------------------
-    // Window creation
-    // ------------------------------------------------------------
-
-    private static UiWindow createWindow() {
-        UiWindow window = new UiWindow("New UI Framework");
-
-        window.setPosition(new UiPoint(50, 50));
-        window.setPreferredSize(new UiSize(320, 270));
-
-        window.content().setPadding(
-                xaos.ui.layout.UiInsets.all(10));
-
-        window.content().setSpacing(6);
-
-        window.content().add(new xaos.ui.components.UiLabel(
-                "New UI renderer is working!",
-                TownsUiTextMetrics.INSTANCE));
-
-        window.content().add(new xaos.ui.components.UiLabel(
-                "Button rendering preview:",
-                TownsUiTextMetrics.INSTANCE));
-
-        UiButton normal = new UiButton(
-                "Normal Button",
-                TownsUiTextMetrics.INSTANCE);
-        normal.setOnClick(() -> window.setTitle("Normal button clicked!"));
-
-        UiButton selected = new UiButton(
-                "Selected Button",
-                TownsUiTextMetrics.INSTANCE);
-
-        selected.setSelected(true);
-        selected.setOnClick(() -> selected.setSelected(!selected.selected()));
-
-        UiButton disabled = new UiButton(
-                "Disabled Button",
-                TownsUiTextMetrics.INSTANCE);
-
-        disabled.setEnabled(false);
-
-        window.content().add(normal);
-        window.content().add(selected);
-        window.content().add(disabled);
-
-        UiButton reopenButton = new UiButton(
-                "Reopen Second Window",
-                TownsUiTextMetrics.INSTANCE);
-
-        reopenButton.setOnClick(
-                UiDebugOverlay::showSecondWindow);
-
-        window.content().add(reopenButton);
-
-        return window;
-    }
-
-    private static UiWindow createSecondWindow() {
-
-        UiWindow window = new UiWindow("Second Window");
+        private UiDebugOverlay() {
+        }
 
         // ------------------------------------------------------------
-        // Title-bar close button
+        // Theme registration
         // ------------------------------------------------------------
 
-        UiButton titleCloseButton = new UiButton(
-                "X",
-                TownsUiTextMetrics.INSTANCE);
+        private static UiThemeRegistry createThemes() {
+                UiThemeRegistry registry = new UiThemeRegistry();
 
-        // Compact title-bar button.
-        titleCloseButton.setMinimumSize(
-                new UiSize(20, 20));
+                registry.register(
+                                CLASSIC_THEME,
+                                new ClassicTownsTheme());
 
-        titleCloseButton.setPreferredSize(
-                new UiSize(20, 20));
+                registry.register(
+                                BASIC_THEME,
+                                new BasicUiTheme());
 
-        titleCloseButton.setPadding(
-                UiInsets.NONE);
+                registry.select(STARTING_THEME);
 
-        // Close the window when clicked.
-        titleCloseButton.setOnClick(
-                () -> WINDOWS.close(window));
+                return registry;
+        }
 
-        // The title-bar layout positions this at the right.
-        window.titleBar().add(titleCloseButton);
-
-        window.setPosition(new UiPoint(235, 95));
-        window.setPreferredSize(new UiSize(230, 150));
-
-        window.content().setPadding(
-                UiInsets.all(8));
-
-        window.content().setSpacing(8);
-
-        window.content().add(
-                new UiLabel(
-                        "Drag me by the title bar!",
-                        TownsUiTextMetrics.INSTANCE));
-
-        UiButton closeButton = new UiButton(
-                "Close Window",
-                TownsUiTextMetrics.INSTANCE);
-
-        closeButton.setOnClick(
-                () -> WINDOWS.close(window));
-
-        window.content().add(closeButton);
-
-        return window;
-    }
-
-    /**
-     * Reopens the second window and brings it to the front.
-     */
-
-    private static void showSecondWindow() {
-        WINDOWS.open(SECOND_WINDOW);
-    }
-
-    private static UiWindowManager createWindowManager() {
-
-        UiWindowManager manager = new UiWindowManager();
-
-        manager.register(WINDOW);
-        manager.register(SECOND_WINDOW);
-        manager.register(SCROLL_WINDOW);
-
-        return manager;
-    }
-
-    private static UiWindow createScrollWindow() {
-
-        UiWindow window = new UiWindow("Scrollable UI Test");
-
-        window.setPosition(new UiPoint(450, 105));
-        window.setPreferredSize(new UiSize(260, 240));
-
-        window.content().setPadding(UiInsets.all(8));
-        window.content().setSpacing(6);
+        /**
+         * Allows the debug overlay to change themes.
+         *
+         * Must be called on the UI/rendering thread.
+         */
+        public static void setTheme(String themeId) {
+                THEMES.select(themeId);
+        }
 
         // ------------------------------------------------------------
-        // Scrolling viewport
+        // Window creation
         // ------------------------------------------------------------
 
-        UiScrollContainer scroll = new UiScrollContainer();
+        private static UiWindow createWindow() {
+                UiWindow window = new UiWindow("New UI Framework");
 
-        scroll.content().setSpacing(4);
+                window.setPosition(new UiPoint(50, 50));
+                window.setPreferredSize(new UiSize(320, 270));
 
-        // Add enough items to exceed the visible height.
-        for (int i = 1; i <= 12; i++) {
+                window.content().setPadding(
+                                xaos.ui.layout.UiInsets.all(10));
 
-            final int itemNumber = i;
+                window.content().setSpacing(6);
 
-            UiButton item = new UiButton(
-                    "Inventory Item " + i,
-                    TownsUiTextMetrics.INSTANCE);
+                window.content().add(new xaos.ui.components.UiLabel(
+                                "New UI renderer is working!",
+                                TownsUiTextMetrics.INSTANCE));
 
-            item.setOnClick(
-                    () -> window.setTitle(
-                            "Selected Item " + itemNumber));
+                window.content().add(new xaos.ui.components.UiLabel(
+                                "Button rendering preview:",
+                                TownsUiTextMetrics.INSTANCE));
 
-            scroll.content().add(item);
+                UiButton normal = new UiButton(
+                                "Normal Button",
+                                TownsUiTextMetrics.INSTANCE);
+                normal.setOnClick(() -> window.setTitle("Normal button clicked!"));
+
+                UiButton selected = new UiButton(
+                                "Selected Button",
+                                TownsUiTextMetrics.INSTANCE);
+
+                selected.setSelected(true);
+                selected.setOnClick(() -> selected.setSelected(!selected.selected()));
+
+                UiButton disabled = new UiButton(
+                                "Disabled Button",
+                                TownsUiTextMetrics.INSTANCE);
+
+                disabled.setEnabled(false);
+
+                window.content().add(normal);
+                window.content().add(selected);
+                window.content().add(disabled);
+
+                UiButton reopenButton = new UiButton(
+                                "Reopen Second Window",
+                                TownsUiTextMetrics.INSTANCE);
+
+                reopenButton.setOnClick(
+                                UiDebugOverlay::showSecondWindow);
+
+                window.content().add(reopenButton);
+
+                return window;
         }
 
-        window.content().add(scroll);
+        private static UiWindow createSecondWindow() {
+
+                UiWindow window = new UiWindow("Second Window");
+
+                // ------------------------------------------------------------
+                // Title-bar close button
+                // ------------------------------------------------------------
+
+                UiButton titleCloseButton = new UiButton(
+                                "X",
+                                TownsUiTextMetrics.INSTANCE);
+
+                // Compact title-bar button.
+                titleCloseButton.setMinimumSize(
+                                new UiSize(20, 20));
+
+                titleCloseButton.setPreferredSize(
+                                new UiSize(20, 20));
+
+                titleCloseButton.setPadding(
+                                UiInsets.NONE);
+
+                // Close the window when clicked.
+                titleCloseButton.setOnClick(
+                                () -> WINDOWS.close(window));
+
+                // The title-bar layout positions this at the right.
+                window.titleBar().add(titleCloseButton);
+
+                window.setPosition(new UiPoint(235, 95));
+                window.setPreferredSize(new UiSize(230, 150));
+
+                window.content().setPadding(
+                                UiInsets.all(8));
+
+                window.content().setSpacing(8);
+
+                window.content().add(
+                                new UiLabel(
+                                                "Drag me by the title bar!",
+                                                TownsUiTextMetrics.INSTANCE));
+
+                UiButton closeButton = new UiButton(
+                                "Close Window",
+                                TownsUiTextMetrics.INSTANCE);
+
+                closeButton.setOnClick(
+                                () -> WINDOWS.close(window));
+
+                window.content().add(closeButton);
+
+                return window;
+        }
+
+        /**
+         * Reopens the second window and brings it to the front.
+         */
+
+        private static void showSecondWindow() {
+                WINDOWS.open(SECOND_WINDOW);
+        }
+
+        private static UiWindowManager createWindowManager() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                manager.register(WINDOW);
+                manager.register(SECOND_WINDOW);
+                manager.register(SCROLL_WINDOW);
+
+                return manager;
+        }
+
+        private static UiWindow createScrollWindow() {
+
+                UiWindow window = new UiWindow("Scrollable UI Test");
+
+                window.setPosition(new UiPoint(450, 105));
+                window.setPreferredSize(new UiSize(260, 240));
+
+                window.content().setPadding(UiInsets.all(8));
+                window.content().setSpacing(6);
+
+                // ------------------------------------------------------------
+                // Text field preview
+                // ------------------------------------------------------------
+
+                UiTextField searchField = new UiTextField(
+                                "",
+                                TownsUiTextMetrics.INSTANCE);
+
+                searchField.setPlaceholder("Search inventory...");
+
+                window.content().add(searchField);
+
+                // ------------------------------------------------------------
+                // Scrolling viewport
+                // ------------------------------------------------------------
+
+                UiScrollContainer scroll = new UiScrollContainer();
+
+                scroll.content().setSpacing(4);
+
+                // Add enough items to exceed the visible height.
+                for (int i = 1; i <= 12; i++) {
+
+                        final int itemNumber = i;
+
+                        UiButton item = new UiButton(
+                                        "Inventory Item " + i,
+                                        TownsUiTextMetrics.INSTANCE);
+
+                        item.setOnClick(
+                                        () -> window.setTitle(
+                                                        "Selected Item " + itemNumber));
+
+                        scroll.content().add(item);
+                }
+
+                window.content().add(scroll);
+
+                // ------------------------------------------------------------
+                // Temporary scrolling controls
+                // ------------------------------------------------------------
+
+                UiContainer controls = new UiContainer();
+
+                controls.setLayoutStrategy(
+                                UiLinearLayout.HORIZONTAL);
+
+                controls.setSpacing(6);
+
+                UiButton scrollUp = new UiButton(
+                                "Scroll Up",
+                                TownsUiTextMetrics.INSTANCE);
+
+                scrollUp.setOnClick(
+                                () -> scroll.scrollBy(-40));
+
+                UiButton scrollDown = new UiButton(
+                                "Scroll Down",
+                                TownsUiTextMetrics.INSTANCE);
+
+                scrollDown.setOnClick(
+                                () -> scroll.scrollBy(40));
+
+                controls.add(scrollUp);
+                controls.add(scrollDown);
+
+                window.content().add(controls);
+
+                return window;
+        }
 
         // ------------------------------------------------------------
-        // Temporary scrolling controls
+        // Rendering
         // ------------------------------------------------------------
 
-        UiContainer controls = new UiContainer();
+        public static void render() {
+                int width = UtilsGL.getWidth();
+                int height = UtilsGL.getHeight();
 
-        controls.setLayoutStrategy(
-                UiLinearLayout.HORIZONTAL);
+                if (width <= 0 || height <= 0) {
+                        return;
+                }
 
-        controls.setSpacing(6);
+                WINDOWS.updateLayout(new UiSize(width, height));
 
-        UiButton scrollUp = new UiButton(
-                "Scroll Up",
-                TownsUiTextMetrics.INSTANCE);
+                TownsUiTexture atlas = null;
 
-        scrollUp.setOnClick(
-                () -> scroll.scrollBy(-40));
+                if (CLASSIC_THEME.equals(THEMES.activeId())) {
+                        TextureData texture = UtilsGL.loadTexture(
+                                        "ui2.png",
+                                        GL11.GL_REPLACE);
 
-        UiButton scrollDown = new UiButton(
-                "Scroll Down",
-                TownsUiTextMetrics.INSTANCE);
+                        if (texture == null) {
+                                return;
+                        }
 
-        scrollDown.setOnClick(
-                () -> scroll.scrollBy(40));
+                        atlas = new TownsUiTexture(
+                                        texture.getTextureID(),
+                                        texture.getWidth(),
+                                        texture.getHeight());
+                }
 
-        controls.add(scrollUp);
-        controls.add(scrollDown);
+                final TownsUiTexture resolvedAtlas = atlas;
 
-        window.content().add(controls);
+                int previousMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
 
-        return window;
-    }
+                GL11.glMatrixMode(GL11.GL_PROJECTION);
+                GL11.glPushMatrix();
+                GL11.glLoadIdentity();
+                GL11.glOrtho(0, width, height, 0, -1, 1);
 
-    // ------------------------------------------------------------
-    // Rendering
-    // ------------------------------------------------------------
+                GL11.glMatrixMode(GL11.GL_MODELVIEW);
+                GL11.glPushMatrix();
+                GL11.glLoadIdentity();
 
-    public static void render() {
-        int width = UtilsGL.getWidth();
-        int height = UtilsGL.getHeight();
+                try (TownsUiRenderer renderer = new TownsUiRenderer(
+                                height,
+                                atlasId -> ClassicTownsTheme.UI2_ATLAS.equals(atlasId)
+                                                ? resolvedAtlas
+                                                : null)) {
 
-        if (width <= 0 || height <= 0) {
-            return;
+                        UiSceneRenderer.render(
+                                        ROOT,
+                                        renderer,
+                                        UiDebugOverlay::paint);
+
+                } finally {
+                        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+                        GL11.glPopMatrix();
+
+                        GL11.glMatrixMode(GL11.GL_PROJECTION);
+                        GL11.glPopMatrix();
+
+                        GL11.glMatrixMode(previousMode);
+                }
         }
 
-        WINDOWS.updateLayout(new UiSize(width, height));
+        // ------------------------------------------------------------
+        // Element painting
+        // ------------------------------------------------------------
 
-        TownsUiTexture atlas = null;
+        private static void paint(
+                        UiElement element,
+                        UiRenderer renderer) {
 
-        if (CLASSIC_THEME.equals(THEMES.activeId())) {
-            TextureData texture = UtilsGL.loadTexture(
-                    "ui2.png",
-                    GL11.GL_REPLACE);
+                UiTheme theme = THEMES.activeTheme();
 
-            if (texture == null) {
-                return;
-            }
+                if (element instanceof UiWindow window) {
 
-            atlas = new TownsUiTexture(
-                    texture.getTextureID(),
-                    texture.getWidth(),
-                    texture.getHeight());
+                        theme.paintWindow(window, renderer);
+
+                        UiResizeGripPainter.paint(
+                                        window,
+                                        renderer,
+                                        theme.textColor());
+
+                } else if (element.parent() instanceof UiWindow window
+                                && element == window.titleBar()) {
+
+                        theme.paintTitleBar(window, renderer);
+                } else if (element instanceof UiTextField field) {
+
+                        UiTextFieldPainter.paint(
+                                        field,
+                                        renderer,
+                                        INPUT.focusManager().isFocused(field),
+                                        theme.textColor(),
+                                        theme.focusColor());
+
+                } else if (element instanceof UiScrollBar scrollBar) {
+
+                        UiScrollBarPainter.paint(
+                                        scrollBar,
+                                        renderer,
+                                        theme.textColor());
+
+                } else if (element instanceof UiLabel label) {
+
+                        UiRect bounds = label.bounds();
+
+                        renderer.drawText(
+                                        label.text(),
+                                        new UiPoint(bounds.x(), bounds.y()),
+                                        theme.textColor());
+
+                } else if (element instanceof UiButton button) {
+
+                        theme.paintButton(button, renderer);
+
+                        // Draw the keyboard focus indicator after
+                        // the button's normal theme rendering.
+                        if (INPUT.focusManager().isFocused(button)) {
+
+                                UiFocusPainter.paint(
+                                                button,
+                                                renderer,
+                                                theme.focusColor());
+                        }
+                }
+
         }
 
-        final TownsUiTexture resolvedAtlas = atlas;
+        // ------------------------------------------------------------
+        // Mouse input
+        // ------------------------------------------------------------
 
-        int previousMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
+        /**
+         * Ensures element positions are current before
+         * performing mouse hit testing.
+         */
+        private static boolean updateLayout() {
+                int width = UtilsGL.getWidth();
+                int height = UtilsGL.getHeight();
 
-        GL11.glMatrixMode(GL11.GL_PROJECTION);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-        GL11.glOrtho(0, width, height, 0, -1, 1);
+                if (width <= 0 || height <= 0) {
+                        return false;
+                }
 
-        GL11.glMatrixMode(GL11.GL_MODELVIEW);
-        GL11.glPushMatrix();
-        GL11.glLoadIdentity();
-
-        try (TownsUiRenderer renderer = new TownsUiRenderer(
-                height,
-                atlasId -> ClassicTownsTheme.UI2_ATLAS.equals(atlasId)
-                        ? resolvedAtlas
-                        : null)) {
-
-            UiSceneRenderer.render(
-                    ROOT,
-                    renderer,
-                    UiDebugOverlay::paint);
-
-        } finally {
-            GL11.glMatrixMode(GL11.GL_MODELVIEW);
-            GL11.glPopMatrix();
-
-            GL11.glMatrixMode(GL11.GL_PROJECTION);
-            GL11.glPopMatrix();
-
-            GL11.glMatrixMode(previousMode);
-        }
-    }
-
-    // ------------------------------------------------------------
-    // Element painting
-    // ------------------------------------------------------------
-
-    private static void paint(
-            UiElement element,
-            UiRenderer renderer) {
-
-        UiTheme theme = THEMES.activeTheme();
-
-        if (element instanceof UiWindow window) {
-
-            theme.paintWindow(window, renderer);
-
-            UiResizeGripPainter.paint(
-                    window,
-                    renderer,
-                    theme.textColor());
-
-        } else if (element.parent() instanceof UiWindow window
-                && element == window.titleBar()) {
-
-            theme.paintTitleBar(window, renderer);
-
-        } else if (element instanceof UiScrollBar scrollBar) {
-
-            UiScrollBarPainter.paint(
-                    scrollBar,
-                    renderer,
-                    theme.textColor());
-
-        } else if (element instanceof UiLabel label) {
-
-            UiRect bounds = label.bounds();
-
-            renderer.drawText(
-                    label.text(),
-                    new UiPoint(bounds.x(), bounds.y()),
-                    theme.textColor());
-
-        } else if (element instanceof UiButton button) {
-
-            theme.paintButton(button, renderer);
-        }
-    }
-
-    // ------------------------------------------------------------
-    // Mouse input
-    // ------------------------------------------------------------
-
-    /**
-     * Ensures element positions are current before
-     * performing mouse hit testing.
-     */
-    private static boolean updateLayout() {
-        int width = UtilsGL.getWidth();
-        int height = UtilsGL.getHeight();
-
-        if (width <= 0 || height <= 0) {
-            return false;
+                WINDOWS.updateLayout(new UiSize(width, height));
+                return true;
         }
 
-        WINDOWS.updateLayout(new UiSize(width, height));
-        return true;
-    }
+        public static boolean mouseMoved(int x, int y) {
+                if (!ENABLED || !updateLayout()) {
+                        return false;
+                }
 
-    public static boolean mouseMoved(int x, int y) {
-        if (!ENABLED || !updateLayout()) {
-            return false;
+                return INPUT.mouseMoved(x, y);
         }
 
-        return INPUT.mouseMoved(x, y);
-    }
+        public static boolean mousePressed(int x, int y) {
+                if (!ENABLED || !updateLayout()) {
+                        return false;
+                }
 
-    public static boolean mousePressed(int x, int y) {
-        if (!ENABLED || !updateLayout()) {
-            return false;
+                return INPUT.mousePressed(x, y);
         }
 
-        return INPUT.mousePressed(x, y);
-    }
+        public static boolean mouseReleased(int x, int y) {
+                if (!ENABLED || !updateLayout()) {
+                        return false;
+                }
 
-    public static boolean mouseReleased(int x, int y) {
-        if (!ENABLED || !updateLayout()) {
-            return false;
+                return INPUT.mouseReleased(x, y);
         }
 
-        return INPUT.mouseReleased(x, y);
-    }
+        /**
+         * Routes mouse-wheel input to the new UI.
+         */
+        public static boolean mouseWheelMoved(
+                        int x, int y, int wheelDelta) {
 
-    /**
-     * Routes mouse-wheel input to the new UI.
-     */
-    public static boolean mouseWheelMoved(
-            int x, int y, int wheelDelta) {
+                if (!ENABLED || !updateLayout()) {
+                        return false;
+                }
 
-        if (!ENABLED || !updateLayout()) {
-            return false;
+                return INPUT.mouseWheelMoved(
+                                x, y, wheelDelta);
         }
 
-        return INPUT.mouseWheelMoved(
-                x, y, wheelDelta);
-    }
+        // ------------------------------------------------------------
+        // Keyboard input
+        // ------------------------------------------------------------
 
-    public static void cancelPointer() {
-        INPUT.cancelPointer();
-    }
+        /**
+         * Forwards a keyboard press to the new UI.
+         *
+         * Returns true when the event was consumed.
+         */
+        public static boolean keyPressed(
+                        UiKey key,
+                        boolean shiftDown) {
+
+                return ENABLED
+                                && INPUT.keyPressed(key, shiftDown);
+        }
+
+        /**
+         * Returns whether an editable text field
+         * currently owns keyboard input.
+         */
+        public static boolean textInputActive() {
+
+                return ENABLED
+                                && INPUT.textInputActive();
+        }
+
+        /**
+         * Delivers a Unicode character to the
+         * currently focused text field.
+         */
+        public static boolean characterTyped(int codePoint) {
+
+                return ENABLED
+                                && INPUT.characterTyped(codePoint);
+        }
+
+        /**
+         * Releases a key captured by the new UI.
+         */
+        public static void keyReleased(UiKey key) {
+
+                if (ENABLED) {
+                        INPUT.keyReleased(key);
+                }
+        }
+
+        public static void cancelPointer() {
+                INPUT.cancelPointer();
+        }
+
+        /**
+         * Cancels keyboard and mouse interactions when
+         * the application loses focus.
+         */
+        public static void cancelInput() {
+
+                if (ENABLED) {
+                        INPUT.cancelInput();
+                }
+        }
 
 }

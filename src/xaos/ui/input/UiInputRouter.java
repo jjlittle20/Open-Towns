@@ -1,11 +1,13 @@
 
 package xaos.ui.input;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiScrollContainer;
+import xaos.ui.components.UiTextField;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiElement;
@@ -28,6 +30,18 @@ public final class UiInputRouter {
 
     private final UiRoot root;
     private final UiFocusManager focusManager;
+
+    /**
+     * Keyboard navigation is enabled after clicking
+     * inside the new UI and disabled when clicking outside.
+     */
+    private boolean keyboardNavigationActive;
+
+    /**
+     * Tracks held navigation keys so GLFW key-repeat
+     * events cannot repeatedly activate buttons.
+     */
+    private final EnumSet<UiKey> heldKeys = EnumSet.noneOf(UiKey.class);
 
     private UiElement pressedTarget;
     private UiButton hoveredButton;
@@ -71,6 +85,226 @@ public final class UiInputRouter {
      */
     public UiFocusManager focusManager() {
         return focusManager;
+    }
+
+    /**
+     * Returns true when the new UI owns text input.
+     *
+     * Only an enabled, focused text field can
+     * receive typed characters.
+     */
+    public boolean textInputActive() {
+        return keyboardNavigationActive
+                && focusManager.focusedElement() instanceof UiTextField;
+    }
+
+    /**
+     * Inserts a Unicode character into the focused field.
+     *
+     * Returns true if the event belongs to the field,
+     * even when the character is rejected.
+     */
+    public boolean characterTyped(int codePoint) {
+
+        if (!textInputActive()) {
+            return false;
+        }
+
+        // GLFW should deliver Unicode scalar values,
+        // but validate them before constructing a String.
+        if (!Character.isValidCodePoint(codePoint)
+                || (codePoint >= Character.MIN_SURROGATE
+                        && codePoint <= Character.MAX_SURROGATE)
+                || Character.isISOControl(codePoint)) {
+
+            return true;
+        }
+
+        UiTextField field = (UiTextField) focusManager.focusedElement();
+
+        field.insertText(
+                new String(Character.toChars(codePoint)));
+
+        return true;
+    }
+
+    // ------------------------------------------------------------
+    // Keyboard input
+    // ------------------------------------------------------------
+
+    /**
+     * Handles keyboard navigation and button activation.
+     *
+     * Returns true when the event is consumed by the
+     * new UI and should not reach the original game.
+     */
+
+    public boolean keyPressed(
+            UiKey key,
+            boolean shiftDown) {
+
+        Objects.requireNonNull(key, "key");
+
+        if (!keyboardNavigationActive) {
+            return false;
+        }
+
+        // Editing keys may repeat while held.
+        // Tab and button activation must not.
+        boolean repeatable = switch (key) {
+            case BACKSPACE, DELETE, LEFT, RIGHT -> true;
+            default -> false;
+        };
+
+        if (heldKeys.contains(key) && !repeatable) {
+            return true;
+        }
+
+        boolean consumed = false;
+
+        // --------------------------------------------------------
+        // Focus navigation
+        // --------------------------------------------------------
+
+        if (key == UiKey.TAB) {
+
+            if (shiftDown) {
+                focusManager.focusPrevious();
+            } else {
+                focusManager.focusNext();
+            }
+
+            revealFocusedElement();
+            consumed = true;
+
+            // --------------------------------------------------------
+            // Text-field editing
+            // --------------------------------------------------------
+
+        } else if (focusManager.focusedElement() instanceof UiTextField field) {
+
+            // A focused text field owns navigation
+            // and editing keys.
+            consumed = true;
+
+            switch (key) {
+
+                case BACKSPACE ->
+                    field.deleteBackward();
+
+                case DELETE ->
+                    field.deleteForward();
+
+                case LEFT ->
+                    field.moveCursor(-1);
+
+                case RIGHT ->
+                    field.moveCursor(1);
+
+                case HOME ->
+                    field.moveCursorToStart();
+
+                case END ->
+                    field.moveCursorToEnd();
+
+                case ESCAPE -> {
+                    focusManager.clearFocus();
+                    keyboardNavigationActive = false;
+                }
+
+                // Printable spaces are inserted through
+                // the GLFW character callback instead.
+                case SPACE, ENTER -> {
+                    // Consume the physical key event.
+                }
+
+                default -> {
+                    // Tab was handled above.
+                }
+            }
+
+            // --------------------------------------------------------
+            // Button activation
+            // --------------------------------------------------------
+
+        } else if (focusManager.focusedElement() instanceof UiButton button) {
+
+            if (key == UiKey.ENTER
+                    || key == UiKey.SPACE) {
+
+                button.activate();
+
+                // The action might close its window.
+                focusManager.focusedElement();
+
+                consumed = true;
+            }
+        }
+
+        if (consumed) {
+            heldKeys.add(key);
+        }
+
+        return consumed;
+    }
+
+    /**
+     * Releases a captured key so its next physical
+     * press can trigger another action.
+     */
+    public void keyReleased(UiKey key) {
+        heldKeys.remove(
+                Objects.requireNonNull(key, "key"));
+    }
+
+    /**
+     * Scrolls containing viewports until the focused
+     * element becomes visible.
+     *
+     * Works with nested scroll containers.
+     */
+    private void revealFocusedElement() {
+
+        UiElement focused = focusManager.focusedElement();
+
+        if (focused == null) {
+            return;
+        }
+
+        root.updateLayout(root.viewportSize());
+
+        for (UiElement parent = focused.parent(); parent != null; parent = parent.parent()) {
+
+            if (!(parent instanceof UiScrollContainer scroll)) {
+                continue;
+            }
+
+            UiRect viewport = scroll.bounds();
+            UiRect item = focused.bounds();
+
+            long itemBottom = (long) item.y() + item.height();
+
+            long viewportBottom = (long) viewport.y() + viewport.height();
+
+            long delta = 0;
+
+            if (item.y() < viewport.y()) {
+                // Item lies above the visible viewport.
+                delta = (long) item.y() - viewport.y();
+
+            } else if (itemBottom > viewportBottom) {
+                // Item lies below the visible viewport.
+                delta = itemBottom - viewportBottom;
+            }
+
+            if (delta != 0 && scroll.scrollBy(
+                    (int) Math.max(
+                            Integer.MIN_VALUE,
+                            Math.min(Integer.MAX_VALUE, delta)))) {
+
+                root.updateLayout(root.viewportSize());
+            }
+        }
     }
 
     // ------------------------------------------------------------
@@ -262,6 +496,13 @@ public final class UiInputRouter {
 
         pressedTarget = target;
         updateHovered(target);
+        // Clicking inside the new UI enables keyboard navigation.
+        // Clicking outside returns control to the original game.
+        keyboardNavigationActive = target != null;
+
+        // Select the keyboard scope belonging to the
+        // window that received this mouse press.
+        focusManager.activateScopeFor(target);
 
         // ------------------------------------------------------------
         // Keyboard focus
@@ -273,6 +514,14 @@ public final class UiInputRouter {
             focusManager.requestFocus(target);
         } else {
             focusManager.clearFocus();
+        }
+
+        // Position the caret when clicking inside
+        // an enabled text field.
+        if (target instanceof UiTextField field
+                && field.enabled()) {
+
+            field.placeCursorAt(x);
         }
 
         UiWindow window = findOwningWindow(target);
@@ -441,6 +690,33 @@ public final class UiInputRouter {
             hoveredButton.setHovered(false);
             hoveredButton = null;
         }
+    }
+
+    /**
+     * Cancels all active UI input.
+     *
+     * Called when the game loses window focus or
+     * changes to another screen.
+     *
+     * Preserves window positions, scroll positions
+     * and text-field contents.
+     */
+    public void cancelInput() {
+
+        // Cancel button presses, dragging, resizing,
+        // scrollbar interactions and mouse hover.
+        cancelPointer();
+
+        // Release any navigation keys that were held.
+        heldKeys.clear();
+
+        // Remove keyboard focus and the active window scope.
+        focusManager.clearFocus();
+        focusManager.activateScopeFor(null);
+
+        // The new UI must be clicked again before
+        // receiving keyboard navigation or text input.
+        keyboardNavigationActive = false;
     }
 
     private void clearPressed() {
@@ -645,8 +921,10 @@ public final class UiInputRouter {
         }
 
         // Buttons receive direct interaction.
+
         if (element instanceof UiButton
-                || element instanceof UiScrollBar) {
+                || element instanceof UiScrollBar
+                || element instanceof UiTextField) {
 
             return element;
         }

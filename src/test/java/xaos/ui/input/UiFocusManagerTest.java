@@ -13,8 +13,7 @@ import xaos.ui.rendering.UiTextMetrics;
 
 class UiFocusManagerTest {
 
-    private static final UiTextMetrics FONT =
-            text -> new UiSize(text.length() * 7, 16);
+    private static final UiTextMetrics FONT = text -> new UiSize(text.length() * 7, 16);
 
     private static UiButton button(String text) {
         return new UiButton(text, FONT);
@@ -170,4 +169,127 @@ class UiFocusManagerTest {
 
         assertSame(firstButton, focus.focusedElement());
     }
+
+    @Test
+    void tabTraversalStaysInsideActiveWindow() {
+
+        UiContainer desktop = new UiContainer();
+
+        UiWindow firstWindow = new UiWindow("Inventory");
+        UiWindow secondWindow = new UiWindow("Building");
+
+        UiButton first = button("Search");
+        UiButton second = button("Sort");
+        UiButton other = button("Build");
+
+        firstWindow.content().add(first);
+        firstWindow.content().add(second);
+
+        secondWindow.content().add(other);
+
+        desktop.add(firstWindow);
+        desktop.add(secondWindow);
+
+        UiFocusManager focus = new UiFocusManager(
+                new UiRoot(desktop));
+
+        assertTrue(focus.requestFocus(first));
+
+        assertSame(firstWindow, focus.activeWindow());
+
+        // Navigate to the second control.
+        assertTrue(focus.focusNext());
+        assertSame(second, focus.focusedElement());
+
+        // Wrap to the first control, not the other window.
+        assertTrue(focus.focusNext());
+        assertSame(first, focus.focusedElement());
+
+        // Reverse traversal also stays in this window.
+        assertTrue(focus.focusPrevious());
+        assertSame(second, focus.focusedElement());
+
+        assertFalse(focus.isFocused(other));
+    }
+
+    @Test
+    void switchingWindowsChangesFocusScope() {
+
+        UiContainer desktop = new UiContainer();
+
+        UiWindow inventory = new UiWindow("Inventory");
+        UiWindow building = new UiWindow("Building");
+
+        UiButton inventoryButton = button("Search");
+        UiButton buildingButton = button("Build");
+
+        inventory.content().add(inventoryButton);
+        building.content().add(buildingButton);
+
+        desktop.add(inventory);
+        desktop.add(building);
+
+        UiFocusManager focus = new UiFocusManager(
+                new UiRoot(desktop));
+
+        // Activate inventory.
+        focus.activateScopeFor(inventory);
+
+        assertSame(inventory, focus.activeWindow());
+
+        assertTrue(focus.focusNext());
+        assertSame(inventoryButton, focus.focusedElement());
+
+        // Activate building by clicking its non-button area.
+        focus.activateScopeFor(building);
+
+        assertSame(building, focus.activeWindow());
+        assertNull(focus.focusedElement());
+
+        // Tab now starts with the building controls.
+        assertTrue(focus.focusNext());
+        assertSame(buildingButton, focus.focusedElement());
+
+        // Switch back to inventory.
+        focus.activateScopeFor(inventory);
+
+        assertTrue(focus.focusNext());
+        assertSame(inventoryButton, focus.focusedElement());
+    }
+
+    @Test
+    void closingActiveWindowInvalidatesScope() {
+
+        UiContainer desktop = new UiContainer();
+
+        UiWindow window = new UiWindow("Inventory");
+        UiButton button = button("Search");
+
+        window.content().add(button);
+        desktop.add(window);
+
+        UiFocusManager focus = new UiFocusManager(
+                new UiRoot(desktop));
+
+        assertTrue(focus.requestFocus(button));
+        assertSame(window, focus.activeWindow());
+
+        window.close();
+
+        assertNull(focus.activeWindow());
+        assertNull(focus.focusedElement());
+
+        // Closing must not allow Tab to focus
+        // a hidden control.
+        assertFalse(focus.focusNext());
+
+        window.open();
+
+        // Clicking the reopened window restores its scope.
+        focus.activateScopeFor(window);
+
+        assertTrue(focus.focusNext());
+        assertSame(button, focus.focusedElement());
+    }
+
 }

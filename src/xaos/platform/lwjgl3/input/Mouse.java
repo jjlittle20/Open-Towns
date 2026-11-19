@@ -36,7 +36,8 @@ public final class Mouse {
                 events.add(new Event(x, y, button, action == GLFW_PRESS, 0));
             }
         });
-        glfwSetScrollCallback(window, (win, xoffset, yoffset) -> events.add(new Event(x, y, -1, false, (int) Math.signum(yoffset))));
+        glfwSetScrollCallback(window,
+                (win, xoffset, yoffset) -> events.add(new Event(x, y, -1, false, (int) Math.signum(yoffset))));
     }
 
     public static void destroy() {
@@ -47,6 +48,18 @@ public final class Mouse {
         events.clear();
         currentEvent = null;
         window = NULL;
+    }
+
+    /**
+     * Discards queued mouse events after input focus
+     * has been lost.
+     *
+     * Does not destroy the cursor or remove callbacks.
+     */
+    public static void clearPendingEvents() {
+
+        events.clear();
+        currentEvent = null;
     }
 
     public static boolean next() {

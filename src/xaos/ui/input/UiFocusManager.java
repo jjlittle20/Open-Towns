@@ -4,39 +4,35 @@ package xaos.ui.input;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiElement;
 import xaos.ui.core.UiFocusable;
 import xaos.ui.core.UiRoot;
 
 /**
- * Manages keyboard focus within a single UI root.
+ * Manages keyboard focus within a UI root.
  *
  * Only one control can be focused at a time.
  *
- * Focus is automatically invalidated when a control
- * becomes disabled, hidden or detached from the tree.
+ * Floating windows act as independent focus scopes.
+ * Tab navigation stays inside the active window.
  */
 public final class UiFocusManager {
 
     private final UiRoot root;
 
     private UiElement focused;
+    private UiWindow activeWindow;
 
     public UiFocusManager(UiRoot root) {
-        this.root = Objects.requireNonNull(
-                root, "root");
+        this.root = Objects.requireNonNull(root, "root");
     }
 
     // ------------------------------------------------------------
     // Current focus
     // ------------------------------------------------------------
 
-    /**
-     * Returns the currently focused element, or null.
-     *
-     * Invalid focus is cleared automatically.
-     */
     public UiElement focusedElement() {
 
         if (!canFocus(focused)) {
@@ -46,37 +42,71 @@ public final class UiFocusManager {
         return focused;
     }
 
-    /**
-     * Returns whether an element currently owns focus.
-     */
     public boolean isFocused(UiElement element) {
         return element != null
                 && focusedElement() == element;
     }
 
     // ------------------------------------------------------------
-    // Focus eligibility
+    // Active window
     // ------------------------------------------------------------
 
     /**
-     * Checks whether a component can receive focus.
+     * Returns the active keyboard window, or null.
      *
-     * It must:
-     * - implement UiFocusable
-     * - accept focus
-     * - be visible, including all ancestors
-     * - belong to this manager's UI root
+     * A closed, hidden or detached window automatically
+     * loses its active scope.
      */
-    public boolean canFocus(UiElement element) {
+    public UiWindow activeWindow() {
 
-        if (!(element instanceof UiFocusable focusable)
-                || !focusable.canReceiveFocus()) {
+        if (activeWindow != null
+                && !belongsToVisibleTree(activeWindow)) {
 
-            return false;
+            activeWindow = null;
+            focused = null;
         }
 
-        // Walk upwards to verify visibility and
-        // membership of this UI tree.
+        return activeWindow;
+    }
+
+    /**
+     * Selects the keyboard scope containing a mouse target.
+     *
+     * Clicking a different window changes the scope and
+     * clears the previous focus.
+     *
+     * Clicking within the same window preserves the scope.
+     */
+    public void activateScopeFor(UiElement target) {
+
+        UiWindow next = belongsToVisibleTree(target)
+                ? findOwningWindow(target)
+                : null;
+
+        if (activeWindow() != next) {
+            activeWindow = next;
+            focused = null;
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Focus eligibility
+    // ------------------------------------------------------------
+
+    public boolean canFocus(UiElement element) {
+
+        return element instanceof UiFocusable focusable
+                && focusable.canReceiveFocus()
+                && belongsToVisibleTree(element);
+    }
+
+    /**
+     * Verifies that an element belongs to this root
+     * and that it and all its ancestors are visible.
+     */
+    private boolean belongsToVisibleTree(
+            UiElement element) {
+
         for (UiElement current = element;
                 current != null;
                 current = current.parent()) {
@@ -98,9 +128,10 @@ public final class UiFocusManager {
     // ------------------------------------------------------------
 
     /**
-     * Requests focus for an element.
+     * Requests focus for an eligible control.
      *
-     * @return true if focus changed
+     * Programmatic focus requests also activate
+     * the control's owning window.
      */
     public boolean requestFocus(UiElement element) {
 
@@ -112,14 +143,17 @@ public final class UiFocusManager {
             return false;
         }
 
+        activeWindow = findOwningWindow(element);
         focused = element;
+
         return true;
     }
 
     /**
-     * Clears keyboard focus.
+     * Clears focus without changing the active window.
      *
-     * @return true if a focus owner was cleared
+     * This allows Tab to start at the first control
+     * after clicking an empty area of a window.
      */
     public boolean clearFocus() {
 
@@ -131,29 +165,33 @@ public final class UiFocusManager {
     }
 
     // ------------------------------------------------------------
-    // Focus traversal
+    // Keyboard traversal
     // ------------------------------------------------------------
 
-    /**
-     * Moves focus to the next eligible control.
-     */
     public boolean focusNext() {
         return moveFocus(false);
     }
 
-    /**
-     * Moves focus to the previous eligible control.
-     */
     public boolean focusPrevious() {
         return moveFocus(true);
     }
 
     private boolean moveFocus(boolean backwards) {
 
+        UiWindow scope = activeWindow();
+
         List<UiElement> candidates =
                 new ArrayList<>();
 
-        collect(root.content(), candidates);
+        // An active window restricts traversal to its
+        // own controls.
+        //
+        // Without one, root-level controls remain
+        // accessible, but other windows are skipped.
+        collect(
+                scope == null ? root.content() : scope,
+                candidates,
+                scope == null);
 
         if (candidates.isEmpty()) {
             return clearFocus();
@@ -166,15 +204,12 @@ public final class UiFocusManager {
 
         if (current < 0) {
 
-            // Nothing focused: begin at the first
-            // or last eligible component.
             next = backwards
                     ? candidates.size() - 1
                     : 0;
 
         } else {
 
-            // Wrap around at either end.
             next = Math.floorMod(
                     current + (backwards ? -1 : 1),
                     candidates.size());
@@ -184,13 +219,24 @@ public final class UiFocusManager {
     }
 
     /**
-     * Collects focusable controls in UI tree order.
+     * Collects controls in their natural tree order.
+     *
+     * When traversing the root scope, nested windows
+     * are excluded.
      */
     private void collect(
             UiElement element,
-            List<UiElement> candidates) {
+            List<UiElement> candidates,
+            boolean skipWindows) {
 
         if (!element.visible()) {
+            return;
+        }
+
+        if (skipWindows
+                && element instanceof UiWindow
+                && element != root.content()) {
+
             return;
         }
 
@@ -203,8 +249,32 @@ public final class UiFocusManager {
         if (element instanceof UiContainer container) {
 
             for (UiElement child : container.children()) {
-                collect(child, candidates);
+                collect(child, candidates, skipWindows);
             }
         }
+    }
+
+    // ------------------------------------------------------------
+    // Window lookup
+    // ------------------------------------------------------------
+
+    /**
+     * Finds the nearest window containing an element.
+     *
+     * Returns null for controls outside windows.
+     */
+    private static UiWindow findOwningWindow(
+            UiElement element) {
+
+        for (UiElement current = element;
+                current != null;
+                current = current.parent()) {
+
+            if (current instanceof UiWindow window) {
+                return window;
+            }
+        }
+
+        return null;
     }
 }
