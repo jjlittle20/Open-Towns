@@ -49,9 +49,21 @@ public final class UiWindowManager {
         boolean repositioned = false;
 
         for (UiWindow window : windows()) {
-            if (UiWindowPlacement.constrainToViewport(
-                    window, viewport)) {
 
+            boolean moved;
+
+            if (window.centered()) {
+
+                moved = UiWindowPlacement.centerInViewport(
+                        window, viewport);
+
+            } else {
+
+                moved = UiWindowPlacement.constrainToViewport(
+                        window, viewport);
+            }
+
+            if (moved) {
                 repositioned = true;
             }
         }
@@ -84,6 +96,13 @@ public final class UiWindowManager {
         }
 
         desktop.add(window);
+
+        UiWindow modal = activeModal();
+
+        if (modal != null) {
+            desktop.bringToFront(modal);
+        }
+
     }
 
     /**
@@ -98,6 +117,26 @@ public final class UiWindowManager {
                 .toList();
     }
 
+    /**
+     * Returns the frontmost open modal window,
+     * or null when no modal is active.
+     */
+    public UiWindow activeModal() {
+
+        List<UiWindow> ordered = windows();
+
+        for (int i = ordered.size() - 1; i >= 0; i--) {
+
+            UiWindow window = ordered.get(i);
+
+            if (window.isOpen() && window.modal()) {
+                return window;
+            }
+        }
+
+        return null;
+    }
+
     public boolean isManaged(UiWindow window) {
         return window != null && window.parent() == desktop;
     }
@@ -109,11 +148,23 @@ public final class UiWindowManager {
     /**
      * Opens a registered window and brings it forward.
      */
+
     public void open(UiWindow window) {
+
         requireManaged(window);
 
         window.open();
+
+        // Newly opened windows normally come forward.
         desktop.bringToFront(window);
+
+        // But an existing modal must stay above any
+        // ordinary window that opens behind it.
+        UiWindow modal = activeModal();
+
+        if (modal != null) {
+            desktop.bringToFront(modal);
+        }
     }
 
     /**
@@ -123,6 +174,14 @@ public final class UiWindowManager {
         requireManaged(window);
 
         window.close();
+
+        // If another modal remains open, bring it forward.
+        UiWindow modal = activeModal();
+
+        if (modal != null) {
+            desktop.bringToFront(modal);
+        }
+
     }
 
     // ------------------------------------------------------------
@@ -134,10 +193,20 @@ public final class UiWindowManager {
      *
      * Returns true if the stacking order changed.
      */
+
     public boolean bringToFront(UiWindow window) {
+
         requireManaged(window);
 
         if (!window.isOpen()) {
+            return false;
+        }
+
+        UiWindow modal = activeModal();
+
+        // Ordinary windows cannot rise above
+        // an active modal window.
+        if (modal != null && modal != window) {
             return false;
         }
 

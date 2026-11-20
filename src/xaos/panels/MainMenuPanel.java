@@ -2,6 +2,7 @@ package xaos.panels;
 
 import java.awt.Color;
 import java.io.File;
+import java.util.Optional;
 
 import xaos.platform.lwjgl3.input.Keyboard;
 import xaos.platform.lwjgl3.input.Mouse;
@@ -10,6 +11,9 @@ import org.lwjgl.opengl.GL11;
 import xaos.property.PropertyFile;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiWindow;
+import xaos.ui.integration.UiLegacySubmenuBridge;
+import xaos.ui.integration.UiMenuNavigation;
+import xaos.ui.integration.UiMenuWindowController;
 import xaos.ui.integration.UiSimpleMenuWindowBuilder;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
@@ -55,16 +59,24 @@ public final class MainMenuPanel implements Runnable {
         private ContextMenu menu;
 
         // ------------------------------------------------------------
-        // New UI framework: migrated Credits screen
+        // Migrated XML menus
         // ------------------------------------------------------------
-
-        private static final String CREDITS_MENU_ITEM_ID = "main.credits";
 
         private static final String CREDITS_MENU_ID = "main.credits.root";
 
+        private MenuDefinition rootMenuDefinition;
         private MenuDefinition creditsDefinition;
 
-        private UiWindow creditsWindow;
+        private static final String OPTIONS_MENU_ID = "main.options.root";
+
+        private MenuDefinition optionsDefinition;
+
+        // Retains the original Options menu and its
+        // six legacy submenus during the migration.
+        private SmartMenu legacyOptionsMenu;
+
+        // All migrated menu windows are now managed here.
+        private final UiMenuWindowController migratedMenus = new UiMenuWindowController(Game.uiSystem());
 
         public final ColorGL COLORGL_BLACK = new ColorGL(Color.BLACK);
         public final ColorGL COLORGL_WHITE = new ColorGL(Color.WHITE);
@@ -150,7 +162,24 @@ public final class MainMenuPanel implements Runnable {
                 deleteLogoTexture = false;
                 settingSavegameName = false;
                 settingHotkey = 0;
+
                 settingNewServer = false;
+
+                // Register the menus already migrated to UiSystem.
+                //
+                // Future migrations only need another registration
+                // here, plus their window implementation.
+
+                migratedMenus.register(
+                                CREDITS_MENU_ID,
+                                this::buildCreditsWindow);
+
+                // Migrate the Options root screen.
+                // Child settings screens still use SmartMenu.
+                migratedMenus.register(
+                                OPTIONS_MENU_ID,
+                                this::buildOptionsWindow);
+
                 createMenu();
                 new Thread(this).start();
 
@@ -162,13 +191,15 @@ public final class MainMenuPanel implements Runnable {
         // MAIN MENU
         public void createMenu() {
                 // Rebuilding the main menu closes any migrated screen.
-                closeCreditsWindow();
+                migratedMenus.closeAll();
+                legacyOptionsMenu = null;
                 setLoadingText(new String());
                 loadingGame = false;
                 MenuManager menuManager = new MenuManager();
                 menuManager.loadMenus(new File("data/menus/main"));
 
                 MenuDefinition menuRoot = menuManager.getMenu("main.root");
+                rootMenuDefinition = menuRoot;
 
                 // Keep the XML Credits definition for the new UI.
                 creditsDefinition = menuManager.getMenu(CREDITS_MENU_ID);
@@ -176,6 +207,13 @@ public final class MainMenuPanel implements Runnable {
                 if (creditsDefinition == null) {
                         throw new IllegalStateException(
                                         "Missing Credits menu: " + CREDITS_MENU_ID);
+                }
+
+                optionsDefinition = menuManager.getMenu(OPTIONS_MENU_ID);
+
+                if (optionsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Missing Options menu: " + OPTIONS_MENU_ID);
                 }
 
                 SmartMenu mainMenu = menuManager.buildSmartMenu(menuRoot, null);
@@ -187,74 +225,108 @@ public final class MainMenuPanel implements Runnable {
                 repositionMenu();
         }
 
-        // ------------------------------------------------------------
-        // Migrated Credits window
-        // ------------------------------------------------------------
-
-        private boolean isCreditsWindowOpen() {
-                return creditsWindow != null
-                                && creditsWindow.isOpen();
-        }
-
         /**
-         * Opens the Credits screen using the new UI framework.
+         * Creates the Credits screen from its existing
+         * XML definition.
          *
-         * The contents come from the existing XML definition.
+         * The UiMenuWindowController handles registration,
+         * opening, closing and reuse.
          */
-        private void openCreditsWindow() {
+        private UiWindow buildCreditsWindow() {
 
-                if (creditsWindow == null) {
-
-                        creditsWindow = UiSimpleMenuWindowBuilder.build(
-                                        creditsDefinition,
-                                        Messages::getString,
-                                        TownsUiTextMetrics.INSTANCE,
-                                        this::closeCreditsWindow);
-
-                        // --------------------------------------------------------
-                        // Title-bar close button
-                        // --------------------------------------------------------
-
-                        UiButton closeButton = new UiButton(
-                                        "X",
-                                        TownsUiTextMetrics.INSTANCE);
-
-                        closeButton.setMinimumSize(
-                                        new UiSize(20, 20));
-
-                        closeButton.setPreferredSize(
-                                        new UiSize(20, 20));
-
-                        closeButton.setPadding(UiInsets.NONE);
-
-                        closeButton.setOnClick(
-                                        this::closeCreditsWindow);
-
-                        creditsWindow.titleBar().add(closeButton);
-
-                        // Register this real game window with the
-                        // permanent runtime, not the debug overlay.
-                        Game.uiSystem().windows().register(
-                                        creditsWindow);
+                if (creditsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Credits XML definition not loaded");
                 }
 
-                // Opening also brings the window to the front.
-                Game.uiSystem().windows().open(
-                                creditsWindow);
+                // Build controls from the original XML.
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                creditsDefinition,
+                                Messages::getString,
+                                TownsUiTextMetrics.INSTANCE,
+                                () -> migratedMenus.close(
+                                                CREDITS_MENU_ID));
+
+                // --------------------------------------------------------
+                // Menu-style window configuration
+                // --------------------------------------------------------
+
+                window.setCentered(true);
+                window.setDraggable(false);
+                window.setResizable(false);
+                window.setModal(true);
+
+                return window;
         }
 
         /**
-         * Closes the new Credits window without destroying it.
+         * Builds the new Options root menu from XML.
+         *
+         * Individual settings screens remain legacy
+         * until their controls are migrated.
          */
-        private void closeCreditsWindow() {
+        private UiWindow buildOptionsWindow() {
 
-                if (creditsWindow != null
-                                && Game.uiSystem().windows()
-                                                .isManaged(creditsWindow)) {
-
-                        Game.uiSystem().windows().close(
-                                        creditsWindow);
+                if (optionsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Options XML definition not loaded");
                 }
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                optionsDefinition,
+                                Messages::getString,
+                                TownsUiTextMetrics.INSTANCE,
+
+                                // Back returns to the main menu.
+                                () -> migratedMenus.close(
+                                                OPTIONS_MENU_ID),
+
+                                // Until migrated, child menus
+                                // use their original SmartMenu.
+                                this::openLegacyOptionsSubmenu);
+
+                // Same menu-screen behaviour as Credits.
+                window.setCentered(true);
+                window.setDraggable(false);
+                window.setResizable(false);
+                window.setModal(true);
+
+                return window;
+        }
+
+        /**
+         * Opens an unmigrated Options submenu using
+         * the original SmartMenu implementation.
+         *
+         * The new Options root is closed temporarily.
+         * Returning via the legacy Back button will
+         * reopen the new Options root.
+         */
+        private void openLegacyOptionsSubmenu(
+                        String targetMenuId) {
+
+                if (legacyOptionsMenu == null) {
+                        throw new IllegalStateException(
+                                        "Legacy Options menu is unavailable");
+                }
+
+                // Resolve the exact original submenu using
+                // the XML target ID.
+                SmartMenu child = UiLegacySubmenuBridge.find(
+                                optionsDefinition,
+                                legacyOptionsMenu,
+                                targetMenuId);
+
+                // Close the new modal before showing the
+                // original submenu.
+                migratedMenus.close(OPTIONS_MENU_ID);
+
+                // Activate the original settings menu.
+                // Its commands, dynamic values and controls
+                // continue working unchanged.
+                menu.setSmartMenu(child);
+
+                repositionMenu();
         }
 
         public void resize(int renderX, int renderY, int renderWidth, int renderHeight) {
@@ -457,7 +529,7 @@ public final class MainMenuPanel implements Runnable {
                 UtilsGL.glEnd();
 
                 if (!loadingGame && !isSettingSavegameName() && !isSettingHotkey() && !isSettingNewServer()
-                                && !isCreditsWindowOpen()) {
+                                && !migratedMenus.isAnyOpen()) {
                         // Pintamos el menú
                         menu.render();
                 }
@@ -602,7 +674,7 @@ public final class MainMenuPanel implements Runnable {
 
                 // The migrated Credits window owns this screen.
                 // Do not interact with the underlying main menu.
-                if (isCreditsWindowOpen()) {
+                if (migratedMenus.isAnyOpen()) {
                         return;
                 }
 
@@ -665,26 +737,60 @@ public final class MainMenuPanel implements Runnable {
                         if (beforeMenu != afterMenu) {
 
                                 // --------------------------------------------------------
-                                // Redirect Credits to the new UI framework
+                                // Returning from a legacy Options child
                                 // --------------------------------------------------------
 
-                                if (afterMenu != null
-                                                && CREDITS_MENU_ITEM_ID.equals(
-                                                                afterMenu.getID())) {
+                                if (legacyOptionsMenu != null
+                                                && beforeMenu != null
+                                                && beforeMenu.getParent() == legacyOptionsMenu
+                                                && afterMenu == legacyOptionsMenu) {
 
-                                        // Restore the original root menu.
-                                        // It will be waiting when the player
-                                        // closes the new Credits window.
+                                        // The user clicked Back inside a legacy
+                                        // settings submenu.
+                                        //
+                                        // Restore the legacy main-menu root,
+                                        // then reopen the migrated Options root.
+                                        menu.setSmartMenu(
+                                                        legacyOptionsMenu.getParent());
+
+                                        repositionMenu();
+
+                                        migratedMenus.open(OPTIONS_MENU_ID);
+                                        return;
+                                }
+
+                                // --------------------------------------------------------
+                                // Existing migrated-menu navigation
+                                // --------------------------------------------------------
+
+                                Optional<Runnable> migratedAction = afterMenu == null
+                                                ? Optional.empty()
+                                                : migratedMenus.resolve(
+                                                                rootMenuDefinition,
+                                                                afterMenu.getID());
+
+                                if (migratedAction.isPresent()) {
+
+                                        // Save the original Options menu instance
+                                        // for its still-unmigrated child screens.
+                                        if (afterMenu != null
+                                                        && "main.options".equals(
+                                                                        afterMenu.getID())) {
+
+                                                legacyOptionsMenu = afterMenu;
+                                        }
+
+                                        // Restore the original menu underneath
+                                        // the new modal window.
                                         menu.setSmartMenu(beforeMenu);
 
                                         repositionMenu();
 
-                                        openCreditsWindow();
+                                        migratedAction.get().run();
 
                                 } else {
 
-                                        // All other menu navigation continues
-                                        // through the original SmartMenu system.
+                                        // Unmigrated navigation remains unchanged.
                                         repositionMenu();
                                 }
                         }
@@ -715,7 +821,7 @@ public final class MainMenuPanel implements Runnable {
         }
 
         public void mouseWheelMoved(int amount, int mouseX, int mouseY) {
-                if (isCreditsWindowOpen()) {
+                if (migratedMenus.isAnyOpen()) {
                         return;
                 }
                 if (menu == null || menu.getSmartMenu() == null) {
@@ -829,7 +935,7 @@ public final class MainMenuPanel implements Runnable {
                 } else {
                         // Migrated main-menu windows must not
                         // remain visible during gameplay.
-                        closeCreditsWindow();
+                        migratedMenus.closeAll();
                 }
 
                 active = bActive;

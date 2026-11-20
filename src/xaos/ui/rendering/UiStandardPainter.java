@@ -6,6 +6,7 @@ import xaos.ui.components.UiButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiTextField;
+import xaos.ui.components.UiToggleButton;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiElement;
 import xaos.ui.core.UiSystem;
@@ -51,18 +52,18 @@ public final class UiStandardPainter
                     renderer,
                     theme.textColor());
 
-        // --------------------------------------------------------
-        // Title bars
-        // --------------------------------------------------------
+            // --------------------------------------------------------
+            // Title bars
+            // --------------------------------------------------------
 
         } else if (element.parent() instanceof UiWindow window
                 && element == window.titleBar()) {
 
             theme.paintTitleBar(window, renderer);
 
-        // --------------------------------------------------------
-        // Scrollbars
-        // --------------------------------------------------------
+            // --------------------------------------------------------
+            // Scrollbars
+            // --------------------------------------------------------
 
         } else if (element instanceof UiScrollBar bar) {
 
@@ -71,9 +72,9 @@ public final class UiStandardPainter
                     renderer,
                     theme.textColor());
 
-        // --------------------------------------------------------
-        // Labels
-        // --------------------------------------------------------
+            // --------------------------------------------------------
+            // Labels
+            // --------------------------------------------------------
 
         } else if (element instanceof UiLabel label) {
 
@@ -84,27 +85,26 @@ public final class UiStandardPainter
                     new UiPoint(bounds.x(), bounds.y()),
                     theme.textColor());
 
-        // --------------------------------------------------------
-        // Buttons
-        // --------------------------------------------------------
+            // --------------------------------------------------------
+            // Buttons
+            // --------------------------------------------------------
 
         } else if (element instanceof UiButton button) {
 
-            theme.paintButton(button, renderer);
-
-            if (system.input()
-                    .focusManager()
-                    .isFocused(button)) {
-
-                UiFocusPainter.paint(
-                        button,
-                        renderer,
-                        theme.focusColor());
+            // Toggle state may change outside the UI,
+            // for example through a fullscreen hotkey.
+            //
+            // Refresh before painting so the displayed
+            // state always reflects the actual setting.
+            if (button instanceof UiToggleButton toggle) {
+                toggle.refresh();
             }
 
-        // --------------------------------------------------------
-        // Text fields
-        // --------------------------------------------------------
+            theme.paintButton(button, renderer);
+
+            // --------------------------------------------------------
+            // Text fields
+            // --------------------------------------------------------
 
         } else if (element instanceof UiTextField field) {
 

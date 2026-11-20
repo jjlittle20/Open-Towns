@@ -12,220 +12,287 @@ import xaos.ui.layout.UiSize;
 
 class UiWindowManagerTest {
 
-    @Test
-    void registeringWindowsPreservesTheirOrder() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void registeringWindowsPreservesTheirOrder() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow first = new UiWindow("First");
-        UiWindow second = new UiWindow("Second");
+                UiWindow first = new UiWindow("First");
+                UiWindow second = new UiWindow("Second");
 
-        manager.register(first);
-        manager.register(second);
+                manager.register(first);
+                manager.register(second);
 
-        assertEquals(
-                List.of(first, second),
-                manager.windows());
+                assertEquals(
+                                List.of(first, second),
+                                manager.windows());
 
-        assertTrue(manager.isManaged(first));
-        assertTrue(manager.isManaged(second));
+                assertTrue(manager.isManaged(first));
+                assertTrue(manager.isManaged(second));
 
-        assertSame(
-                manager.root().content(),
-                first.parent());
-    }
+                assertSame(
+                                manager.root().content(),
+                                first.parent());
+        }
 
-    @Test
-    void closingWindowPreservesItsContents() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void closingWindowPreservesItsContents() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow window = new UiWindow("Inventory");
-        UiElement item = new UiElement();
+                UiWindow window = new UiWindow("Inventory");
+                UiElement item = new UiElement();
 
-        window.content().add(item);
-        manager.register(window);
+                window.content().add(item);
+                manager.register(window);
 
-        manager.close(window);
+                manager.close(window);
 
-        assertFalse(window.isOpen());
-        assertTrue(manager.isManaged(window));
-        assertTrue(manager.windows().contains(window));
+                assertFalse(window.isOpen());
+                assertTrue(manager.isManaged(window));
+                assertTrue(manager.windows().contains(window));
 
-        assertSame(
-                window.content(),
-                item.parent());
+                assertSame(
+                                window.content(),
+                                item.parent());
 
-        manager.open(window);
+                manager.open(window);
 
-        assertTrue(window.isOpen());
-        assertSame(window.content(), item.parent());
-    }
+                assertTrue(window.isOpen());
+                assertSame(window.content(), item.parent());
+        }
 
-    @Test
-    void reopeningWindowBringsItToFront() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void reopeningWindowBringsItToFront() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow first = new UiWindow("First");
-        UiWindow second = new UiWindow("Second");
+                UiWindow first = new UiWindow("First");
+                UiWindow second = new UiWindow("Second");
 
-        manager.register(first);
-        manager.register(second);
+                manager.register(first);
+                manager.register(second);
 
-        manager.close(first);
-        manager.open(first);
+                manager.close(first);
+                manager.open(first);
 
-        assertEquals(
-                List.of(second, first),
-                manager.windows());
+                assertEquals(
+                                List.of(second, first),
+                                manager.windows());
 
-        assertTrue(first.isOpen());
-    }
+                assertTrue(first.isOpen());
+        }
 
-    @Test
-    void bringToFrontRespectsWindowVisibility() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void bringToFrontRespectsWindowVisibility() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow first = new UiWindow("First");
-        UiWindow second = new UiWindow("Second");
+                UiWindow first = new UiWindow("First");
+                UiWindow second = new UiWindow("Second");
 
-        manager.register(first);
-        manager.register(second);
+                manager.register(first);
+                manager.register(second);
 
-        assertTrue(manager.bringToFront(first));
+                assertTrue(manager.bringToFront(first));
 
-        assertEquals(
-                List.of(second, first),
-                manager.windows());
+                assertEquals(
+                                List.of(second, first),
+                                manager.windows());
 
-        // Already in front.
-        assertFalse(manager.bringToFront(first));
+                // Already in front.
+                assertFalse(manager.bringToFront(first));
 
-        manager.close(first);
+                manager.close(first);
 
-        // Closed windows cannot be raised directly.
-        assertFalse(manager.bringToFront(first));
-        assertFalse(first.isOpen());
-    }
+                // Closed windows cannot be raised directly.
+                assertFalse(manager.bringToFront(first));
+                assertFalse(first.isOpen());
+        }
 
-    @Test
-    void reopeningPreservesWindowPosition() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void reopeningPreservesWindowPosition() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow window = new UiWindow("Character");
+                UiWindow window = new UiWindow("Character");
 
-        window.setPosition(new UiPoint(150, 120));
-        window.setPreferredSize(new UiSize(300, 200));
+                window.setPosition(new UiPoint(150, 120));
+                window.setPreferredSize(new UiSize(300, 200));
 
-        manager.register(window);
+                manager.register(window);
 
-        UiRoot root = manager.root();
-        root.updateLayout(new UiSize(800, 600));
+                UiRoot root = manager.root();
+                root.updateLayout(new UiSize(800, 600));
 
-        manager.close(window);
-        root.updateLayout(new UiSize(800, 600));
+                manager.close(window);
+                root.updateLayout(new UiSize(800, 600));
 
-        manager.open(window);
-        root.updateLayout(new UiSize(800, 600));
+                manager.open(window);
+                root.updateLayout(new UiSize(800, 600));
 
-        assertEquals(
-                new UiPoint(150, 120),
-                window.position());
+                assertEquals(
+                                new UiPoint(150, 120),
+                                window.position());
 
-        assertEquals(
-                new UiRect(150, 120, 300, 200),
-                window.bounds());
-    }
+                assertEquals(
+                                new UiRect(150, 120, 300, 200),
+                                window.bounds());
+        }
 
-    @Test
-    void invalidWindowOperationsAreRejected() {
-        UiWindowManager manager = new UiWindowManager();
-        UiWindow other = new UiWindow("Unknown");
+        @Test
+        void invalidWindowOperationsAreRejected() {
+                UiWindowManager manager = new UiWindowManager();
+                UiWindow other = new UiWindow("Unknown");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.open(other));
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.open(other));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.close(other));
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.close(other));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.bringToFront(other));
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.bringToFront(other));
 
-        manager.register(other);
+                manager.register(other);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.register(other));
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.register(other));
 
-        UiWindowManager anotherManager = new UiWindowManager();
+                UiWindowManager anotherManager = new UiWindowManager();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> anotherManager.register(other));
-    }
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> anotherManager.register(other));
+        }
 
-    @Test
-    void windowsStayInsideViewport() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void windowsStayInsideViewport() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow window = new UiWindow("Inventory");
-        window.setPreferredSize(new UiSize(300, 200));
-        window.setPosition(new UiPoint(750, 550));
+                UiWindow window = new UiWindow("Inventory");
+                window.setPreferredSize(new UiSize(300, 200));
+                window.setPosition(new UiPoint(750, 550));
 
-        manager.register(window);
+                manager.register(window);
 
-        manager.updateLayout(new UiSize(800, 600));
+                manager.updateLayout(new UiSize(800, 600));
 
-        assertEquals(
-                new UiPoint(500, 400),
-                window.position());
+                assertEquals(
+                                new UiPoint(500, 400),
+                                window.position());
 
-        assertEquals(
-                new UiRect(500, 400, 300, 200),
-                window.bounds());
-    }
+                assertEquals(
+                                new UiRect(500, 400, 300, 200),
+                                window.bounds());
+        }
 
-    @Test
-    void shrinkingViewportRepositionsOversizedWindow() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void shrinkingViewportRepositionsOversizedWindow() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow window = new UiWindow("Inventory");
-        window.setPreferredSize(new UiSize(300, 200));
-        window.setPosition(new UiPoint(500, 300));
+                UiWindow window = new UiWindow("Inventory");
+                window.setPreferredSize(new UiSize(300, 200));
+                window.setPosition(new UiPoint(500, 300));
 
-        manager.register(window);
+                manager.register(window);
 
-        manager.updateLayout(new UiSize(800, 600));
+                manager.updateLayout(new UiSize(800, 600));
 
-        // Shrink the viewport below the window's size.
-        manager.updateLayout(new UiSize(240, 150));
+                // Shrink the viewport below the window's size.
+                manager.updateLayout(new UiSize(240, 150));
 
-        assertEquals(
-                new UiPoint(0, 118),
-                window.position());
+                assertEquals(
+                                new UiPoint(0, 118),
+                                window.position());
 
-        // The complete 24-unit title bar stays visible.
-        assertEquals(
-                150,
-                window.titleBar().bounds().y()
-                        + window.titleBar().bounds().height());
-    }
+                // The complete 24-unit title bar stays visible.
+                assertEquals(
+                                150,
+                                window.titleBar().bounds().y()
+                                                + window.titleBar().bounds().height());
+        }
 
-    @Test
-    void unchangedViewportDoesNotRecalculateLayout() {
-        UiWindowManager manager = new UiWindowManager();
+        @Test
+        void unchangedViewportDoesNotRecalculateLayout() {
+                UiWindowManager manager = new UiWindowManager();
 
-        UiWindow window = new UiWindow("Inventory");
+                UiWindow window = new UiWindow("Inventory");
 
-        manager.register(window);
+                manager.register(window);
 
-        assertTrue(
-                manager.updateLayout(new UiSize(800, 600)));
+                assertTrue(
+                                manager.updateLayout(new UiSize(800, 600)));
 
-        // No changes since the previous update.
-        assertFalse(
-                manager.updateLayout(new UiSize(800, 600)));
-    }
+                // No changes since the previous update.
+                assertFalse(
+                                manager.updateLayout(new UiSize(800, 600)));
+        }
+
+        @Test
+        void centeredWindowTracksViewportSize() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Credits");
+
+                window.setUserSize(new UiSize(420, 260));
+                window.setCentered(true);
+
+                manager.register(window);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(190, 170),
+                                window.position());
+
+                // Simulate changing the game resolution.
+                manager.updateLayout(new UiSize(1000, 700));
+
+                assertEquals(
+                                new UiPoint(290, 220),
+                                window.position());
+
+                assertFalse(
+                                manager.updateLayout(new UiSize(1000, 700)));
+        }
+
+        @Test
+        void modalStaysAboveOrdinaryWindows() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow normal = new UiWindow("Inventory");
+
+                UiWindow modal = new UiWindow("Credits");
+                modal.setModal(true);
+
+                manager.register(normal);
+                manager.register(modal);
+
+                manager.open(modal);
+
+                assertSame(modal, manager.activeModal());
+
+                // Cannot raise a normal window above the modal.
+                assertFalse(manager.bringToFront(normal));
+
+                // Opening a normal window cannot cover it either.
+                manager.open(normal);
+
+                assertSame(
+                                modal,
+                                manager.windows()
+                                                .get(manager.windows().size() - 1));
+
+                manager.close(modal);
+
+                assertNull(manager.activeModal());
+
+                // Normal windows regain their usual behaviour.
+                assertTrue(manager.bringToFront(normal)
+                                || manager.windows().get(
+                                                manager.windows().size() - 1) == normal);
+        }
 
 }

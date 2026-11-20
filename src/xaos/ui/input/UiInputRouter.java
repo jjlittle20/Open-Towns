@@ -574,7 +574,7 @@ public final class UiInputRouter {
                 resizeStartWidth = window.bounds().width();
                 resizeStartHeight = window.bounds().height();
 
-            } else if (target == window
+            } else if (target == window && window.draggable()
                     && window.titleBar().bounds().contains(x, y)) {
 
                 // Existing title-bar drag behaviour.
@@ -881,6 +881,25 @@ public final class UiInputRouter {
     // ------------------------------------------------------------
 
     private UiElement hitTest(int x, int y) {
+
+        UiWindow modal = activeModal();
+
+        if (modal != null) {
+
+            // Search only inside the modal's component tree.
+            UiElement target = hitTest(modal, x, y);
+
+            if (target != null) {
+                return target;
+            }
+
+            // Even outside its bounds, the modal captures
+            // input so it cannot reach another window
+            // or the game behind it.
+            return modal;
+        }
+
+        // Normal behaviour when no modal exists.
         return hitTest(root.content(), x, y);
     }
 
@@ -939,4 +958,30 @@ public final class UiInputRouter {
         // intercept mouse input themselves.
         return null;
     }
+
+    /**
+     * Finds the frontmost open modal belonging to
+     * this input router's root.
+     */
+    private UiWindow activeModal() {
+
+        if (!(root.content() instanceof UiContainer desktop)) {
+            return null;
+        }
+
+        var children = desktop.children();
+
+        for (int i = children.size() - 1; i >= 0; i--) {
+
+            if (children.get(i) instanceof UiWindow window
+                    && window.isOpen()
+                    && window.modal()) {
+
+                return window;
+            }
+        }
+
+        return null;
+    }
+
 }

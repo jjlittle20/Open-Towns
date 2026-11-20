@@ -11,6 +11,7 @@ import xaos.ui.layout.UiLinearLayout;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiSizePolicy;
+import xaos.ui.rendering.UiTextMetrics;
 
 /**
  * A reusable window with a title bar and content area.
@@ -34,6 +35,41 @@ public class UiWindow extends UiContainer {
     public static final int RESIZE_HANDLE_SIZE = 16;
 
     private boolean resizable = true;
+    private boolean draggable = true;
+    private boolean centered = false;
+    private boolean modal = false;
+    private UiWindowCloseButton closeButton;
+
+    public boolean draggable() {
+        return draggable;
+    }
+
+    public void setDraggable(boolean draggable) {
+        this.draggable = draggable;
+    }
+
+    public boolean centered() {
+        return centered;
+    }
+
+    public void setCentered(boolean centered) {
+        if (this.centered != centered) {
+            this.centered = centered;
+            invalidateLayout();
+        }
+    }
+
+    /**
+     * Whether this window blocks interaction with
+     * other windows and the game behind it.
+     */
+    public boolean modal() {
+        return modal;
+    }
+
+    public void setModal(boolean modal) {
+        this.modal = modal;
+    }
 
     // ------------------------------------------------------------
     // Construction
@@ -125,6 +161,50 @@ public class UiWindow extends UiContainer {
      */
     public UiContainer titleBar() {
         return titleBar;
+    }
+
+    /**
+     * Installs or updates the standard title-bar
+     * close button.
+     *
+     * Repeated calls update the callback without
+     * creating duplicate buttons.
+     *
+     * The callback should use the appropriate
+     * window manager or UiSystem close method.
+     */
+    public void setCloseAction(
+            UiTextMetrics textMetrics,
+            Runnable onClose) {
+
+        Objects.requireNonNull(
+                textMetrics, "textMetrics");
+
+        Objects.requireNonNull(
+                onClose, "onClose");
+
+        if (closeButton == null) {
+
+            closeButton = new UiWindowCloseButton(
+                    textMetrics,
+                    onClose);
+
+            // The title bar already contains flexible
+            // space, so this appears on the right.
+            titleBar.add(closeButton);
+
+        } else {
+
+            closeButton.setOnClick(onClose);
+        }
+    }
+
+    /**
+     * Returns the standard close button if one
+     * has been installed.
+     */
+    public Optional<UiWindowCloseButton> closeButton() {
+        return Optional.ofNullable(closeButton);
     }
 
     /**

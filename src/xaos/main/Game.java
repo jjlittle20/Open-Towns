@@ -230,18 +230,20 @@ public final class Game {
 	 * Both the original Towns typing panel and the
 	 * new UI framework can own text input.
 	 */
-	
-public static boolean isGameplayKeyboardBlocked() {
 
-    // Original Towns typing panels.
-    if (typingPanel != null) {
-        return true;
-    }
+	public static boolean isGameplayKeyboardBlocked() {
 
-    // Permanent UI text fields.
-    return UI_SYSTEM.input().textInputActive();
-}
+		if (typingPanel != null) {
+			return true;
+		}
 
+		// A modal window temporarily owns game input.
+		if (UI_SYSTEM.windows().activeModal() != null) {
+			return true;
+		}
+
+		return UI_SYSTEM.input().textInputActive();
+	}
 
 	// ------------------------------------------------------------
 	// New UI framework
@@ -1356,14 +1358,14 @@ public static boolean isGameplayKeyboardBlocked() {
 
 			if (mouseWheelMoved != 0) {
 
-				// Give the new UI first opportunity to handle
-				// scrolling before legacy panels or world controls.
+				boolean uiScrolled = UI_SYSTEM.input().mouseWheelMoved(
+						mouseX, mouseY, mouseWheelMoved);
 
-				if (UI_SYSTEM.input().mouseWheelMoved(
-						mouseX, mouseY, mouseWheelMoved)) {
+				if (uiScrolled
+						|| UI_SYSTEM.windows().activeModal() != null) {
 
-					// UI consumed the event. Do not scroll
-					// legacy menus or change the world level.
+					// Do not pass wheel input to gameplay or
+					// legacy menus while a modal is active.
 					continue;
 				}
 
@@ -1607,6 +1609,13 @@ public static boolean isGameplayKeyboardBlocked() {
 
 					// A text field owns keyboard input.
 					// Do not trigger gameplay shortcuts.
+					continue;
+				}
+
+				// Modal windows block remaining legacy keyboard
+				// handling, even if no individual UI control
+				// consumed the key.
+				if (UI_SYSTEM.windows().activeModal() != null) {
 					continue;
 				}
 

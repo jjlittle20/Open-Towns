@@ -2,6 +2,8 @@
 package xaos.ui.core;
 
 import java.util.Objects;
+
+import xaos.ui.components.UiWindow;
 import xaos.ui.input.UiInputRouter;
 import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.UiElementPainter;
@@ -128,4 +130,49 @@ public final class UiSystem {
     public void cancelInput() {
         input.cancelInput();
     }
+
+    /**
+     * Opens a modal window and transfers input ownership
+     * to it.
+     *
+     * The window must already be registered.
+     */
+    public void openModal(UiWindow window) {
+
+        Objects.requireNonNull(window, "window");
+
+        if (!window.modal()) {
+            throw new IllegalArgumentException(
+                    "Window is not configured as modal");
+        }
+
+        // Release any drag, held key or focus belonging
+        // to the previously active UI.
+        input.cancelInput();
+
+        windows.open(window);
+
+        // Restrict keyboard focus to this window.
+        input.focusManager().activateScopeFor(window);
+    }
+
+    /**
+     * Closes a modal window and releases its input.
+     */
+    public void closeModal(UiWindow window) {
+
+        Objects.requireNonNull(window, "window");
+
+        windows.close(window);
+        input.cancelInput();
+
+        // Restore the scope of another modal, if one
+        // is still open underneath.
+        UiWindow remaining = windows.activeModal();
+
+        if (remaining != null) {
+            input.focusManager().activateScopeFor(remaining);
+        }
+    }
+
 }

@@ -189,30 +189,10 @@ public final class UiDebugOverlay {
 
                 UiWindow window = new UiWindow("Second Window");
 
-                // ------------------------------------------------------------
-                // Title-bar close button
-                // ------------------------------------------------------------
-
-                UiButton titleCloseButton = new UiButton(
-                                "X",
-                                TownsUiTextMetrics.INSTANCE);
-
-                // Compact title-bar button.
-                titleCloseButton.setMinimumSize(
-                                new UiSize(20, 20));
-
-                titleCloseButton.setPreferredSize(
-                                new UiSize(20, 20));
-
-                titleCloseButton.setPadding(
-                                UiInsets.NONE);
-
-                // Close the window when clicked.
-                titleCloseButton.setOnClick(
+                // Standard reusable title-bar close button.
+                window.setCloseAction(
+                                TownsUiTextMetrics.INSTANCE,
                                 () -> WINDOWS.close(window));
-
-                // The title-bar layout positions this at the right.
-                window.titleBar().add(titleCloseButton);
 
                 window.setPosition(new UiPoint(235, 95));
                 window.setPreferredSize(new UiSize(230, 150));
@@ -327,10 +307,6 @@ public final class UiDebugOverlay {
 
                 return window;
         }
-
-        
-
-        
 
         // ------------------------------------------------------------
         // Mouse input

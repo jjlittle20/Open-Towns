@@ -16,7 +16,8 @@ import xaos.ui.layout.UiSize;
  */
 public final class UiWindowPlacement {
 
-    private UiWindowPlacement() {}
+    private UiWindowPlacement() {
+    }
 
     /**
      * Adjusts a window's requested position to keep it
@@ -102,8 +103,54 @@ public final class UiWindowPlacement {
         return true;
     }
 
+    /**
+     * Centres a window within the current viewport.
+     *
+     * If the window is larger than the viewport,
+     * its position is clamped to the top-left so
+     * its title bar remains accessible.
+     *
+     * @return true if the window moved
+     */
+    public static boolean centerInViewport(
+            UiWindow window,
+            UiSize viewport) {
+
+        Objects.requireNonNull(window, "window");
+        Objects.requireNonNull(viewport, "viewport");
+
+        if (!window.isOpen()
+                || viewport.width() == 0
+                || viewport.height() == 0) {
+            return false;
+        }
+
+        UiRect bounds = window.bounds();
+
+        if (bounds.width() == 0
+                || bounds.height() == 0) {
+            return false;
+        }
+
+        int x = Math.max(
+                0,
+                (viewport.width() - bounds.width()) / 2);
+
+        int y = Math.max(
+                0,
+                (viewport.height() - bounds.height()) / 2);
+
+        UiPoint position = new UiPoint(x, y);
+
+        if (window.position().equals(position)) {
+            return false;
+        }
+
+        window.setPosition(position);
+        return true;
+    }
+
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(value, max));
     }
 }
-    

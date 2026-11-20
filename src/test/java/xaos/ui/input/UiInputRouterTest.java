@@ -21,1534 +21,1613 @@ import xaos.ui.rendering.UiTextMetrics;
 
 class UiInputRouterTest {
 
-    private static final UiTextMetrics FONT = text -> new UiSize(text.length() * 7, 16);
+        private static final UiTextMetrics FONT = text -> new UiSize(text.length() * 7, 16);
 
-    private static UiButton button(String text) {
-        return new UiButton(text, FONT);
-    }
-
-    private static UiWindow window() {
-        UiWindow window = new UiWindow("Test Window");
-        window.setPosition(new UiPoint(20, 20));
-        window.setPreferredSize(new UiSize(200, 140));
-        return window;
-    }
-
-    private static UiContainer desktop() {
-        UiContainer desktop = new UiContainer();
-        desktop.setLayoutStrategy(UiAbsoluteLayout.INSTANCE);
-        return desktop;
-    }
-
-    private static UiRoot root(UiContainer desktop) {
-        UiRoot root = new UiRoot(desktop);
-        root.updateLayout(new UiSize(800, 600));
-        return root;
-    }
-
-    private static int x(UiButton button) {
-        return button.bounds().x() + 2;
-    }
-
-    private static int y(UiButton button) {
-        return button.bounds().y() + 2;
-    }
-
-    private static UiScrollContainer scrollList() {
-
-        UiScrollContainer scroll = new UiScrollContainer();
-
-        scroll.setPreferredSize(new UiSize(150, 80));
-
-        // Enough content to exceed the viewport.
-        for (int i = 0; i < 8; i++) {
-
-            UiElement item = new UiElement();
-
-            item.setPreferredSize(
-                    new UiSize(100, 30));
-
-            scroll.content().add(item);
+        private static UiButton button(String text) {
+                return new UiButton(text, FONT);
         }
 
-        return scroll;
-    }
-
-    @Test
-    void clickingButtonActivatesIt() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton button = button("Click");
-        AtomicInteger clicks = new AtomicInteger();
-
-        button.setOnClick(clicks::incrementAndGet);
-
-        window.content().add(button);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        assertTrue(input.mousePressed(x(button), y(button)));
-        assertTrue(button.pressed());
-
-        assertTrue(input.mouseReleased(x(button), y(button)));
-
-        assertEquals(1, clicks.get());
-        assertFalse(button.pressed());
-
-        // Releasing again must not trigger another click.
-        input.mouseReleased(x(button), y(button));
-        assertEquals(1, clicks.get());
-    }
-
-    @Test
-    void mouseMovementUpdatesHoverState() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-        UiButton button = button("Hover");
-
-        window.content().add(button);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        assertTrue(input.mouseMoved(x(button), y(button)));
-        assertTrue(button.hovered());
-
-        assertFalse(input.mouseMoved(500, 500));
-        assertFalse(button.hovered());
-    }
-
-    @Test
-    void releasingOutsideCancelsClick() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton button = button("Click");
-        AtomicInteger clicks = new AtomicInteger();
-
-        button.setOnClick(clicks::incrementAndGet);
-
-        window.content().add(button);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        input.mousePressed(x(button), y(button));
-
-        // Drag away from the button.
-        assertTrue(input.mouseMoved(500, 500));
-        assertFalse(button.pressed());
-
-        // The release is still consumed by the UI.
-        assertTrue(input.mouseReleased(500, 500));
-
-        assertEquals(0, clicks.get());
-    }
-
-    @Test
-    void releasingOnAnotherButtonDoesNotActivateEither() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton first = button("First");
-        UiButton second = button("Second");
-
-        AtomicInteger firstClicks = new AtomicInteger();
-        AtomicInteger secondClicks = new AtomicInteger();
-
-        first.setOnClick(firstClicks::incrementAndGet);
-        second.setOnClick(secondClicks::incrementAndGet);
-
-        window.content().add(first);
-        window.content().add(second);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        input.mousePressed(x(first), y(first));
-        input.mouseMoved(x(second), y(second));
-        input.mouseReleased(x(second), y(second));
-
-        assertEquals(0, firstClicks.get());
-        assertEquals(0, secondClicks.get());
-    }
-
-    @Test
-    void disabledButtonsConsumeClicksWithoutActivating() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton button = button("Disabled");
-        AtomicInteger clicks = new AtomicInteger();
-
-        button.setOnClick(clicks::incrementAndGet);
-        button.setEnabled(false);
-
-        window.content().add(button);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        assertTrue(input.mousePressed(x(button), y(button)));
-        assertTrue(input.mouseReleased(x(button), y(button)));
-
-        assertEquals(0, clicks.get());
-        assertFalse(button.pressed());
-        assertFalse(button.hovered());
-    }
-
-    @Test
-    void frontWindowBlocksButtonsBehindIt() {
-        UiContainer desktop = desktop();
-
-        UiWindow back = window();
-        UiButton backButton = button("Behind");
-
-        AtomicInteger clicks = new AtomicInteger();
-        backButton.setOnClick(clicks::incrementAndGet);
-
-        back.content().add(backButton);
-
-        UiWindow front = window();
-
-        desktop.add(back);
-        desktop.add(front);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        // Front window is empty but covers the back button.
-        assertTrue(input.mousePressed(
-                x(backButton), y(backButton)));
-
-        assertTrue(input.mouseReleased(
-                x(backButton), y(backButton)));
-
-        assertEquals(0, clicks.get());
-    }
-
-    @Test
-    void bringingWindowToFrontChangesInputPriority() {
-        UiContainer desktop = desktop();
-
-        UiWindow back = window();
-        UiWindow front = window();
-
-        UiButton backButton = button("Back");
-        UiButton frontButton = button("Front");
-
-        AtomicInteger backClicks = new AtomicInteger();
-        AtomicInteger frontClicks = new AtomicInteger();
-
-        backButton.setOnClick(backClicks::incrementAndGet);
-        frontButton.setOnClick(frontClicks::incrementAndGet);
-
-        back.content().add(backButton);
-        front.content().add(frontButton);
-
-        desktop.add(back);
-        desktop.add(front);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        input.mousePressed(x(frontButton), y(frontButton));
-        input.mouseReleased(x(frontButton), y(frontButton));
-
-        assertEquals(1, frontClicks.get());
-        assertEquals(0, backClicks.get());
-
-        // Move the other window to the top.
-        desktop.bringToFront(back);
-        root.updateLayout(new UiSize(800, 600));
-
-        input.mousePressed(x(backButton), y(backButton));
-        input.mouseReleased(x(backButton), y(backButton));
-
-        assertEquals(1, backClicks.get());
-        assertEquals(1, frontClicks.get());
-    }
-
-    @Test
-    void hiddenWindowsDoNotReceiveInput() {
-        UiContainer desktop = desktop();
-
-        UiWindow back = window();
-        UiButton backButton = button("Back");
-
-        AtomicInteger clicks = new AtomicInteger();
-        backButton.setOnClick(clicks::incrementAndGet);
-
-        back.content().add(backButton);
-
-        UiWindow front = window();
-
-        desktop.add(back);
-        desktop.add(front);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        front.setVisible(false);
-        root.updateLayout(new UiSize(800, 600));
-
-        input.mousePressed(x(backButton), y(backButton));
-        input.mouseReleased(x(backButton), y(backButton));
-
-        assertEquals(1, clicks.get());
-    }
-
-    @Test
-    void cancellationClearsPointerState() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton button = button("Click");
-        AtomicInteger clicks = new AtomicInteger();
-
-        button.setOnClick(clicks::incrementAndGet);
-
-        window.content().add(button);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        input.mousePressed(x(button), y(button));
-
-        assertTrue(button.pressed());
-        assertTrue(button.hovered());
-
-        input.cancelPointer();
-
-        assertFalse(button.pressed());
-        assertFalse(button.hovered());
-
-        // No activation after cancellation.
-        input.mouseReleased(x(button), y(button));
-
-        assertEquals(0, clicks.get());
-    }
-
-    @Test
-    void clickingWindowBringsItToFront() {
-        UiContainer desktop = desktop();
-
-        UiWindow back = window();
-        UiWindow front = window();
-
-        front.setPosition(new UiPoint(110, 80));
-
-        desktop.add(back);
-        desktop.add(front);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        assertSame(front, desktop.children().get(1));
-
-        // Click an exposed part of the back window's title.
-        assertTrue(input.mousePressed(35, 35));
-
-        assertSame(back, desktop.children().get(1));
-
-        input.mouseReleased(35, 35);
-    }
-
-    @Test
-    void draggingTitleBarMovesWindow() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        int startX = window.titleBar().bounds().x() + 8;
-        int startY = window.titleBar().bounds().y() + 8;
-
-        UiPoint original = window.position();
-
-        assertTrue(input.mousePressed(startX, startY));
-
-        assertTrue(input.mouseMoved(
-                startX + 65,
-                startY + 40));
-
-        assertEquals(
-                new UiPoint(
-                        original.x() + 65,
-                        original.y() + 40),
-                window.position());
-
-        assertEquals(
-                new UiRect(85, 60, 200, 140),
-                window.bounds());
-
-        assertTrue(input.mouseReleased(
-                startX + 65,
-                startY + 40));
-
-        // Further movement must not drag the released window.
-        UiPoint finalPosition = window.position();
-
-        input.mouseMoved(700, 500);
-
-        assertEquals(finalPosition, window.position());
-    }
-
-    @Test
-    void clickingWindowContentDoesNotDragIt() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        int x = window.content().bounds().x() + 15;
-        int y = window.content().bounds().y() + 30;
-
-        UiPoint original = window.position();
-
-        assertTrue(input.mousePressed(x, y));
-
-        input.mouseMoved(x + 100, y + 50);
-
-        assertEquals(original, window.position());
-
-        input.mouseReleased(x + 100, y + 50);
-
-        assertEquals(original, window.position());
-    }
-
-    @Test
-    void clickingButtonRaisesWindowWithoutDragging() {
-        UiContainer desktop = desktop();
-
-        UiWindow back = window();
-        UiWindow front = window();
-
-        front.setPosition(new UiPoint(110, 80));
-
-        UiButton button = button("Click");
-
-        AtomicInteger clicks = new AtomicInteger();
-
-        button.setOnClick(clicks::incrementAndGet);
-
-        back.content().add(button);
-
-        desktop.add(back);
-        desktop.add(front);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        UiPoint original = back.position();
-
-        input.mousePressed(x(button), y(button));
-
-        assertSame(back, desktop.children().get(1));
-
-        input.mouseReleased(x(button), y(button));
-
-        assertEquals(1, clicks.get());
-        assertEquals(original, back.position());
-    }
-
-    @Test
-    void titleBarCloseButtonClosesWithoutDragging() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-
-        UiButton close = button("X");
-
-        close.setMinimumSize(new UiSize(20, 20));
-        close.setPreferredSize(new UiSize(20, 20));
-        close.setPadding(xaos.ui.layout.UiInsets.NONE);
-
-        close.setOnClick(window::close);
-
-        window.titleBar().add(close);
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        UiPoint originalPosition = window.position();
-
-        assertTrue(input.mousePressed(x(close), y(close)));
-
-        assertTrue(close.pressed());
-
-        assertTrue(input.mouseReleased(x(close), y(close)));
-
-        assertFalse(window.isOpen());
-        assertFalse(close.pressed());
-        assertFalse(close.hovered());
-
-        // Clicking close must not move the window.
-        assertEquals(originalPosition, window.position());
-
-        root.updateLayout(new UiSize(800, 600));
-
-        // A closed window must not receive new clicks.
-        assertFalse(input.mousePressed(x(close), y(close)));
-    }
-
-    @Test
-    void draggingWindowRespectsViewportBoundaries() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        int startX = window.titleBar().bounds().x() + 8;
-        int startY = window.titleBar().bounds().y() + 8;
-
-        input.mousePressed(startX, startY);
-
-        // Attempt to drag far beyond the bottom-right corner.
-        input.mouseMoved(2000, 2000);
-
-        assertEquals(
-                new UiPoint(600, 460),
-                window.position());
-
-        // Attempt to drag beyond the top-left corner.
-        input.mouseMoved(-500, -500);
-
-        assertEquals(
-                UiPoint.ZERO,
-                window.position());
-
-        input.mouseReleased(-500, -500);
-
-        assertEquals(
-                UiPoint.ZERO,
-                window.position());
-    }
-
-    @Test
-    void resizingWindowChangesDimensions() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        UiPoint originalPosition = window.position();
-
-        UiRect handle = window.resizeHandleBounds();
-
-        int startX = handle.x() + handle.width() - 3;
-        int startY = handle.y() + handle.height() - 3;
-
-        assertTrue(input.mousePressed(startX, startY));
-
-        assertTrue(input.mouseMoved(
-                startX + 60,
-                startY + 35));
-
-        assertEquals(
-                new UiSize(260, 175),
-                window.userSize().orElseThrow());
-
-        assertEquals(
-                new UiRect(20, 20, 260, 175),
-                window.bounds());
-
-        assertEquals(originalPosition, window.position());
-
-        assertTrue(input.mouseReleased(
-                startX + 60,
-                startY + 35));
-    }
-
-    @Test
-    void resizingRespectsMinimumDimensions() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiRect handle = window.resizeHandleBounds();
-
-        int startX = handle.x() + handle.width() - 3;
-        int startY = handle.y() + handle.height() - 3;
-
-        input.mousePressed(startX, startY);
-
-        input.mouseMoved(
-                startX - 500,
-                startY - 500);
-
-        assertEquals(
-                new UiSize(180, 80),
-                window.userSize().orElseThrow());
-
-        input.mouseReleased(
-                startX - 500,
-                startY - 500);
-    }
-
-    @Test
-    void resizingStopsAfterMouseRelease() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiRect handle = window.resizeHandleBounds();
-
-        int startX = handle.x() + handle.width() - 3;
-        int startY = handle.y() + handle.height() - 3;
-
-        input.mousePressed(startX, startY);
-
-        input.mouseReleased(
-                startX + 40,
-                startY + 20);
-
-        UiSize finalSize = window.userSize().orElseThrow();
-
-        // Movement after release must not resize the window.
-        input.mouseMoved(700, 500);
-
-        assertEquals(
-                finalSize,
-                window.userSize().orElseThrow());
-    }
-
-    @Test
-    void resizingRespectsViewportBoundaries() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiRect handle = window.resizeHandleBounds();
-
-        int startX = handle.x() + handle.width() - 3;
-        int startY = handle.y() + handle.height() - 3;
-
-        input.mousePressed(startX, startY);
-
-        // Attempt to resize far beyond the viewport.
-        input.mouseMoved(2000, 2000);
-
-        // Viewport: 800x600
-        // Window position: 20,20
-        assertEquals(
-                new UiSize(780, 580),
-                window.userSize().orElseThrow());
-
-        input.mouseReleased(2000, 2000);
-    }
-
-    @Test
-    void nonResizableWindowsIgnoreResizeDrag() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        window.setResizable(false);
-
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiRect originalBounds = window.bounds();
-        UiRect handle = window.resizeHandleBounds();
-
-        int startX = handle.x() + handle.width() - 3;
-        int startY = handle.y() + handle.height() - 3;
-
-        input.mousePressed(startX, startY);
-
-        input.mouseMoved(
-                startX + 100,
-                startY + 100);
-
-        input.mouseReleased(
-                startX + 100,
-                startY + 100);
-
-        assertEquals(originalBounds, window.bounds());
-        assertTrue(window.userSize().isEmpty());
-    }
-
-    @Test
-    void mouseWheelScrollsContainerUnderCursor() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer scroll = scrollList();
-
-        window.content().add(scroll);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        // Use the empty space to the right of the items.
-        int x = scroll.bounds().x()
-                + scroll.bounds().width() - 4;
-
-        int y = scroll.bounds().y() + 5;
-
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-        assertEquals(40, scroll.scrollY());
-
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-        assertEquals(80, scroll.scrollY());
-
-        assertTrue(input.mouseWheelMoved(x, y, 120));
-        assertEquals(40, scroll.scrollY());
-
-        assertTrue(input.mouseWheelMoved(x, y, 120));
-        assertEquals(0, scroll.scrollY());
-    }
-
-    @Test
-    void wheelEventsOverWindowsAreConsumed() {
-        UiContainer desktop = desktop();
-
-        UiWindow window = window();
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        int x = window.bounds().x() + 10;
-        int y = window.bounds().y() + 10;
-
-        // The window has no scroll container,
-        // but it must still block the wheel event.
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-
-        // Outside all UI, the event is not consumed.
-        assertFalse(input.mouseWheelMoved(700, 500, -120));
-
-        // A zero-delta event does nothing.
-        assertFalse(input.mouseWheelMoved(x, y, 0));
-    }
-
-    @Test
-    void wheelAtScrollLimitIsStillConsumed() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer scroll = scrollList();
-
-        window.content().add(scroll);
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        scroll.scrollTo(scroll.maxScrollY());
-        root.updateLayout(new UiSize(800, 600));
-
-        int x = scroll.bounds().x() + 5;
-        int y = scroll.bounds().y() + 5;
-
-        int bottom = scroll.maxScrollY();
-
-        // The list cannot move further down,
-        // but the event must not reach the world.
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-
-        assertEquals(bottom, scroll.scrollY());
-    }
-
-    @Test
-    void frontWindowBlocksScrollingBehindIt() {
-        UiContainer desktop = desktop();
-
-        UiWindow back = window();
-        UiScrollContainer scroll = scrollList();
-
-        back.content().add(scroll);
-
-        UiWindow front = window();
-
-        desktop.add(back);
-        desktop.add(front);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        int x = scroll.bounds().x() + 5;
-        int y = scroll.bounds().y() + 5;
-
-        // The front window covers the scroll container.
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-        assertEquals(0, scroll.scrollY());
-
-        // Move the covering window out of the way.
-        front.setPosition(new UiPoint(350, 100));
-        root.updateLayout(new UiSize(800, 600));
-
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-        assertEquals(40, scroll.scrollY());
-    }
-
-    @Test
-    void nestedScrollingFallsBackToOuterContainer() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer outer = new UiScrollContainer();
-        outer.setPreferredSize(new UiSize(150, 80));
-
-        UiScrollContainer inner = scrollList();
-        outer.content().add(inner);
-
-        // Give the outer container additional content
-        // so it has its own scrolling range.
-        UiElement filler = new UiElement();
-        filler.setPreferredSize(new UiSize(100, 250));
-
-        outer.content().add(filler);
-
-        window.content().add(outer);
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        int x = inner.bounds().x() + 5;
-        int y = inner.bounds().y() + 5;
-
-        assertTrue(inner.maxScrollY() > 0);
-        assertTrue(outer.maxScrollY() > 0);
-
-        // Inner container scrolls first.
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-
-        assertEquals(40, inner.scrollY());
-        assertEquals(0, outer.scrollY());
-
-        // Move the inner container to its bottom.
-        inner.scrollTo(inner.maxScrollY());
-        root.updateLayout(new UiSize(800, 600));
-
-        // Further scrolling moves the outer container.
-        assertTrue(input.mouseWheelMoved(x, y, -120));
-
-        assertEquals(40, outer.scrollY());
-    }
-
-    @Test
-    void draggingScrollbarChangesScrollPosition() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer scroll = scrollList();
-
-        window.content().add(scroll);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiScrollBar bar = scroll.scrollBar();
-        UiRect thumb = bar.thumbBounds();
-
-        int x = thumb.x() + thumb.width() / 2;
-        int y = thumb.y() + thumb.height() / 2;
-
-        UiPoint windowPosition = window.position();
-
-        assertTrue(input.mousePressed(x, y));
-
-        assertTrue(input.mouseMoved(x, y + 30));
-
-        assertTrue(scroll.scrollY() > 0);
-
-        // Dragging the thumb must not move its window.
-        assertEquals(windowPosition, window.position());
-
-        assertTrue(input.mouseReleased(x, y + 30));
-
-        int finalScrollY = scroll.scrollY();
-
-        // Mouse movement after release must not scroll.
-        input.mouseMoved(700, 500);
-
-        assertEquals(finalScrollY, scroll.scrollY());
-    }
-
-    @Test
-    void clickingScrollbarTrackMovesThumb() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer scroll = scrollList();
-
-        window.content().add(scroll);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiScrollBar bar = scroll.scrollBar();
-
-        int x = bar.bounds().x()
-                + bar.bounds().width() / 2;
-
-        // Click three quarters of the way down the track.
-        int y = bar.bounds().y()
-                + bar.bounds().height() * 3 / 4;
-
-        assertEquals(0, scroll.scrollY());
-
-        assertTrue(input.mousePressed(x, y));
-
-        // Track click should jump towards this position.
-        assertTrue(scroll.scrollY() > 0);
-
-        assertTrue(input.mouseReleased(x, y));
-    }
-
-    @Test
-    void scrollbarDoesNotPreventWindowResizing() {
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer scroll = scrollList();
-
-        window.content().add(scroll);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiRect handle = window.resizeHandleBounds();
-
-        // Choose a point inside the bottom-right resize grip.
-        int x = handle.x() + 2;
-        int y = handle.y() + 2;
-
-        assertTrue(input.mousePressed(x, y));
-
-        assertTrue(input.mouseMoved(x + 30, y + 20));
-
-        assertTrue(window.userSize().isPresent());
-
-        assertTrue(input.mouseReleased(x + 30, y + 20));
-    }
-
-    @Test
-    void mouseClickChangesKeyboardFocus() {
-
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton first = button("First");
-        UiButton second = button("Second");
-        UiButton disabled = button("Disabled");
-
-        disabled.setEnabled(false);
-
-        window.content().add(first);
-        window.content().add(second);
-        window.content().add(disabled);
-
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(
-                root(desktop));
-
-        UiFocusManager focus = input.focusManager();
-
-        assertNull(focus.focusedElement());
-
-        // Pressing the first button establishes focus.
-        assertTrue(input.mousePressed(x(first), y(first)));
-
-        assertSame(first, focus.focusedElement());
-
-        input.mouseReleased(x(first), y(first));
-
-        // Moving the pointer does not change focus.
-        input.mouseMoved(x(second), y(second));
-
-        assertSame(first, focus.focusedElement());
-
-        // Clicking another button transfers focus.
-        assertTrue(input.mousePressed(
-                x(second), y(second)));
-
-        assertSame(second, focus.focusedElement());
-
-        input.mouseReleased(x(second), y(second));
-
-        // Disabled buttons cannot take focus.
-        assertTrue(input.mousePressed(
-                x(disabled), y(disabled)));
-
-        assertNull(focus.focusedElement());
-
-        input.mouseReleased(x(disabled), y(disabled));
-    }
-
-    @Test
-    void keyboardNavigationRequiresUiInteraction() {
-
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton first = button("First");
-        UiButton disabled = button("Disabled");
-        UiButton second = button("Second");
-
-        disabled.setEnabled(false);
-
-        window.content().add(first);
-        window.content().add(disabled);
-        window.content().add(second);
-
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        UiFocusManager focus = input.focusManager();
-
-        // Before clicking the UI, keyboard navigation
-        // must remain available to the original game.
-        assertFalse(input.keyPressed(UiKey.TAB, false));
-        assertNull(focus.focusedElement());
-
-        // Click the first button.
-        assertTrue(input.mousePressed(
-                x(first), y(first)));
-
-        input.mouseReleased(x(first), y(first));
-
-        assertSame(first, focus.focusedElement());
-
-        // Tab skips the disabled button.
-        assertTrue(input.keyPressed(UiKey.TAB, false));
-
-        assertSame(second, focus.focusedElement());
-
-        // Release Tab before pressing it again.
-        input.keyReleased(UiKey.TAB);
-
-        // Shift+Tab navigates backwards.
-        assertTrue(input.keyPressed(UiKey.TAB, true));
-
-        assertSame(first, focus.focusedElement());
-
-        input.keyReleased(UiKey.TAB);
-
-        // Clicking outside the UI releases keyboard
-        // navigation back to the original game.
-        input.mousePressed(700, 500);
-        input.mouseReleased(700, 500);
-
-        assertFalse(input.keyPressed(UiKey.TAB, false));
-    }
-
-    @Test
-    void keyboardActivatesFocusedButtonOnlyOncePerPress() {
-
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiButton button = button("Action");
-
-        AtomicInteger activations = new AtomicInteger();
-
-        button.setOnClick(
-                activations::incrementAndGet);
-
-        window.content().add(button);
-        desktop.add(window);
-
-        UiInputRouter input = new UiInputRouter(root(desktop));
-
-        // Mouse click establishes keyboard focus.
-        input.mousePressed(x(button), y(button));
-        input.mouseReleased(x(button), y(button));
-
-        assertEquals(1, activations.get());
-
-        // Enter activates the focused button.
-        assertTrue(input.keyPressed(UiKey.ENTER, false));
-
-        assertEquals(2, activations.get());
-
-        // A repeated key-down must not activate again.
-        assertTrue(input.keyPressed(UiKey.ENTER, false));
-
-        assertEquals(2, activations.get());
-
-        // Release and press again.
-        input.keyReleased(UiKey.ENTER);
-
-        assertTrue(input.keyPressed(UiKey.ENTER, false));
-
-        assertEquals(3, activations.get());
-
-        input.keyReleased(UiKey.ENTER);
-
-        // Space uses the same button action.
-        assertTrue(input.keyPressed(UiKey.SPACE, false));
-
-        assertEquals(4, activations.get());
-
-        input.keyReleased(UiKey.SPACE);
-
-        // Closing the window invalidates focus.
-        window.close();
-
-        assertNull(input.focusManager().focusedElement());
-
-        // The hidden button must not activate.
-        assertFalse(input.keyPressed(UiKey.ENTER, false));
-
-        assertEquals(4, activations.get());
-    }
-
-    @Test
-    void tabNavigationRevealsItemsInsideScrollContainer() {
-
-        UiContainer desktop = desktop();
-        UiWindow window = window();
-
-        UiScrollContainer scroll = new UiScrollContainer();
-
-        UiButton[] items = new UiButton[10];
-
-        for (int i = 0; i < items.length; i++) {
-
-            items[i] = button("Item " + i);
-
-            scroll.content().add(items[i]);
+        private static UiWindow window() {
+                UiWindow window = new UiWindow("Test Window");
+                window.setPosition(new UiPoint(20, 20));
+                window.setPreferredSize(new UiSize(200, 140));
+                return window;
         }
 
-        window.content().add(scroll);
-        desktop.add(window);
-
-        UiRoot root = root(desktop);
-        UiInputRouter input = new UiInputRouter(root);
-
-        // Give the first item focus.
-        input.mousePressed(x(items[0]), y(items[0]));
-        input.mouseReleased(x(items[0]), y(items[0]));
-
-        assertSame(
-                items[0],
-                input.focusManager().focusedElement());
-
-        // Navigate through the rest of the list.
-        for (int i = 1; i < items.length; i++) {
-
-            assertTrue(input.keyPressed(
-                    UiKey.TAB, false));
-
-            input.keyReleased(UiKey.TAB);
+        private static UiContainer desktop() {
+                UiContainer desktop = new UiContainer();
+                desktop.setLayoutStrategy(UiAbsoluteLayout.INSTANCE);
+                return desktop;
         }
 
-        assertSame(
-                items[9],
-                input.focusManager().focusedElement());
+        private static UiRoot root(UiContainer desktop) {
+                UiRoot root = new UiRoot(desktop);
+                root.updateLayout(new UiSize(800, 600));
+                return root;
+        }
 
-        // The container must have scrolled down
-        // to reveal the final button.
-        assertTrue(scroll.scrollY() > 0);
+        private static int x(UiButton button) {
+                return button.bounds().x() + 2;
+        }
 
-        UiRect itemBounds = items[9].bounds();
-        UiRect viewport = scroll.bounds();
+        private static int y(UiButton button) {
+                return button.bounds().y() + 2;
+        }
 
-        assertTrue(itemBounds.y() >= viewport.y());
+        private static UiScrollContainer scrollList() {
 
-        assertTrue(
-                itemBounds.y() + itemBounds.height() <= viewport.y() + viewport.height());
-    }
+                UiScrollContainer scroll = new UiScrollContainer();
 
-    @Test
-    void clickingTextFieldFocusesItAndPositionsCaret() {
+                scroll.setPreferredSize(new UiSize(150, 80));
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                // Enough content to exceed the viewport.
+                for (int i = 0; i < 8; i++) {
 
-        UiTextField field = new UiTextField(
-                "Stone",
-                text -> new UiSize(text.length() * 7, 16));
+                        UiElement item = new UiElement();
 
-        window.content().add(field);
-        desktop.add(window);
+                        item.setPreferredSize(
+                                        new UiSize(100, 30));
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                        scroll.content().add(item);
+                }
 
-        // The text begins after the field's left padding.
-        int textX = field.bounds().x()
-                + field.padding().left();
+                return scroll;
+        }
 
-        int mouseY = field.bounds().y() + 12;
+        @Test
+        void clickingButtonActivatesIt() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
 
-        // Click just after the second character.
-        assertTrue(input.mousePressed(
-                textX + 14, mouseY));
+                UiButton button = button("Click");
+                AtomicInteger clicks = new AtomicInteger();
 
-        assertSame(
-                field,
-                input.focusManager().focusedElement());
+                button.setOnClick(clicks::incrementAndGet);
 
-        assertEquals(2, field.cursorPosition());
+                window.content().add(button);
+                desktop.add(window);
 
-        input.mouseReleased(textX + 14, mouseY);
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        // Clicking elsewhere in the text moves the caret.
-        assertTrue(input.mousePressed(
-                textX + 35, mouseY));
+                assertTrue(input.mousePressed(x(button), y(button)));
+                assertTrue(button.pressed());
 
-        assertEquals(5, field.cursorPosition());
+                assertTrue(input.mouseReleased(x(button), y(button)));
 
-        input.mouseReleased(textX + 35, mouseY);
-    }
+                assertEquals(1, clicks.get());
+                assertFalse(button.pressed());
 
-    @Test
-    void textFieldReceivesUnicodeCharacterInput() {
+                // Releasing again must not trigger another click.
+                input.mouseReleased(x(button), y(button));
+                assertEquals(1, clicks.get());
+        }
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+        @Test
+        void mouseMovementUpdatesHoverState() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+                UiButton button = button("Hover");
 
-        UiTextField field = new UiTextField(
-                "",
-                text -> new UiSize(text.length() * 7, 16));
+                window.content().add(button);
+                desktop.add(window);
 
-        window.content().add(field);
-        desktop.add(window);
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                assertTrue(input.mouseMoved(x(button), y(button)));
+                assertTrue(button.hovered());
 
-        int mouseX = field.bounds().x()
-                + field.bounds().width() / 2;
+                assertFalse(input.mouseMoved(500, 500));
+                assertFalse(button.hovered());
+        }
 
-        int mouseY = field.bounds().y()
-                + field.bounds().height() / 2;
+        @Test
+        void releasingOutsideCancelsClick() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
 
-        input.mousePressed(mouseX, mouseY);
-        input.mouseReleased(mouseX, mouseY);
+                UiButton button = button("Click");
+                AtomicInteger clicks = new AtomicInteger();
 
-        assertTrue(input.textInputActive());
+                button.setOnClick(clicks::incrementAndGet);
 
-        assertTrue(input.characterTyped('A'));
-        assertTrue(input.characterTyped(0x1F48E));
-        assertTrue(input.characterTyped('B'));
+                window.content().add(button);
+                desktop.add(window);
 
-        assertEquals("A💎B", field.text());
-        assertEquals(3, field.cursorPosition());
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        // Reject line breaks and control characters.
-        assertTrue(input.characterTyped('\n'));
+                input.mousePressed(x(button), y(button));
 
-        assertEquals("A💎B", field.text());
+                // Drag away from the button.
+                assertTrue(input.mouseMoved(500, 500));
+                assertFalse(button.pressed());
 
-        // Clicking outside returns input to the game.
-        input.mousePressed(700, 500);
-        input.mouseReleased(700, 500);
+                // The release is still consumed by the UI.
+                assertTrue(input.mouseReleased(500, 500));
 
-        assertFalse(input.textInputActive());
-        assertFalse(input.characterTyped('X'));
+                assertEquals(0, clicks.get());
+        }
 
-        assertEquals("A💎B", field.text());
-    }
+        @Test
+        void releasingOnAnotherButtonDoesNotActivateEither() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
 
-    @Test
-    void editingKeysModifyFocusedTextField() {
+                UiButton first = button("First");
+                UiButton second = button("Second");
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                AtomicInteger firstClicks = new AtomicInteger();
+                AtomicInteger secondClicks = new AtomicInteger();
 
-        UiTextField field = new UiTextField(
-                "Stone",
-                text -> new UiSize(text.length() * 7, 16));
+                first.setOnClick(firstClicks::incrementAndGet);
+                second.setOnClick(secondClicks::incrementAndGet);
 
-        window.content().add(field);
-        desktop.add(window);
+                window.content().add(first);
+                window.content().add(second);
+                desktop.add(window);
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        int mouseX = field.bounds().x()
-                + field.bounds().width() / 2;
+                input.mousePressed(x(first), y(first));
+                input.mouseMoved(x(second), y(second));
+                input.mouseReleased(x(second), y(second));
 
-        int mouseY = field.bounds().y()
-                + field.bounds().height() / 2;
+                assertEquals(0, firstClicks.get());
+                assertEquals(0, secondClicks.get());
+        }
 
-        input.mousePressed(mouseX, mouseY);
-        input.mouseReleased(mouseX, mouseY);
+        @Test
+        void disabledButtonsConsumeClicksWithoutActivating() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
 
-        assertTrue(input.textInputActive());
+                UiButton button = button("Disabled");
+                AtomicInteger clicks = new AtomicInteger();
 
-        // Home moves to the beginning.
-        assertTrue(input.keyPressed(UiKey.HOME, false));
-        assertEquals(0, field.cursorPosition());
-        input.keyReleased(UiKey.HOME);
+                button.setOnClick(clicks::incrementAndGet);
+                button.setEnabled(false);
 
-        // Right moves forward one character.
-        assertTrue(input.keyPressed(UiKey.RIGHT, false));
-        assertEquals(1, field.cursorPosition());
-        input.keyReleased(UiKey.RIGHT);
+                window.content().add(button);
+                desktop.add(window);
 
-        // Insert a character at the cursor.
-        assertTrue(input.characterTyped('X'));
-        assertEquals("SXtone", field.text());
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        // Backspace removes the inserted character.
-        assertTrue(input.keyPressed(
-                UiKey.BACKSPACE, false));
+                assertTrue(input.mousePressed(x(button), y(button)));
+                assertTrue(input.mouseReleased(x(button), y(button)));
 
-        assertEquals("Stone", field.text());
+                assertEquals(0, clicks.get());
+                assertFalse(button.pressed());
+                assertFalse(button.hovered());
+        }
 
-        input.keyReleased(UiKey.BACKSPACE);
+        @Test
+        void frontWindowBlocksButtonsBehindIt() {
+                UiContainer desktop = desktop();
 
-        // Delete removes the character after the cursor.
-        assertTrue(input.keyPressed(
-                UiKey.DELETE, false));
+                UiWindow back = window();
+                UiButton backButton = button("Behind");
 
-        assertEquals("Sone", field.text());
+                AtomicInteger clicks = new AtomicInteger();
+                backButton.setOnClick(clicks::incrementAndGet);
 
-        input.keyReleased(UiKey.DELETE);
+                back.content().add(backButton);
 
-        // End moves to the end of the text.
-        assertTrue(input.keyPressed(UiKey.END, false));
+                UiWindow front = window();
 
-        assertEquals(4, field.cursorPosition());
+                desktop.add(back);
+                desktop.add(front);
 
-        input.keyReleased(UiKey.END);
-    }
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-    @Test
-    void textInputOwnershipFollowsFocusAndWindowState() {
+                // Front window is empty but covers the back button.
+                assertTrue(input.mousePressed(
+                                x(backButton), y(backButton)));
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                assertTrue(input.mouseReleased(
+                                x(backButton), y(backButton)));
 
-        UiTextField field = new UiTextField(
-                "",
-                text -> new UiSize(text.length() * 7, 16));
+                assertEquals(0, clicks.get());
+        }
 
-        UiButton button = button("Action");
+        @Test
+        void bringingWindowToFrontChangesInputPriority() {
+                UiContainer desktop = desktop();
 
-        window.content().add(field);
-        window.content().add(button);
-        desktop.add(window);
+                UiWindow back = window();
+                UiWindow front = window();
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                UiButton backButton = button("Back");
+                UiButton frontButton = button("Front");
 
-        int fieldX = field.bounds().x() + 10;
-        int fieldY = field.bounds().y() + 10;
+                AtomicInteger backClicks = new AtomicInteger();
+                AtomicInteger frontClicks = new AtomicInteger();
 
-        // Initially, gameplay owns keyboard input.
-        assertFalse(input.textInputActive());
+                backButton.setOnClick(backClicks::incrementAndGet);
+                frontButton.setOnClick(frontClicks::incrementAndGet);
 
-        // Focusing the text field transfers ownership.
-        input.mousePressed(fieldX, fieldY);
-        input.mouseReleased(fieldX, fieldY);
+                back.content().add(backButton);
+                front.content().add(frontButton);
 
-        assertTrue(input.textInputActive());
+                desktop.add(back);
+                desktop.add(front);
 
-        // Another control takes focus.
-        int buttonX = button.bounds().x()
-                + button.bounds().width() / 2;
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
 
-        int buttonY = button.bounds().y()
-                + button.bounds().height() / 2;
+                input.mousePressed(x(frontButton), y(frontButton));
+                input.mouseReleased(x(frontButton), y(frontButton));
 
-        input.mousePressed(buttonX, buttonY);
-        input.mouseReleased(buttonX, buttonY);
+                assertEquals(1, frontClicks.get());
+                assertEquals(0, backClicks.get());
 
-        assertFalse(input.textInputActive());
+                // Move the other window to the top.
+                desktop.bringToFront(back);
+                root.updateLayout(new UiSize(800, 600));
 
-        // Return focus to the text field.
-        input.mousePressed(fieldX, fieldY);
-        input.mouseReleased(fieldX, fieldY);
+                input.mousePressed(x(backButton), y(backButton));
+                input.mouseReleased(x(backButton), y(backButton));
 
-        assertTrue(input.textInputActive());
+                assertEquals(1, backClicks.get());
+                assertEquals(1, frontClicks.get());
+        }
 
-        // Disabling the field invalidates text ownership.
-        field.setEnabled(false);
+        @Test
+        void hiddenWindowsDoNotReceiveInput() {
+                UiContainer desktop = desktop();
 
-        assertFalse(input.textInputActive());
+                UiWindow back = window();
+                UiButton backButton = button("Back");
 
-        // Re-enable and refocus.
-        field.setEnabled(true);
+                AtomicInteger clicks = new AtomicInteger();
+                backButton.setOnClick(clicks::incrementAndGet);
 
-        input.mousePressed(fieldX, fieldY);
-        input.mouseReleased(fieldX, fieldY);
+                back.content().add(backButton);
 
-        assertTrue(input.textInputActive());
+                UiWindow front = window();
 
-        // Closing the window releases ownership.
-        window.close();
+                desktop.add(back);
+                desktop.add(front);
 
-        assertFalse(input.textInputActive());
-    }
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
 
-    @Test
-    void cancellingInputClearsTextFocus() {
+                front.setVisible(false);
+                root.updateLayout(new UiSize(800, 600));
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                input.mousePressed(x(backButton), y(backButton));
+                input.mouseReleased(x(backButton), y(backButton));
 
-        UiTextField field = new UiTextField(
-                "",
-                text -> new UiSize(text.length() * 7, 16));
+                assertEquals(1, clicks.get());
+        }
 
-        window.content().add(field);
-        desktop.add(window);
+        @Test
+        void cancellationClearsPointerState() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                UiButton button = button("Click");
+                AtomicInteger clicks = new AtomicInteger();
 
-        int x = field.bounds().x() + 10;
-        int y = field.bounds().y() + 10;
+                button.setOnClick(clicks::incrementAndGet);
 
-        input.mousePressed(x, y);
-        input.mouseReleased(x, y);
+                window.content().add(button);
+                desktop.add(window);
 
-        assertTrue(input.textInputActive());
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        input.characterTyped('A');
-        assertEquals("A", field.text());
+                input.mousePressed(x(button), y(button));
 
-        // Simulate losing application focus.
-        input.cancelInput();
+                assertTrue(button.pressed());
+                assertTrue(button.hovered());
 
-        assertFalse(input.textInputActive());
-        assertNull(input.focusManager().focusedElement());
-        assertNull(input.focusManager().activeWindow());
+                input.cancelPointer();
 
-        // Text is preserved, but no further typing is accepted.
-        assertEquals("A", field.text());
-        assertFalse(input.characterTyped('B'));
+                assertFalse(button.pressed());
+                assertFalse(button.hovered());
 
-        // Clicking again restores text ownership.
-        input.mousePressed(x, y);
-        input.mouseReleased(x, y);
+                // No activation after cancellation.
+                input.mouseReleased(x(button), y(button));
 
-        assertTrue(input.textInputActive());
-    }
+                assertEquals(0, clicks.get());
+        }
 
-    @Test
-    void cancellingInputReleasesPressedButton() {
+        @Test
+        void clickingWindowBringsItToFront() {
+                UiContainer desktop = desktop();
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                UiWindow back = window();
+                UiWindow front = window();
 
-        UiButton button = button("Action");
+                front.setPosition(new UiPoint(110, 80));
 
-        java.util.concurrent.atomic.AtomicInteger activations = new java.util.concurrent.atomic.AtomicInteger();
+                desktop.add(back);
+                desktop.add(front);
 
-        button.setOnClick(activations::incrementAndGet);
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
 
-        window.content().add(button);
-        desktop.add(window);
+                assertSame(front, desktop.children().get(1));
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                // Click an exposed part of the back window's title.
+                assertTrue(input.mousePressed(35, 35));
 
-        int x = x(button);
-        int y = y(button);
+                assertSame(back, desktop.children().get(1));
 
-        input.mousePressed(x, y);
+                input.mouseReleased(35, 35);
+        }
 
-        assertTrue(button.pressed());
+        @Test
+        void draggingTitleBarMovesWindow() {
+                UiContainer desktop = desktop();
 
-        // Simulate Alt+Tab before mouse release.
-        input.cancelInput();
+                UiWindow window = window();
+                desktop.add(window);
 
-        assertFalse(button.pressed());
-        assertFalse(button.hovered());
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
 
-        // Releasing after cancellation must not click.
-        input.mouseReleased(x, y);
+                int startX = window.titleBar().bounds().x() + 8;
+                int startY = window.titleBar().bounds().y() + 8;
 
-        assertEquals(0, activations.get());
-    }
+                UiPoint original = window.position();
 
-    @Test
-    void cancellingInputStopsWindowDragging() {
+                assertTrue(input.mousePressed(startX, startY));
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                assertTrue(input.mouseMoved(
+                                startX + 65,
+                                startY + 40));
 
-        desktop.add(window);
+                assertEquals(
+                                new UiPoint(
+                                                original.x() + 65,
+                                                original.y() + 40),
+                                window.position());
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                assertEquals(
+                                new UiRect(85, 60, 200, 140),
+                                window.bounds());
 
-        int x = window.titleBar().bounds().x() + 8;
-        int y = window.titleBar().bounds().y() + 8;
+                assertTrue(input.mouseReleased(
+                                startX + 65,
+                                startY + 40));
 
-        input.mousePressed(x, y);
+                // Further movement must not drag the released window.
+                UiPoint finalPosition = window.position();
 
-        // Cancel while dragging.
-        input.cancelInput();
+                input.mouseMoved(700, 500);
 
-        UiPoint position = window.position();
+                assertEquals(finalPosition, window.position());
+        }
 
-        // Later mouse movement must not move the window.
-        input.mouseMoved(650, 450);
+        @Test
+        void clickingWindowContentDoesNotDragIt() {
+                UiContainer desktop = desktop();
 
-        assertEquals(position, window.position());
-    }
+                UiWindow window = window();
+                desktop.add(window);
 
-    @Test
-    void cancellingInputClearsHeldNavigationKeys() {
+                UiInputRouter input = new UiInputRouter(root(desktop));
 
-        UiContainer desktop = desktop();
-        UiWindow window = window();
+                int x = window.content().bounds().x() + 15;
+                int y = window.content().bounds().y() + 30;
 
-        UiButton first = button("First");
-        UiButton second = button("Second");
+                UiPoint original = window.position();
 
-        window.content().add(first);
-        window.content().add(second);
+                assertTrue(input.mousePressed(x, y));
 
-        desktop.add(window);
+                input.mouseMoved(x + 100, y + 50);
 
-        UiInputRouter input = new UiInputRouter(root(desktop));
+                assertEquals(original, window.position());
 
-        // Activate keyboard navigation.
-        input.mousePressed(x(first), y(first));
-        input.mouseReleased(x(first), y(first));
+                input.mouseReleased(x + 100, y + 50);
 
-        assertTrue(input.keyPressed(UiKey.TAB, false));
+                assertEquals(original, window.position());
+        }
 
-        assertSame(
-                second,
-                input.focusManager().focusedElement());
+        @Test
+        void clickingButtonRaisesWindowWithoutDragging() {
+                UiContainer desktop = desktop();
 
-        // Cancel without receiving a Tab key-release event.
-        input.cancelInput();
+                UiWindow back = window();
+                UiWindow front = window();
 
-        assertNull(input.focusManager().focusedElement());
+                front.setPosition(new UiPoint(110, 80));
 
-        // Keyboard input is no longer consumed.
-        assertFalse(input.keyPressed(UiKey.TAB, false));
+                UiButton button = button("Click");
 
-        // Re-enable navigation by clicking the UI.
-        input.mousePressed(x(first), y(first));
-        input.mouseReleased(x(first), y(first));
+                AtomicInteger clicks = new AtomicInteger();
 
-        // Tab must work again, despite the missing release.
-        assertTrue(input.keyPressed(UiKey.TAB, false));
+                button.setOnClick(clicks::incrementAndGet);
 
-        assertSame(
-                second,
-                input.focusManager().focusedElement());
-    }
+                back.content().add(button);
+
+                desktop.add(back);
+                desktop.add(front);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                UiPoint original = back.position();
+
+                input.mousePressed(x(button), y(button));
+
+                assertSame(back, desktop.children().get(1));
+
+                input.mouseReleased(x(button), y(button));
+
+                assertEquals(1, clicks.get());
+                assertEquals(original, back.position());
+        }
+
+        @Test
+        void titleBarCloseButtonClosesWithoutDragging() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+
+                UiButton close = button("X");
+
+                close.setMinimumSize(new UiSize(20, 20));
+                close.setPreferredSize(new UiSize(20, 20));
+                close.setPadding(xaos.ui.layout.UiInsets.NONE);
+
+                close.setOnClick(window::close);
+
+                window.titleBar().add(close);
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                UiPoint originalPosition = window.position();
+
+                assertTrue(input.mousePressed(x(close), y(close)));
+
+                assertTrue(close.pressed());
+
+                assertTrue(input.mouseReleased(x(close), y(close)));
+
+                assertFalse(window.isOpen());
+                assertFalse(close.pressed());
+                assertFalse(close.hovered());
+
+                // Clicking close must not move the window.
+                assertEquals(originalPosition, window.position());
+
+                root.updateLayout(new UiSize(800, 600));
+
+                // A closed window must not receive new clicks.
+                assertFalse(input.mousePressed(x(close), y(close)));
+        }
+
+        @Test
+        void draggingWindowRespectsViewportBoundaries() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                int startX = window.titleBar().bounds().x() + 8;
+                int startY = window.titleBar().bounds().y() + 8;
+
+                input.mousePressed(startX, startY);
+
+                // Attempt to drag far beyond the bottom-right corner.
+                input.mouseMoved(2000, 2000);
+
+                assertEquals(
+                                new UiPoint(600, 460),
+                                window.position());
+
+                // Attempt to drag beyond the top-left corner.
+                input.mouseMoved(-500, -500);
+
+                assertEquals(
+                                UiPoint.ZERO,
+                                window.position());
+
+                input.mouseReleased(-500, -500);
+
+                assertEquals(
+                                UiPoint.ZERO,
+                                window.position());
+        }
+
+        @Test
+        void resizingWindowChangesDimensions() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                UiPoint originalPosition = window.position();
+
+                UiRect handle = window.resizeHandleBounds();
+
+                int startX = handle.x() + handle.width() - 3;
+                int startY = handle.y() + handle.height() - 3;
+
+                assertTrue(input.mousePressed(startX, startY));
+
+                assertTrue(input.mouseMoved(
+                                startX + 60,
+                                startY + 35));
+
+                assertEquals(
+                                new UiSize(260, 175),
+                                window.userSize().orElseThrow());
+
+                assertEquals(
+                                new UiRect(20, 20, 260, 175),
+                                window.bounds());
+
+                assertEquals(originalPosition, window.position());
+
+                assertTrue(input.mouseReleased(
+                                startX + 60,
+                                startY + 35));
+        }
+
+        @Test
+        void resizingRespectsMinimumDimensions() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiRect handle = window.resizeHandleBounds();
+
+                int startX = handle.x() + handle.width() - 3;
+                int startY = handle.y() + handle.height() - 3;
+
+                input.mousePressed(startX, startY);
+
+                input.mouseMoved(
+                                startX - 500,
+                                startY - 500);
+
+                assertEquals(
+                                new UiSize(180, 80),
+                                window.userSize().orElseThrow());
+
+                input.mouseReleased(
+                                startX - 500,
+                                startY - 500);
+        }
+
+        @Test
+        void resizingStopsAfterMouseRelease() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiRect handle = window.resizeHandleBounds();
+
+                int startX = handle.x() + handle.width() - 3;
+                int startY = handle.y() + handle.height() - 3;
+
+                input.mousePressed(startX, startY);
+
+                input.mouseReleased(
+                                startX + 40,
+                                startY + 20);
+
+                UiSize finalSize = window.userSize().orElseThrow();
+
+                // Movement after release must not resize the window.
+                input.mouseMoved(700, 500);
+
+                assertEquals(
+                                finalSize,
+                                window.userSize().orElseThrow());
+        }
+
+        @Test
+        void resizingRespectsViewportBoundaries() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiRect handle = window.resizeHandleBounds();
+
+                int startX = handle.x() + handle.width() - 3;
+                int startY = handle.y() + handle.height() - 3;
+
+                input.mousePressed(startX, startY);
+
+                // Attempt to resize far beyond the viewport.
+                input.mouseMoved(2000, 2000);
+
+                // Viewport: 800x600
+                // Window position: 20,20
+                assertEquals(
+                                new UiSize(780, 580),
+                                window.userSize().orElseThrow());
+
+                input.mouseReleased(2000, 2000);
+        }
+
+        @Test
+        void nonResizableWindowsIgnoreResizeDrag() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                window.setResizable(false);
+
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiRect originalBounds = window.bounds();
+                UiRect handle = window.resizeHandleBounds();
+
+                int startX = handle.x() + handle.width() - 3;
+                int startY = handle.y() + handle.height() - 3;
+
+                input.mousePressed(startX, startY);
+
+                input.mouseMoved(
+                                startX + 100,
+                                startY + 100);
+
+                input.mouseReleased(
+                                startX + 100,
+                                startY + 100);
+
+                assertEquals(originalBounds, window.bounds());
+                assertTrue(window.userSize().isEmpty());
+        }
+
+        @Test
+        void mouseWheelScrollsContainerUnderCursor() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer scroll = scrollList();
+
+                window.content().add(scroll);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                // Use the empty space to the right of the items.
+                int x = scroll.bounds().x()
+                                + scroll.bounds().width() - 4;
+
+                int y = scroll.bounds().y() + 5;
+
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+                assertEquals(40, scroll.scrollY());
+
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+                assertEquals(80, scroll.scrollY());
+
+                assertTrue(input.mouseWheelMoved(x, y, 120));
+                assertEquals(40, scroll.scrollY());
+
+                assertTrue(input.mouseWheelMoved(x, y, 120));
+                assertEquals(0, scroll.scrollY());
+        }
+
+        @Test
+        void wheelEventsOverWindowsAreConsumed() {
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int x = window.bounds().x() + 10;
+                int y = window.bounds().y() + 10;
+
+                // The window has no scroll container,
+                // but it must still block the wheel event.
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+
+                // Outside all UI, the event is not consumed.
+                assertFalse(input.mouseWheelMoved(700, 500, -120));
+
+                // A zero-delta event does nothing.
+                assertFalse(input.mouseWheelMoved(x, y, 0));
+        }
+
+        @Test
+        void wheelAtScrollLimitIsStillConsumed() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer scroll = scrollList();
+
+                window.content().add(scroll);
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                scroll.scrollTo(scroll.maxScrollY());
+                root.updateLayout(new UiSize(800, 600));
+
+                int x = scroll.bounds().x() + 5;
+                int y = scroll.bounds().y() + 5;
+
+                int bottom = scroll.maxScrollY();
+
+                // The list cannot move further down,
+                // but the event must not reach the world.
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+
+                assertEquals(bottom, scroll.scrollY());
+        }
+
+        @Test
+        void frontWindowBlocksScrollingBehindIt() {
+                UiContainer desktop = desktop();
+
+                UiWindow back = window();
+                UiScrollContainer scroll = scrollList();
+
+                back.content().add(scroll);
+
+                UiWindow front = window();
+
+                desktop.add(back);
+                desktop.add(front);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                int x = scroll.bounds().x() + 5;
+                int y = scroll.bounds().y() + 5;
+
+                // The front window covers the scroll container.
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+                assertEquals(0, scroll.scrollY());
+
+                // Move the covering window out of the way.
+                front.setPosition(new UiPoint(350, 100));
+                root.updateLayout(new UiSize(800, 600));
+
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+                assertEquals(40, scroll.scrollY());
+        }
+
+        @Test
+        void nestedScrollingFallsBackToOuterContainer() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer outer = new UiScrollContainer();
+                outer.setPreferredSize(new UiSize(150, 80));
+
+                UiScrollContainer inner = scrollList();
+                outer.content().add(inner);
+
+                // Give the outer container additional content
+                // so it has its own scrolling range.
+                UiElement filler = new UiElement();
+                filler.setPreferredSize(new UiSize(100, 250));
+
+                outer.content().add(filler);
+
+                window.content().add(outer);
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                int x = inner.bounds().x() + 5;
+                int y = inner.bounds().y() + 5;
+
+                assertTrue(inner.maxScrollY() > 0);
+                assertTrue(outer.maxScrollY() > 0);
+
+                // Inner container scrolls first.
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+
+                assertEquals(40, inner.scrollY());
+                assertEquals(0, outer.scrollY());
+
+                // Move the inner container to its bottom.
+                inner.scrollTo(inner.maxScrollY());
+                root.updateLayout(new UiSize(800, 600));
+
+                // Further scrolling moves the outer container.
+                assertTrue(input.mouseWheelMoved(x, y, -120));
+
+                assertEquals(40, outer.scrollY());
+        }
+
+        @Test
+        void draggingScrollbarChangesScrollPosition() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer scroll = scrollList();
+
+                window.content().add(scroll);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiScrollBar bar = scroll.scrollBar();
+                UiRect thumb = bar.thumbBounds();
+
+                int x = thumb.x() + thumb.width() / 2;
+                int y = thumb.y() + thumb.height() / 2;
+
+                UiPoint windowPosition = window.position();
+
+                assertTrue(input.mousePressed(x, y));
+
+                assertTrue(input.mouseMoved(x, y + 30));
+
+                assertTrue(scroll.scrollY() > 0);
+
+                // Dragging the thumb must not move its window.
+                assertEquals(windowPosition, window.position());
+
+                assertTrue(input.mouseReleased(x, y + 30));
+
+                int finalScrollY = scroll.scrollY();
+
+                // Mouse movement after release must not scroll.
+                input.mouseMoved(700, 500);
+
+                assertEquals(finalScrollY, scroll.scrollY());
+        }
+
+        @Test
+        void clickingScrollbarTrackMovesThumb() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer scroll = scrollList();
+
+                window.content().add(scroll);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiScrollBar bar = scroll.scrollBar();
+
+                int x = bar.bounds().x()
+                                + bar.bounds().width() / 2;
+
+                // Click three quarters of the way down the track.
+                int y = bar.bounds().y()
+                                + bar.bounds().height() * 3 / 4;
+
+                assertEquals(0, scroll.scrollY());
+
+                assertTrue(input.mousePressed(x, y));
+
+                // Track click should jump towards this position.
+                assertTrue(scroll.scrollY() > 0);
+
+                assertTrue(input.mouseReleased(x, y));
+        }
+
+        @Test
+        void scrollbarDoesNotPreventWindowResizing() {
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer scroll = scrollList();
+
+                window.content().add(scroll);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiRect handle = window.resizeHandleBounds();
+
+                // Choose a point inside the bottom-right resize grip.
+                int x = handle.x() + 2;
+                int y = handle.y() + 2;
+
+                assertTrue(input.mousePressed(x, y));
+
+                assertTrue(input.mouseMoved(x + 30, y + 20));
+
+                assertTrue(window.userSize().isPresent());
+
+                assertTrue(input.mouseReleased(x + 30, y + 20));
+        }
+
+        @Test
+        void mouseClickChangesKeyboardFocus() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton first = button("First");
+                UiButton second = button("Second");
+                UiButton disabled = button("Disabled");
+
+                disabled.setEnabled(false);
+
+                window.content().add(first);
+                window.content().add(second);
+                window.content().add(disabled);
+
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(
+                                root(desktop));
+
+                UiFocusManager focus = input.focusManager();
+
+                assertNull(focus.focusedElement());
+
+                // Pressing the first button establishes focus.
+                assertTrue(input.mousePressed(x(first), y(first)));
+
+                assertSame(first, focus.focusedElement());
+
+                input.mouseReleased(x(first), y(first));
+
+                // Moving the pointer does not change focus.
+                input.mouseMoved(x(second), y(second));
+
+                assertSame(first, focus.focusedElement());
+
+                // Clicking another button transfers focus.
+                assertTrue(input.mousePressed(
+                                x(second), y(second)));
+
+                assertSame(second, focus.focusedElement());
+
+                input.mouseReleased(x(second), y(second));
+
+                // Disabled buttons cannot take focus.
+                assertTrue(input.mousePressed(
+                                x(disabled), y(disabled)));
+
+                assertNull(focus.focusedElement());
+
+                input.mouseReleased(x(disabled), y(disabled));
+        }
+
+        @Test
+        void keyboardNavigationRequiresUiInteraction() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton first = button("First");
+                UiButton disabled = button("Disabled");
+                UiButton second = button("Second");
+
+                disabled.setEnabled(false);
+
+                window.content().add(first);
+                window.content().add(disabled);
+                window.content().add(second);
+
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiFocusManager focus = input.focusManager();
+
+                // Before clicking the UI, keyboard navigation
+                // must remain available to the original game.
+                assertFalse(input.keyPressed(UiKey.TAB, false));
+                assertNull(focus.focusedElement());
+
+                // Click the first button.
+                assertTrue(input.mousePressed(
+                                x(first), y(first)));
+
+                input.mouseReleased(x(first), y(first));
+
+                assertSame(first, focus.focusedElement());
+
+                // Tab skips the disabled button.
+                assertTrue(input.keyPressed(UiKey.TAB, false));
+
+                assertSame(second, focus.focusedElement());
+
+                // Release Tab before pressing it again.
+                input.keyReleased(UiKey.TAB);
+
+                // Shift+Tab navigates backwards.
+                assertTrue(input.keyPressed(UiKey.TAB, true));
+
+                assertSame(first, focus.focusedElement());
+
+                input.keyReleased(UiKey.TAB);
+
+                // Clicking outside the UI releases keyboard
+                // navigation back to the original game.
+                input.mousePressed(700, 500);
+                input.mouseReleased(700, 500);
+
+                assertFalse(input.keyPressed(UiKey.TAB, false));
+        }
+
+        @Test
+        void keyboardActivatesFocusedButtonOnlyOncePerPress() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton button = button("Action");
+
+                AtomicInteger activations = new AtomicInteger();
+
+                button.setOnClick(
+                                activations::incrementAndGet);
+
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                // Mouse click establishes keyboard focus.
+                input.mousePressed(x(button), y(button));
+                input.mouseReleased(x(button), y(button));
+
+                assertEquals(1, activations.get());
+
+                // Enter activates the focused button.
+                assertTrue(input.keyPressed(UiKey.ENTER, false));
+
+                assertEquals(2, activations.get());
+
+                // A repeated key-down must not activate again.
+                assertTrue(input.keyPressed(UiKey.ENTER, false));
+
+                assertEquals(2, activations.get());
+
+                // Release and press again.
+                input.keyReleased(UiKey.ENTER);
+
+                assertTrue(input.keyPressed(UiKey.ENTER, false));
+
+                assertEquals(3, activations.get());
+
+                input.keyReleased(UiKey.ENTER);
+
+                // Space uses the same button action.
+                assertTrue(input.keyPressed(UiKey.SPACE, false));
+
+                assertEquals(4, activations.get());
+
+                input.keyReleased(UiKey.SPACE);
+
+                // Closing the window invalidates focus.
+                window.close();
+
+                assertNull(input.focusManager().focusedElement());
+
+                // The hidden button must not activate.
+                assertFalse(input.keyPressed(UiKey.ENTER, false));
+
+                assertEquals(4, activations.get());
+        }
+
+        @Test
+        void tabNavigationRevealsItemsInsideScrollContainer() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiScrollContainer scroll = new UiScrollContainer();
+
+                UiButton[] items = new UiButton[10];
+
+                for (int i = 0; i < items.length; i++) {
+
+                        items[i] = button("Item " + i);
+
+                        scroll.content().add(items[i]);
+                }
+
+                window.content().add(scroll);
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                // Give the first item focus.
+                input.mousePressed(x(items[0]), y(items[0]));
+                input.mouseReleased(x(items[0]), y(items[0]));
+
+                assertSame(
+                                items[0],
+                                input.focusManager().focusedElement());
+
+                // Navigate through the rest of the list.
+                for (int i = 1; i < items.length; i++) {
+
+                        assertTrue(input.keyPressed(
+                                        UiKey.TAB, false));
+
+                        input.keyReleased(UiKey.TAB);
+                }
+
+                assertSame(
+                                items[9],
+                                input.focusManager().focusedElement());
+
+                // The container must have scrolled down
+                // to reveal the final button.
+                assertTrue(scroll.scrollY() > 0);
+
+                UiRect itemBounds = items[9].bounds();
+                UiRect viewport = scroll.bounds();
+
+                assertTrue(itemBounds.y() >= viewport.y());
+
+                assertTrue(
+                                itemBounds.y() + itemBounds.height() <= viewport.y() + viewport.height());
+        }
+
+        @Test
+        void clickingTextFieldFocusesItAndPositionsCaret() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiTextField field = new UiTextField(
+                                "Stone",
+                                text -> new UiSize(text.length() * 7, 16));
+
+                window.content().add(field);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                // The text begins after the field's left padding.
+                int textX = field.bounds().x()
+                                + field.padding().left();
+
+                int mouseY = field.bounds().y() + 12;
+
+                // Click just after the second character.
+                assertTrue(input.mousePressed(
+                                textX + 14, mouseY));
+
+                assertSame(
+                                field,
+                                input.focusManager().focusedElement());
+
+                assertEquals(2, field.cursorPosition());
+
+                input.mouseReleased(textX + 14, mouseY);
+
+                // Clicking elsewhere in the text moves the caret.
+                assertTrue(input.mousePressed(
+                                textX + 35, mouseY));
+
+                assertEquals(5, field.cursorPosition());
+
+                input.mouseReleased(textX + 35, mouseY);
+        }
+
+        @Test
+        void textFieldReceivesUnicodeCharacterInput() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiTextField field = new UiTextField(
+                                "",
+                                text -> new UiSize(text.length() * 7, 16));
+
+                window.content().add(field);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int mouseX = field.bounds().x()
+                                + field.bounds().width() / 2;
+
+                int mouseY = field.bounds().y()
+                                + field.bounds().height() / 2;
+
+                input.mousePressed(mouseX, mouseY);
+                input.mouseReleased(mouseX, mouseY);
+
+                assertTrue(input.textInputActive());
+
+                assertTrue(input.characterTyped('A'));
+                assertTrue(input.characterTyped(0x1F48E));
+                assertTrue(input.characterTyped('B'));
+
+                assertEquals("A💎B", field.text());
+                assertEquals(3, field.cursorPosition());
+
+                // Reject line breaks and control characters.
+                assertTrue(input.characterTyped('\n'));
+
+                assertEquals("A💎B", field.text());
+
+                // Clicking outside returns input to the game.
+                input.mousePressed(700, 500);
+                input.mouseReleased(700, 500);
+
+                assertFalse(input.textInputActive());
+                assertFalse(input.characterTyped('X'));
+
+                assertEquals("A💎B", field.text());
+        }
+
+        @Test
+        void editingKeysModifyFocusedTextField() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiTextField field = new UiTextField(
+                                "Stone",
+                                text -> new UiSize(text.length() * 7, 16));
+
+                window.content().add(field);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int mouseX = field.bounds().x()
+                                + field.bounds().width() / 2;
+
+                int mouseY = field.bounds().y()
+                                + field.bounds().height() / 2;
+
+                input.mousePressed(mouseX, mouseY);
+                input.mouseReleased(mouseX, mouseY);
+
+                assertTrue(input.textInputActive());
+
+                // Home moves to the beginning.
+                assertTrue(input.keyPressed(UiKey.HOME, false));
+                assertEquals(0, field.cursorPosition());
+                input.keyReleased(UiKey.HOME);
+
+                // Right moves forward one character.
+                assertTrue(input.keyPressed(UiKey.RIGHT, false));
+                assertEquals(1, field.cursorPosition());
+                input.keyReleased(UiKey.RIGHT);
+
+                // Insert a character at the cursor.
+                assertTrue(input.characterTyped('X'));
+                assertEquals("SXtone", field.text());
+
+                // Backspace removes the inserted character.
+                assertTrue(input.keyPressed(
+                                UiKey.BACKSPACE, false));
+
+                assertEquals("Stone", field.text());
+
+                input.keyReleased(UiKey.BACKSPACE);
+
+                // Delete removes the character after the cursor.
+                assertTrue(input.keyPressed(
+                                UiKey.DELETE, false));
+
+                assertEquals("Sone", field.text());
+
+                input.keyReleased(UiKey.DELETE);
+
+                // End moves to the end of the text.
+                assertTrue(input.keyPressed(UiKey.END, false));
+
+                assertEquals(4, field.cursorPosition());
+
+                input.keyReleased(UiKey.END);
+        }
+
+        @Test
+        void textInputOwnershipFollowsFocusAndWindowState() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiTextField field = new UiTextField(
+                                "",
+                                text -> new UiSize(text.length() * 7, 16));
+
+                UiButton button = button("Action");
+
+                window.content().add(field);
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int fieldX = field.bounds().x() + 10;
+                int fieldY = field.bounds().y() + 10;
+
+                // Initially, gameplay owns keyboard input.
+                assertFalse(input.textInputActive());
+
+                // Focusing the text field transfers ownership.
+                input.mousePressed(fieldX, fieldY);
+                input.mouseReleased(fieldX, fieldY);
+
+                assertTrue(input.textInputActive());
+
+                // Another control takes focus.
+                int buttonX = button.bounds().x()
+                                + button.bounds().width() / 2;
+
+                int buttonY = button.bounds().y()
+                                + button.bounds().height() / 2;
+
+                input.mousePressed(buttonX, buttonY);
+                input.mouseReleased(buttonX, buttonY);
+
+                assertFalse(input.textInputActive());
+
+                // Return focus to the text field.
+                input.mousePressed(fieldX, fieldY);
+                input.mouseReleased(fieldX, fieldY);
+
+                assertTrue(input.textInputActive());
+
+                // Disabling the field invalidates text ownership.
+                field.setEnabled(false);
+
+                assertFalse(input.textInputActive());
+
+                // Re-enable and refocus.
+                field.setEnabled(true);
+
+                input.mousePressed(fieldX, fieldY);
+                input.mouseReleased(fieldX, fieldY);
+
+                assertTrue(input.textInputActive());
+
+                // Closing the window releases ownership.
+                window.close();
+
+                assertFalse(input.textInputActive());
+        }
+
+        @Test
+        void cancellingInputClearsTextFocus() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiTextField field = new UiTextField(
+                                "",
+                                text -> new UiSize(text.length() * 7, 16));
+
+                window.content().add(field);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int x = field.bounds().x() + 10;
+                int y = field.bounds().y() + 10;
+
+                input.mousePressed(x, y);
+                input.mouseReleased(x, y);
+
+                assertTrue(input.textInputActive());
+
+                input.characterTyped('A');
+                assertEquals("A", field.text());
+
+                // Simulate losing application focus.
+                input.cancelInput();
+
+                assertFalse(input.textInputActive());
+                assertNull(input.focusManager().focusedElement());
+                assertNull(input.focusManager().activeWindow());
+
+                // Text is preserved, but no further typing is accepted.
+                assertEquals("A", field.text());
+                assertFalse(input.characterTyped('B'));
+
+                // Clicking again restores text ownership.
+                input.mousePressed(x, y);
+                input.mouseReleased(x, y);
+
+                assertTrue(input.textInputActive());
+        }
+
+        @Test
+        void cancellingInputReleasesPressedButton() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton button = button("Action");
+
+                java.util.concurrent.atomic.AtomicInteger activations = new java.util.concurrent.atomic.AtomicInteger();
+
+                button.setOnClick(activations::incrementAndGet);
+
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int x = x(button);
+                int y = y(button);
+
+                input.mousePressed(x, y);
+
+                assertTrue(button.pressed());
+
+                // Simulate Alt+Tab before mouse release.
+                input.cancelInput();
+
+                assertFalse(button.pressed());
+                assertFalse(button.hovered());
+
+                // Releasing after cancellation must not click.
+                input.mouseReleased(x, y);
+
+                assertEquals(0, activations.get());
+        }
+
+        @Test
+        void cancellingInputStopsWindowDragging() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                int x = window.titleBar().bounds().x() + 8;
+                int y = window.titleBar().bounds().y() + 8;
+
+                input.mousePressed(x, y);
+
+                // Cancel while dragging.
+                input.cancelInput();
+
+                UiPoint position = window.position();
+
+                // Later mouse movement must not move the window.
+                input.mouseMoved(650, 450);
+
+                assertEquals(position, window.position());
+        }
+
+        @Test
+        void cancellingInputClearsHeldNavigationKeys() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton first = button("First");
+                UiButton second = button("Second");
+
+                window.content().add(first);
+                window.content().add(second);
+
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                // Activate keyboard navigation.
+                input.mousePressed(x(first), y(first));
+                input.mouseReleased(x(first), y(first));
+
+                assertTrue(input.keyPressed(UiKey.TAB, false));
+
+                assertSame(
+                                second,
+                                input.focusManager().focusedElement());
+
+                // Cancel without receiving a Tab key-release event.
+                input.cancelInput();
+
+                assertNull(input.focusManager().focusedElement());
+
+                // Keyboard input is no longer consumed.
+                assertFalse(input.keyPressed(UiKey.TAB, false));
+
+                // Re-enable navigation by clicking the UI.
+                input.mousePressed(x(first), y(first));
+                input.mouseReleased(x(first), y(first));
+
+                // Tab must work again, despite the missing release.
+                assertTrue(input.keyPressed(UiKey.TAB, false));
+
+                assertSame(
+                                second,
+                                input.focusManager().focusedElement());
+        }
+
+        @Test
+        void nonDraggableWindowStaysInPlace() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                window.setDraggable(false);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiPoint originalPosition = window.position();
+
+                int x = window.titleBar().bounds().x() + 8;
+                int y = window.titleBar().bounds().y() + 8;
+
+                // Attempt to drag the title bar.
+                assertTrue(input.mousePressed(x, y));
+
+                input.mouseMoved(x + 120, y + 90);
+                input.mouseReleased(x + 120, y + 90);
+
+                assertEquals(
+                                originalPosition,
+                                window.position());
+        }
+
+        @Test
+        void modalWindowBlocksBackgroundButtons() {
+
+                UiContainer desktop = desktop();
+
+                UiWindow background = window();
+
+                UiButton backgroundButton = button("Behind");
+
+                AtomicInteger clicks = new AtomicInteger();
+
+                backgroundButton.setOnClick(
+                                clicks::incrementAndGet);
+
+                background.content().add(backgroundButton);
+
+                UiWindow modal = new UiWindow("Credits");
+
+                modal.setPosition(new UiPoint(350, 150));
+                modal.setPreferredSize(new UiSize(220, 160));
+                modal.setModal(true);
+
+                desktop.add(background);
+                desktop.add(modal);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                // Click the background button outside the modal.
+                assertTrue(input.mousePressed(
+                                x(backgroundButton),
+                                y(backgroundButton)));
+
+                assertTrue(input.mouseReleased(
+                                x(backgroundButton),
+                                y(backgroundButton)));
+
+                assertEquals(0, clicks.get());
+
+                // Closing the modal restores background input.
+                modal.close();
+
+                input.mousePressed(
+                                x(backgroundButton),
+                                y(backgroundButton));
+
+                input.mouseReleased(
+                                x(backgroundButton),
+                                y(backgroundButton));
+
+                assertEquals(1, clicks.get());
+        }
 
 }

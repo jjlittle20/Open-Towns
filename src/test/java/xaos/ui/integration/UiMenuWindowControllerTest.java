@@ -1,0 +1,211 @@
+
+package xaos.ui.integration;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.Test;
+
+import xaos.panels.menus.MenuDefinition;
+import xaos.panels.menus.MenuXmlLoader;
+import xaos.ui.components.UiWindow;
+import xaos.ui.core.UiSystem;
+
+class UiMenuWindowControllerTest {
+
+    private static MenuDefinition loadMainMenu()
+            throws Exception {
+
+        URL resource = UiMenuWindowControllerTest.class
+                .getClassLoader()
+                .getResource(
+                        "data/menus/main/root.xml");
+
+        assertNotNull(resource);
+
+        return MenuXmlLoader.load(
+                Path.of(resource.toURI()).toFile());
+    }
+
+    @Test
+    void migratedMenuIsCreatedOnlyWhenOpened()
+            throws Exception {
+
+        UiSystem ui = new UiSystem();
+
+        UiMenuWindowController controller = new UiMenuWindowController(ui);
+
+        AtomicInteger creations = new AtomicInteger();
+
+        controller.register(
+                "main.credits.root",
+                () -> {
+                    creations.incrementAndGet();
+
+                    UiWindow window = new UiWindow("Credits");
+
+                    window.setModal(true);
+
+                    return window;
+                });
+
+        assertEquals(0, creations.get());
+        assertFalse(controller.isAnyOpen());
+        assertTrue(ui.windows().windows().isEmpty());
+
+        // Resolve navigation from real Towns XML.
+        Optional<Runnable> action = controller.resolve(
+                loadMainMenu(),
+                "main.credits");
+
+        assertTrue(action.isPresent());
+        assertEquals(0, creations.get());
+
+        action.get().run();
+
+        assertEquals(1, creations.get());
+        assertTrue(
+                controller.isOpen("main.credits.root"));
+
+        assertEquals(
+                1, ui.windows().windows().size());
+
+        assertNotNull(ui.windows().activeModal());
+    }
+
+    @Test
+    void reopeningMenuReusesExistingWindow() {
+
+        UiSystem ui = new UiSystem();
+
+        UiMenuWindowController controller = new UiMenuWindowController(ui);
+
+        AtomicInteger creations = new AtomicInteger();
+
+        controller.register(
+                "main.credits.root",
+                () -> {
+                    creations.incrementAndGet();
+
+                    UiWindow window = new UiWindow("Credits");
+
+                    window.setModal(true);
+
+                    return window;
+                });
+
+        controller.open("main.credits.root");
+
+        UiWindow original = ui.windows().activeModal();
+
+        controller.close("main.credits.root");
+
+        assertFalse(
+                controller.isOpen("main.credits.root"));
+
+        assertNull(ui.windows().activeModal());
+
+        controller.open("main.credits.root");
+
+        assertSame(
+                original,
+                ui.windows().activeModal());
+
+        assertEquals(1, creations.get());
+
+        // Registration happens once.
+        assertEquals(
+                1, ui.windows().windows().size());
+    }
+
+    @Test
+    void closingAllMenusRestoresNormalState() {
+
+        UiSystem ui = new UiSystem();
+
+        UiMenuWindowController controller = new UiMenuWindowController(ui);
+
+        controller.register(
+                "main.options.root",
+                () -> new UiWindow("Options"));
+
+        controller.register(
+                "main.credits.root",
+                () -> {
+                    UiWindow window = new UiWindow("Credits");
+
+                    window.setModal(true);
+
+                    return window;
+                });
+
+        controller.open("main.options.root");
+        controller.open("main.credits.root");
+
+        assertTrue(controller.isAnyOpen());
+        assertNotNull(ui.windows().activeModal());
+
+        controller.closeAll();
+
+        assertFalse(controller.isAnyOpen());
+        assertNull(ui.windows().activeModal());
+
+        // Windows remain registered for reuse.
+        assertEquals(
+                2, ui.windows().windows().size());
+
+        assertTrue(
+                ui.windows().windows().stream()
+                        .noneMatch(UiWindow::isOpen));
+    }
+
+    @Test
+    void unmigratedMenusRemainLegacy()
+            throws Exception {
+
+        UiSystem ui = new UiSystem();
+
+        UiMenuWindowController controller = new UiMenuWindowController(ui);
+
+        controller.register(
+                "main.credits.root",
+                () -> new UiWindow("Credits"));
+
+        MenuDefinition root = loadMainMenu();
+
+        // Options is not registered as migrated.
+        assertTrue(
+                controller.resolve(
+                        root,
+                        "main.options")
+                        .isEmpty());
+
+        // The Credits route is registered.
+        assertTrue(
+                controller.resolve(
+                        root,
+                        "main.credits")
+                        .isPresent());
+    }
+
+    @Test
+    void duplicateMenuRegistrationIsRejected() {
+
+        UiMenuWindowController controller = new UiMenuWindowController(
+                new UiSystem());
+
+        controller.register(
+                "main.credits.root",
+                () -> new UiWindow("Credits"));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.register(
+                        "main.credits.root",
+                        () -> new UiWindow("Duplicate")));
+    }
+}
