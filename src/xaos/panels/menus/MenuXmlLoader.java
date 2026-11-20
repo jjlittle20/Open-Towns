@@ -1,6 +1,8 @@
 package xaos.panels.menus;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -46,20 +48,70 @@ public final class MenuXmlLoader {
                     continue;
                 }
 
-                Element itemElement = (Element) node;
+                Element element = (Element) node;
 
-                if (!"item".equals(itemElement.getTagName())) {
-                    continue;
+                switch (element.getTagName()) {
+                    case "item" -> menuDefinition.addItem(parseItem(element, file));
+                    case "tabs" -> menuDefinition.addTabs(parseTabs(element, file));
+                    default -> {
+                        // Preserve the original loader's handling of unknown
+                        // top-level elements during legacy menu migration.
+                    }
                 }
-
-                MenuItemDefinition item = parseItem(itemElement, file);
-                menuDefinition.addItem(item);
             }
 
             return menuDefinition;
         } catch (Exception exception) {
             throw new RuntimeException("Failed to load menu XML: " + file.getPath(), exception);
         }
+    }
+
+    private static MenuTabsDefinition parseTabs(Element element, File file) {
+        String id = required(element, "id", file);
+        MenuTabsDefinition.Placement placement =
+                MenuTabsDefinition.Placement.fromXml(optional(element, "placement"));
+
+        List<MenuTabDefinition> tabs = new ArrayList<>();
+        NodeList children = element.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            Element tabElement = (Element) node;
+            if (!"tab".equals(tabElement.getTagName())) {
+                throw new IllegalArgumentException(
+                        "Only <tab> is allowed inside <tabs>: " + id);
+            }
+            tabs.add(parseTab(tabElement, file));
+        }
+
+        return new MenuTabsDefinition(id, placement, tabs);
+    }
+
+    private static MenuTabDefinition parseTab(Element element, File file) {
+        String id = required(element, "id", file);
+        String titleKey = optional(element, "titleKey");
+        String title = optional(element, "title");
+
+        List<MenuItemDefinition> items = new ArrayList<>();
+        NodeList children = element.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+            Element child = (Element) node;
+            if (!"item".equals(child.getTagName())) {
+                throw new IllegalArgumentException(
+                        "Only <item> is allowed inside <tab>: " + id);
+            }
+            items.add(parseItem(child, file));
+        }
+
+        return new MenuTabDefinition(id, titleKey, title, items);
     }
 
     private static MenuItemDefinition parseItem(Element itemElement, File file) {
@@ -88,9 +140,7 @@ public final class MenuXmlLoader {
                 key,
                 condition,
                 textColorName,
-                transparent
-            
-            );
+                transparent);
     }
 
     private static String required(Element element, String attributeName, File file) {

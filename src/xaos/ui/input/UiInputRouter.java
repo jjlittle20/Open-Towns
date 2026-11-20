@@ -4,6 +4,8 @@ package xaos.ui.input;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.IntConsumer;
+
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiScrollContainer;
@@ -38,6 +40,26 @@ public final class UiInputRouter {
      * inside the new UI and disabled when clicking outside.
      */
     private boolean keyboardNavigationActive;
+
+    // ------------------------------------------------------------
+    // Physical keyboard capture
+    // ------------------------------------------------------------
+
+    private IntConsumer physicalKeyReceiver;
+    private Runnable physicalKeyCancel;
+
+    private int captureEscapeKey = -1;
+
+    // If capture was requested using Enter/Space,
+    // wait for that initiating key to be released.
+    private boolean awaitingActivationRelease;
+    private boolean activatingButtonFromKeyboard;
+    private UiKey activatingNavigationKey;
+    private UiKey captureActivationKey;
+
+    // Prevent the captured key's repeat/release events
+    // from reaching normal UI or gameplay handlers.
+    private int swallowedPhysicalKey = -1;
 
     /**
      * Tracks held navigation keys so GLFW key-repeat
@@ -87,6 +109,123 @@ public final class UiInputRouter {
      */
     public UiFocusManager focusManager() {
         return focusManager;
+    }
+
+    /**
+     * Begins capturing the next physical key press.
+     *
+     * The UI layer remains independent of the platform:
+     * the caller supplies the physical Escape key code.
+     */
+    public void beginPhysicalKeyCapture(
+            int escapeKeyCode,
+            IntConsumer onCaptured,
+            Runnable onCancelled) {
+
+        Objects.requireNonNull(onCaptured, "onCaptured");
+        Objects.requireNonNull(onCancelled, "onCancelled");
+
+        if (physicalKeyReceiver != null) {
+            throw new IllegalStateException(
+                    "A key capture is already active");
+        }
+
+        physicalKeyReceiver = onCaptured;
+        physicalKeyCancel = onCancelled;
+
+        captureEscapeKey = escapeKeyCode;
+
+        captureActivationKey = activatingButtonFromKeyboard
+                ? activatingNavigationKey
+                : null;
+
+        awaitingActivationRelease = captureActivationKey != null;
+    }
+
+    public boolean isCapturingPhysicalKey() {
+        return physicalKeyReceiver != null;
+    }
+
+    /**
+     * Handles raw physical keyboard events.
+     *
+     * Must be called before normal UI navigation
+     * and gameplay shortcut processing.
+     *
+     * @return true if the event was consumed
+     */
+    public boolean physicalKeyEvent(
+            int keyCode,
+            boolean pressed) {
+
+        // The key that completed capture must remain
+        // consumed until the player releases it.
+        if (keyCode == swallowedPhysicalKey) {
+
+            if (!pressed) {
+                swallowedPhysicalKey = -1;
+            }
+
+            return true;
+        }
+
+        if (!isCapturingPhysicalKey()) {
+            return false;
+        }
+
+        if (awaitingActivationRelease) {
+            return true;
+        }
+
+        // While capturing, consume key releases
+        // and ignore unknown key codes.
+        if (!pressed || keyCode <= 0) {
+            return true;
+        }
+
+        IntConsumer receiver = physicalKeyReceiver;
+        Runnable cancellation = physicalKeyCancel;
+
+        boolean cancelled = keyCode == captureEscapeKey;
+
+        // Clear capture before invoking callbacks.
+        // Callbacks may open windows or start another capture.
+        clearPhysicalKeyCapture();
+
+        swallowedPhysicalKey = keyCode;
+
+        if (cancelled) {
+            cancellation.run();
+        } else {
+            receiver.accept(keyCode);
+        }
+
+        return true;
+    }
+
+    /**
+     * Cancels capture without changing any assignment.
+     */
+    public void cancelPhysicalKeyCapture() {
+
+        if (!isCapturingPhysicalKey()) {
+            return;
+        }
+
+        Runnable cancellation = physicalKeyCancel;
+
+        clearPhysicalKeyCapture();
+
+        cancellation.run();
+    }
+
+    private void clearPhysicalKeyCapture() {
+
+        physicalKeyReceiver = null;
+        physicalKeyCancel = null;
+        captureActivationKey = null;
+        captureEscapeKey = -1;
+        awaitingActivationRelease = false;
     }
 
     /**
@@ -176,6 +315,9 @@ public final class UiInputRouter {
             boolean shiftDown) {
 
         Objects.requireNonNull(key, "key");
+        if (isCapturingPhysicalKey()) {
+            return true;
+        }
 
         if (!keyboardNavigationActive) {
             return false;
@@ -289,9 +431,16 @@ public final class UiInputRouter {
             if (key == UiKey.ENTER
                     || key == UiKey.SPACE) {
 
-                button.activate();
+                activatingButtonFromKeyboard = true;
+                activatingNavigationKey = key;
 
-                // The action might close its window.
+                try {
+                    button.activate();
+                } finally {
+                    activatingButtonFromKeyboard = false;
+                    activatingNavigationKey = null;
+                }
+
                 focusManager.focusedElement();
 
                 consumed = true;
@@ -305,13 +454,21 @@ public final class UiInputRouter {
         return consumed;
     }
 
-    /**
-     * Releases a captured key so its next physical
-     * press can trigger another action.
-     */
     public void keyReleased(UiKey key) {
-        heldKeys.remove(
-                Objects.requireNonNull(key, "key"));
+
+        Objects.requireNonNull(key, "key");
+
+        heldKeys.remove(key);
+
+        // Only releasing the key that activated
+        // capture allows the next physical key
+        // to be assigned.
+        if (awaitingActivationRelease
+                && key == captureActivationKey) {
+
+            awaitingActivationRelease = false;
+            captureActivationKey = null;
+        }
     }
 
     /**
@@ -556,6 +713,9 @@ public final class UiInputRouter {
      */
 
     public boolean mousePressed(int x, int y) {
+        if (isCapturingPhysicalKey()) {
+            cancelPhysicalKeyCapture();
+        }
         clearPressed();
 
         UiElement target = hitTest(x, y);
@@ -813,6 +973,8 @@ public final class UiInputRouter {
         // Cancel button presses, dragging, resizing,
         // scrollbar interactions and mouse hover.
         cancelPointer();
+        cancelPhysicalKeyCapture();
+        swallowedPhysicalKey = -1;
 
         // Release any navigation keys that were held.
         heldKeys.clear();

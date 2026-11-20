@@ -1,7 +1,9 @@
 
 package xaos.ui.debug;
 
+import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.lwjgl.opengl.GL11;
 import xaos.ui.components.UiWindow;
@@ -33,10 +35,12 @@ import xaos.ui.components.UiTextField;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiLinearLayout;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
+import xaos.panels.menus.MenuXmlLoader;
 import xaos.ui.components.UiButton;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.ui.input.UiInputRouter;
 import xaos.ui.input.UiKey;
+import xaos.ui.integration.UiSimpleMenuWindowBuilder;
 import xaos.ui.core.UiWindowManager;
 import xaos.ui.rendering.UiResizeGripPainter;
 
@@ -48,6 +52,7 @@ import xaos.ui.rendering.UiResizeGripPainter;
 public final class UiDebugOverlay {
 
         public static final boolean ENABLED = false;
+        private static final boolean TABS_DEMO_ENABLED = false;
 
         private static final String CLASSIC_THEME = "classic-towns";
         private static final String BASIC_THEME = "basic";
@@ -112,6 +117,9 @@ public final class UiDebugOverlay {
                         WINDOWS.register(WINDOW);
                         WINDOWS.register(SECOND_WINDOW);
                         WINDOWS.register(SCROLL_WINDOW);
+                }
+                if (TABS_DEMO_ENABLED) {
+                        WINDOWS.register(createXmlTabsDemoWindow());
                 }
         }
 
@@ -304,6 +312,50 @@ public final class UiDebugOverlay {
                 controls.add(scrollDown);
 
                 window.content().add(controls);
+
+                return window;
+        }
+
+        /**
+         * Temporary visual test for XML-defined tabs.
+         *
+         * The tab structure and contents are entirely
+         * defined in tabs_demo.xml.
+         */
+        private static UiWindow createXmlTabsDemoWindow() {
+
+                AtomicReference<UiWindow> reference = new AtomicReference<>();
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                MenuXmlLoader.load(
+                                                new File("data/menus/debug/tabs_demo.xml")),
+
+                                // Demo-only localiser.
+                                key -> "MainMenuPanel.7".equals(key)
+                                                ? "Back"
+                                                : key,
+
+                                TownsUiTextMetrics.INSTANCE,
+
+                                // Both Back and the title-bar X close
+                                // the demonstration window.
+                                () -> WINDOWS.close(reference.get()),
+
+                                // Demo-only submenu action.
+                                // Show which item was clicked.
+                                target -> {
+                                        UiWindow current = reference.get();
+
+                                        if (current != null) {
+                                                current.setTitle(
+                                                                "Selected: " + target);
+                                        }
+                                });
+
+                reference.set(window);
+
+                window.setPosition(new UiPoint(310, 55));
+                window.setPreferredSize(new UiSize(540, 375));
 
                 return window;
         }

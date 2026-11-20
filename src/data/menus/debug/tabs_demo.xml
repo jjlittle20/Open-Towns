@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu
+    id="debug.tabs.demo"
+    titleKey="XML Tabs Demo">
+
+    <tabs
+        id="debug.tabs.group"
+        placement="top">
+
+        <tab id="movement" title="Movement">
+
+            <item id="debug.move.up"
+                  type="submenu"
+                  titleKey="Move Up"
+                  targetMenu="move-up" />
+
+            <item id="debug.move.down"
+                  type="submenu"
+                  titleKey="Move Down"
+                  targetMenu="move-down" />
+
+            <item id="debug.move.left"
+                  type="submenu"
+                  titleKey="Move Left"
+                  targetMenu="move-left" />
+
+            <item id="debug.move.right"
+                  type="submenu"
+                  titleKey="Move Right"
+                  targetMenu="move-right" />
+
+        </tab>
+
+        <tab id="inventory" title="Inventory">
+
+            <item id="debug.inventory.1" type="submenu"
+                  titleKey="Inventory Item 1" targetMenu="item-1" />
+            <item id="debug.inventory.2" type="submenu"
+                  titleKey="Inventory Item 2" targetMenu="item-2" />
+            <item id="debug.inventory.3" type="submenu"
+                  titleKey="Inventory Item 3" targetMenu="item-3" />
+            <item id="debug.inventory.4" type="submenu"
+                  titleKey="Inventory Item 4" targetMenu="item-4" />
+            <item id="debug.inventory.5" type="submenu"
+                  titleKey="Inventory Item 5" targetMenu="item-5" />
+            <item id="debug.inventory.6" type="submenu"
+                  titleKey="Inventory Item 6" targetMenu="item-6" />
+            <item id="debug.inventory.7" type="submenu"
+                  titleKey="Inventory Item 7" targetMenu="item-7" />
+            <item id="debug.inventory.8" type="submenu"
+                  titleKey="Inventory Item 8" targetMenu="item-8" />
+            <item id="debug.inventory.9" type="submenu"
+                  titleKey="Inventory Item 9" targetMenu="item-9" />
+            <item id="debug.inventory.10" type="submenu"
+                  titleKey="Inventory Item 10" targetMenu="item-10" />
+            <item id="debug.inventory.11" type="submenu"
+                  titleKey="Inventory Item 11" targetMenu="item-11" />
+            <item id="debug.inventory.12" type="submenu"
+                  titleKey="Inventory Item 12" targetMenu="item-12" />
+
+        </tab>
+
+        <tab id="mods" title="Mod Tools">
+
+            <item id="debug.mods.one"
+                  type="submenu"
+                  titleKey="Example Mod"
+                  targetMenu="example-mod" />
+
+            <item id="debug.mods.two"
+                  type="submenu"
+                  titleKey="Mod Settings"
+                  targetMenu="mod-settings" />
+
+            <item id="debug.mods.three"
+                  type="submenu"
+                  titleKey="Mod Diagnostics"
+                  targetMenu="mod-diagnostics" />
+
+        </tab>
+
+    </tabs>
+
+    <item id="debug.tabs.back" type="back" />
+
+</menu>

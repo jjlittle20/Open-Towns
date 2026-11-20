@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -14,9 +16,11 @@ import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuXmlLoader;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiCycleButton;
+import xaos.ui.components.UiKeyBindingRow;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.components.UiSlider;
+import xaos.ui.components.UiTabbedPane;
 import xaos.ui.components.UiToggleButton;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiSystem;
@@ -658,6 +662,250 @@ class UiSimpleMenuWindowBuilderTest {
                 value.set(10);
 
                 assertEquals("100%", binding.formattedValue());
+        }
+
+        @Test
+        void buildsTabbedMenuFromXml() throws Exception {
+
+                Path file = Files.createTempFile(
+                                "opentowns-tabs-test", ".xml");
+
+                try {
+                        Files.writeString(file, """
+                                        <menu id="test.tabs"
+                                              titleKey="test.title">
+
+                                            <item id="test.intro"
+                                                  type="text"
+                                                  titleKey="test.intro" />
+
+                                            <tabs id="test.tabs.group"
+                                                  placement="left">
+
+                                                <tab id="movement"
+                                                     title="Movement">
+
+                                                    <item id="test.move.up"
+                                                          type="text"
+                                                          titleKey="test.move.up" />
+
+                                                </tab>
+
+                                                <tab id="menus"
+                                                     titleKey="test.menus">
+
+                                                    <item id="test.menu.open"
+                                                          type="text"
+                                                          titleKey="test.menu.open" />
+
+                                                </tab>
+
+                                            </tabs>
+
+                                            <item id="test.back"
+                                                  type="back" />
+
+                                        </menu>
+                                        """);
+
+                        MenuDefinition definition = MenuXmlLoader.load(file.toFile());
+
+                        AtomicInteger backCount = new AtomicInteger();
+
+                        UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                        definition,
+                                        UiSimpleMenuWindowBuilderTest::localize,
+                                        FONT,
+                                        backCount::incrementAndGet);
+
+                        // Ordinary content, tabs, stationary Back.
+                        assertEquals(3,
+                                        window.content().children().size());
+
+                        assertInstanceOf(
+                                        UiScrollContainer.class,
+                                        window.content().children().get(0));
+
+                        UiTabbedPane tabs = assertInstanceOf(
+                                        UiTabbedPane.class,
+                                        window.content().children().get(1));
+
+                        assertEquals(
+                                        UiTabbedPane.Placement.LEFT,
+                                        tabs.placement());
+
+                        // The initial tab is selected automatically.
+                        assertEquals("movement",
+                                        tabs.selectedTabId());
+
+                        assertTrue(tabs.page("movement").visible());
+                        assertFalse(tabs.page("menus").visible());
+
+                        // Tab labels come from XML.
+                        assertEquals(
+                                        "Movement",
+                                        tabs.tabButton("movement").text());
+
+                        assertEquals(
+                                        "loc:test.menus",
+                                        tabs.tabButton("menus").text());
+
+                        // Every tab has its own scroll container.
+                        UiScrollContainer movementScroll = assertInstanceOf(
+                                        UiScrollContainer.class,
+                                        tabs.page("movement")
+                                                        .children().get(0));
+
+                        UiScrollContainer menusScroll = assertInstanceOf(
+                                        UiScrollContainer.class,
+                                        tabs.page("menus")
+                                                        .children().get(0));
+
+                        assertEquals(1,
+                                        movementScroll.content()
+                                                        .children().size());
+
+                        assertEquals(1,
+                                        menusScroll.content()
+                                                        .children().size());
+
+                        // Test actual mouse input switching tabs.
+                        UiSystem system = new UiSystem();
+
+                        window.setPreferredSize(new UiSize(550, 380));
+
+                        system.windows().register(window);
+                        system.updateLayout(new UiSize(800, 600));
+
+                        UiButton menusButton = tabs.tabButton("menus");
+
+                        int x = menusButton.bounds().x()
+                                        + menusButton.bounds().width() / 2;
+
+                        int y = menusButton.bounds().y()
+                                        + menusButton.bounds().height() / 2;
+
+                        assertTrue(system.input().mousePressed(x, y));
+                        assertTrue(system.input().mouseReleased(x, y));
+
+                        assertEquals("menus", tabs.selectedTabId());
+
+                        assertFalse(tabs.page("movement").visible());
+                        assertTrue(tabs.page("menus").visible());
+
+                        // Back remains outside the tabs.
+                        UiButton back = assertInstanceOf(
+                                        UiButton.class,
+                                        window.content().children().get(2));
+
+                        back.activate();
+
+                        assertEquals(1, backCount.get());
+
+                } finally {
+                        Files.deleteIfExists(file);
+                }
+        }
+
+        @Test
+        void buildsAllControlsInsideXmlDefinedTabs() throws Exception {
+
+                URL resource = getClass()
+                                .getClassLoader()
+                                .getResource(
+                                                "data/menus/main/options/controls_menu.xml");
+
+                assertNotNull(resource);
+
+                MenuDefinition definition = MenuXmlLoader.load(
+                                Path.of(resource.toURI()).toFile());
+
+                AtomicInteger createdRows = new AtomicInteger();
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                definition,
+                                key -> key,
+                                FONT,
+                                () -> {
+                                },
+                                null,
+                                null,
+                                null,
+                                null,
+
+                                // Test-only row factory.
+                                item -> {
+                                        createdRows.incrementAndGet();
+
+                                        return new UiKeyBindingRow(
+                                                        item.getKey(),
+                                                        FONT,
+                                                        () -> 0,
+                                                        () -> 0,
+                                                        code -> "Unbound",
+                                                        slot -> {
+                                                        });
+                                });
+
+                // Every XML keyboard item must create one row.
+                assertEquals(37, createdRows.get());
+
+                UiTabbedPane tabs = assertInstanceOf(
+                                UiTabbedPane.class,
+                                window.content().children().get(0));
+
+                assertEquals(
+                                UiTabbedPane.Placement.TOP,
+                                tabs.placement());
+
+                assertEquals(
+                                List.of(
+                                                "movement",
+                                                "panels",
+                                                "navigation",
+                                                "misc",
+                                                "bottom-menu"),
+                                List.of(
+                                                "movement",
+                                                "panels",
+                                                "navigation",
+                                                "misc",
+                                                "bottom-menu").stream()
+                                                .filter(id -> tabs.page(id) != null)
+                                                .toList());
+
+                // Check the number of actual binding rows
+                // within each XML-defined tab.
+                assertEquals(6, countKeyboardRows(tabs, "movement"));
+                assertEquals(4, countKeyboardRows(tabs, "panels"));
+                assertEquals(6, countKeyboardRows(tabs, "navigation"));
+                assertEquals(11, countKeyboardRows(tabs, "misc"));
+                assertEquals(10, countKeyboardRows(tabs, "bottom-menu"));
+
+                // The first tab is selected by default.
+                assertEquals("movement", tabs.selectedTabId());
+
+                assertTrue(tabs.page("movement").visible());
+                assertFalse(tabs.page("panels").visible());
+
+                // Switching tabs does not rebuild the rows.
+                tabs.selectTab("bottom-menu");
+                tabs.selectTab("movement");
+
+                assertEquals(37, createdRows.get());
+        }
+
+        private static long countKeyboardRows(
+                        UiTabbedPane tabs,
+                        String tabId) {
+
+                UiScrollContainer scroll = assertInstanceOf(
+                                UiScrollContainer.class,
+                                tabs.page(tabId).children().get(0));
+
+                return scroll.content().children().stream()
+                                .filter(UiKeyBindingRow.class::isInstance)
+                                .count();
         }
 
 }

@@ -1757,4 +1757,215 @@ class UiInputRouterTest {
                 assertEquals(3, commits.get());
         }
 
+        @Test
+        void capturesPhysicalKeyAndConsumesItsRelease() {
+
+                UiInputRouter input = new UiInputRouter(root(desktop()));
+
+                AtomicInteger captured = new AtomicInteger(-1);
+                AtomicInteger cancellations = new AtomicInteger();
+
+                // GLFW values used as example physical codes.
+                int escape = 256;
+                int keyR = 82;
+
+                input.beginPhysicalKeyCapture(
+                                escape,
+                                captured::set,
+                                cancellations::incrementAndGet);
+
+                assertTrue(input.isCapturingPhysicalKey());
+
+                // First key press completes capture.
+                assertTrue(input.physicalKeyEvent(keyR, true));
+
+                assertEquals(keyR, captured.get());
+                assertEquals(0, cancellations.get());
+
+                assertFalse(input.isCapturingPhysicalKey());
+
+                // Repeated presses and release are swallowed.
+                assertTrue(input.physicalKeyEvent(keyR, true));
+                assertTrue(input.physicalKeyEvent(keyR, false));
+
+                // A later, separate press is no longer captured.
+                assertFalse(input.physicalKeyEvent(keyR, true));
+
+                assertEquals(keyR, captured.get());
+        }
+
+        @Test
+        void escapeCancelsPhysicalKeyCapture() {
+
+                UiInputRouter input = new UiInputRouter(root(desktop()));
+
+                AtomicInteger captured = new AtomicInteger(-1);
+                AtomicInteger cancellations = new AtomicInteger();
+
+                int escape = 256;
+
+                input.beginPhysicalKeyCapture(
+                                escape,
+                                captured::set,
+                                cancellations::incrementAndGet);
+
+                assertTrue(input.physicalKeyEvent(escape, true));
+
+                assertFalse(input.isCapturingPhysicalKey());
+                assertEquals(-1, captured.get());
+                assertEquals(1, cancellations.get());
+
+                // Consume the cancelling Escape key's release.
+                assertTrue(input.physicalKeyEvent(escape, false));
+        }
+
+        @Test
+        void keyboardActivationDoesNotCaptureEnter() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                // Use the same modal keyboard activation
+                // mechanism as the real Options menus.
+                window.setModal(true);
+
+                UiButton button = button("Set Key");
+
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                AtomicInteger captured = new AtomicInteger(-1);
+
+                int escape = 256;
+                int enter = 257;
+                int keyR = 82;
+
+                // Enable keyboard navigation without clicking.
+                input.activateModalKeyboardNavigation(window);
+
+                // Explicitly focus the capture button.
+                assertTrue(
+                                input.focusManager().requestFocus(button));
+
+                assertSame(
+                                button,
+                                input.focusManager().focusedElement());
+
+                assertFalse(input.isCapturingPhysicalKey());
+
+                // Register capture AFTER focus is established.
+                button.setOnClick(() -> input.beginPhysicalKeyCapture(
+                                escape,
+                                captured::set,
+                                () -> {
+                                }));
+
+                // Enter activates the focused button.
+                assertTrue(input.keyPressed(UiKey.ENTER, false));
+
+                assertTrue(input.isCapturingPhysicalKey());
+
+                // The initiating Enter press must be ignored.
+                assertTrue(input.physicalKeyEvent(enter, true));
+
+                assertEquals(-1, captured.get());
+
+                // Release Enter.
+                input.keyReleased(UiKey.ENTER);
+
+                assertTrue(input.physicalKeyEvent(enter, false));
+
+                assertTrue(input.isCapturingPhysicalKey());
+
+                // Now capture R.
+                assertTrue(input.physicalKeyEvent(keyR, true));
+
+                assertEquals(keyR, captured.get());
+                assertFalse(input.isCapturingPhysicalKey());
+
+                // The captured key's release is consumed.
+                assertTrue(input.physicalKeyEvent(keyR, false));
+        }
+
+        @Test
+        void cancellingUiInputCancelsKeyCapture() {
+
+                UiInputRouter input = new UiInputRouter(root(desktop()));
+
+                AtomicInteger captured = new AtomicInteger(-1);
+                AtomicInteger cancellations = new AtomicInteger();
+
+                input.beginPhysicalKeyCapture(
+                                256,
+                                captured::set,
+                                cancellations::incrementAndGet);
+
+                input.cancelInput();
+
+                assertFalse(input.isCapturingPhysicalKey());
+                assertEquals(1, cancellations.get());
+
+                // No key can now be assigned by that capture.
+                assertFalse(input.physicalKeyEvent(82, true));
+                assertEquals(-1, captured.get());
+        }
+
+        @Test
+        void unrelatedKeyReleaseDoesNotFinishActivationWait() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+                window.setModal(true);
+
+                UiButton button = button("Set Key");
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                input.activateModalKeyboardNavigation(window);
+
+                assertTrue(
+                                input.focusManager().requestFocus(button));
+
+                AtomicInteger captured = new AtomicInteger(-1);
+
+                button.setOnClick(() -> input.beginPhysicalKeyCapture(
+                                256,
+                                captured::set,
+                                () -> {
+                                }));
+
+                // Begin capture using Enter.
+                assertTrue(input.keyPressed(UiKey.ENTER, false));
+
+                assertTrue(input.isCapturingPhysicalKey());
+
+                // An unrelated key release must not
+                // make capture ready.
+                input.keyReleased(UiKey.LEFT);
+
+                assertTrue(input.physicalKeyEvent(263, false));
+
+                // This press occurs while Enter is still held.
+                // It must not be accepted.
+                assertTrue(input.physicalKeyEvent(75, true));
+
+                assertEquals(-1, captured.get());
+
+                // Now release the actual activating key.
+                input.keyReleased(UiKey.ENTER);
+
+                assertTrue(input.physicalKeyEvent(257, false));
+
+                // The next physical press can be captured.
+                assertTrue(input.physicalKeyEvent(82, true));
+
+                assertEquals(82, captured.get());
+
+                assertFalse(input.isCapturingPhysicalKey());
+        }
+
 }

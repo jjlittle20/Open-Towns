@@ -1509,6 +1509,10 @@ public final class Game {
 
 			if (Keyboard.isTextInputEvent()) {
 
+				if (UI_SYSTEM.input().isCapturingPhysicalKey()) {
+					continue;
+				}
+
 				// Original Towns typing panels retain priority.
 				if (typingPanel == null) {
 
@@ -1565,6 +1569,23 @@ public final class Game {
 					&& uiKey != null) {
 
 				UI_SYSTEM.input().keyReleased(uiKey);
+			}
+
+			// ------------------------------------------------------------
+			// Physical key capture
+			// ------------------------------------------------------------
+
+			// Key capture must happen before normal UI key presses,
+			// legacy menu shortcuts and gameplay commands.
+			//
+			// Also route releases after capture completes, so
+			// captured keys cannot trigger gameplay while held.
+			if (typingPanel == null
+					&& UI_SYSTEM.input().physicalKeyEvent(
+							Keyboard.getEventKey(),
+							Keyboard.getEventKeyState())) {
+
+				continue;
 			}
 
 			if (Keyboard.getEventKeyState()) {

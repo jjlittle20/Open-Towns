@@ -2,6 +2,8 @@ package xaos.panels;
 
 import java.awt.Color;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import xaos.platform.lwjgl3.input.Keyboard;
@@ -10,8 +12,10 @@ import xaos.platform.lwjgl3.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import xaos.property.PropertyFile;
 import xaos.ui.components.UiButton;
+import xaos.ui.components.UiKeyBindingRow;
 import xaos.ui.components.UiWindow;
 import xaos.ui.integration.UiLegacyCycleBindings;
+import xaos.ui.integration.UiLegacyKeyBindings;
 import xaos.ui.integration.UiLegacySubmenuBridge;
 import xaos.ui.integration.UiLegacyToggleBindings;
 import xaos.ui.integration.UiLegacyVolumeBindings;
@@ -84,6 +88,9 @@ public final class MainMenuPanel implements Runnable {
         private static final String AUDIO_MENU_ID = "main.options.audio.root";
 
         private MenuDefinition audioDefinition;
+        private static final String CONTROLS_MENU_ID = "main.options.controls.root";
+
+        private MenuDefinition controlsDefinition;
 
         private MenuDefinition gameDefinition;
 
@@ -211,6 +218,9 @@ public final class MainMenuPanel implements Runnable {
                 migratedMenus.register(
                                 AUDIO_MENU_ID,
                                 this::buildAudioWindow);
+                migratedMenus.register(
+                                CONTROLS_MENU_ID,
+                                this::buildControlsWindow);
 
                 createMenu();
                 new Thread(this).start();
@@ -269,6 +279,14 @@ public final class MainMenuPanel implements Runnable {
                         throw new IllegalStateException(
                                         "Missing Audio settings menu: "
                                                         + AUDIO_MENU_ID);
+                }
+
+                controlsDefinition = menuManager.getMenu(CONTROLS_MENU_ID);
+
+                if (controlsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Missing Controls settings menu: "
+                                                        + CONTROLS_MENU_ID);
                 }
 
                 SmartMenu mainMenu = menuManager.buildSmartMenu(menuRoot, null);
@@ -480,6 +498,95 @@ public final class MainMenuPanel implements Runnable {
                 // Temporary compatibility path for
                 // unmigrated settings categories.
                 openLegacyOptionsSubmenu(targetMenuId);
+        }
+
+        /**
+         * Builds the Controls settings screen from XML.
+         *
+         * Five XML-defined tabs organise the original
+         * 37 keyboard actions.
+         *
+         * Assignments continue to be owned and saved
+         * by UtilsKeyboard.
+         */
+        private UiWindow buildControlsWindow() {
+
+                if (controlsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Controls settings XML definition not loaded");
+                }
+
+                // --------------------------------------------------------
+                // Track the binding rows
+                // --------------------------------------------------------
+
+                // Reassigning one key can clear that key from
+                // another action. All visible rows must refresh.
+                //
+                // Keep this list local to the window so it stays
+                // associated with the controller's cached window.
+                List<UiKeyBindingRow> bindingRows = new ArrayList<>();
+
+                Runnable refreshAllBindings = () -> {
+                        for (UiKeyBindingRow row : bindingRows) {
+                                row.refresh();
+                        }
+                };
+
+                // --------------------------------------------------------
+                // Original Towns keyboard integration
+                // --------------------------------------------------------
+
+                UiLegacyKeyBindings keyBindings = new UiLegacyKeyBindings(
+                                Game.uiSystem().input(),
+                                TownsUiTextMetrics.INSTANCE,
+                                refreshAllBindings);
+
+                // --------------------------------------------------------
+                // Build the menu from the XML
+                // --------------------------------------------------------
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                controlsDefinition,
+                                Messages::getString,
+                                TownsUiTextMetrics.INSTANCE,
+
+                                // Back and X return to Options.
+                                () -> returnToOptions(CONTROLS_MENU_ID),
+
+                                // No child submenus.
+                                null,
+
+                                // No toggles, cycles or sliders.
+                                null,
+                                null,
+                                null,
+
+                                // XML keyboard item factory.
+                                item -> {
+
+                                        UiKeyBindingRow row = keyBindings.forItem(item);
+
+                                        bindingRows.add(row);
+
+                                        return row;
+                                });
+
+                // --------------------------------------------------------
+                // Window configuration
+                // --------------------------------------------------------
+
+                window.setCentered(true);
+                window.setDraggable(false);
+                window.setResizable(false);
+                window.setModal(true);
+
+                // Wider than the other settings screens
+                // to accommodate two key buttons per action.
+                window.setPreferredSize(
+                                new UiSize(660, 460));
+
+                return window;
         }
 
         /**

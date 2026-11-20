@@ -1,7 +1,7 @@
 package xaos.panels.menus;
 
 
-public final class MenuItemDefinition {
+public final class MenuItemDefinition implements MenuContentDefinition {
 
     private final String id;
     private final String type;

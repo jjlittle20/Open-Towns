@@ -1,20 +1,28 @@
 
 package xaos.ui.integration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import xaos.panels.menus.MenuContentDefinition;
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
+import xaos.panels.menus.MenuTabDefinition;
+import xaos.panels.menus.MenuTabsDefinition;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiCycleButton;
+import xaos.ui.components.UiKeyBindingRow;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.components.UiSlider;
+import xaos.ui.components.UiTabbedPane;
 import xaos.ui.components.UiToggleButton;
 import xaos.ui.components.UiWindow;
+import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiElement;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiPoint;
@@ -150,6 +158,36 @@ public final class UiSimpleMenuWindowBuilder {
                         Function<MenuItemDefinition, UiCycleBinding> cycleBindings,
                         Function<MenuItemDefinition, UiSliderBinding> sliderBindings) {
 
+                return build(
+                                definition,
+                                localize,
+                                textMetrics,
+                                onBack,
+                                onSubmenu,
+                                toggleBindings,
+                                cycleBindings,
+                                sliderBindings,
+                                null);
+        }
+
+        /**
+         * Builds an XML menu, optionally including editable
+         * keyboard-binding rows.
+         *
+         * Keyboard row creation is supplied by the caller
+         * because different games and mods may own different
+         * shortcut systems.
+         */
+        public static UiWindow build(
+                        MenuDefinition definition,
+                        Function<String, String> localize,
+                        UiTextMetrics textMetrics,
+                        Runnable onBack,
+                        Consumer<String> onSubmenu,
+                        Function<MenuItemDefinition, UiToggleBinding> toggleBindings,
+                        Function<MenuItemDefinition, UiCycleBinding> cycleBindings,
+                        Function<MenuItemDefinition, UiSliderBinding> sliderBindings,
+                        Function<MenuItemDefinition, UiKeyBindingRow> keyboardRows) {
                 Objects.requireNonNull(definition, "definition");
                 Objects.requireNonNull(localize, "localize");
                 Objects.requireNonNull(textMetrics, "textMetrics");
@@ -172,13 +210,94 @@ public final class UiSimpleMenuWindowBuilder {
                 // Scrollable menu contents
                 // --------------------------------------------------------
 
-                UiScrollContainer scroll = new UiScrollContainer();
+                List<PlacedItem> placedItems = new ArrayList<>();
 
-                scroll.content().setSpacing(4);
+                UiScrollContainer currentScroll = null;
+
+                // Read the structured XML rather than the flattened
+                // legacy item list.
+                for (MenuContentDefinition entry : definition.getContent()) {
+
+                        if (entry instanceof MenuItemDefinition item) {
+
+                                // Back remains a shared control outside tabs.
+                                if ("back".equals(item.getType())) {
+                                        placedItems.add(new PlacedItem(item, null));
+                                        continue;
+                                }
+
+                                // Consecutive ordinary items share a scroll area.
+                                if (currentScroll == null) {
+                                        currentScroll = createScroll();
+                                        window.content().add(currentScroll);
+                                }
+
+                                placedItems.add(new PlacedItem(
+                                                item,
+                                                currentScroll.content()));
+
+                        } else if (entry instanceof MenuTabsDefinition group) {
+
+                                // A tab group ends the preceding ordinary
+                                // content section.
+                                currentScroll = null;
+
+                                UiTabbedPane tabs = new UiTabbedPane(
+                                                textMetrics,
+                                                UiTabbedPane.Placement.valueOf(
+                                                                group.getPlacement().name()));
+
+                                for (MenuTabDefinition tab : group.getTabs()) {
+
+                                        String label = tab.getTitleKey() == null
+                                                        ? tab.getTitle()
+                                                        : resolve(localize, tab.getTitleKey());
+
+                                        UiContainer page = tabs.addTab(
+                                                        tab.getId(),
+                                                        label);
+
+                                        // Each tab receives its own scrollable area.
+                                        UiScrollContainer tabScroll = createScroll();
+
+                                        page.add(tabScroll);
+
+                                        for (MenuItemDefinition item : tab.getItems()) {
+
+                                                if ("back".equals(item.getType())) {
+                                                        throw new IllegalArgumentException(
+                                                                        "Back must be outside <tabs>: "
+                                                                                        + item.getId());
+                                                }
+
+                                                placedItems.add(new PlacedItem(
+                                                                item,
+                                                                tabScroll.content()));
+                                        }
+                                }
+
+                                window.content().add(tabs);
+
+                        } else {
+                                throw new IllegalArgumentException(
+                                                "Unknown menu content: " + entry);
+                        }
+                }
+
+                // Preserve the legacy scroll structure for empty
+                // or Back-only menus.
+                if (window.content().children().isEmpty()) {
+                        window.content().add(createScroll());
+                }
 
                 UiButton backButton = null;
 
-                for (MenuItemDefinition item : definition.getItems()) {
+                // The existing switch below creates the controls.
+                // We only change which container receives each one.
+                for (PlacedItem placed : placedItems) {
+
+                        MenuItemDefinition item = placed.item();
+                        UiContainer destination = placed.destination();
 
                         switch (item.getType()) {
 
@@ -187,7 +306,7 @@ public final class UiSimpleMenuWindowBuilder {
                                         String label = resolve(
                                                         localize, item.getTitleKey());
 
-                                        scroll.content().add(
+                                        destination.add(
                                                         new UiLabel(label, textMetrics));
                                 }
 
@@ -198,7 +317,7 @@ public final class UiSimpleMenuWindowBuilder {
                                         spacer.setPreferredSize(
                                                         new UiSize(0, SPACER_HEIGHT));
 
-                                        scroll.content().add(spacer);
+                                        destination.add(spacer);
                                 }
 
                                 case "submenu" -> {
@@ -235,7 +354,7 @@ public final class UiSimpleMenuWindowBuilder {
                                         submenuButton.setOnClick(
                                                         () -> onSubmenu.accept(targetMenuId));
 
-                                        scroll.content().add(submenuButton);
+                                        destination.add(submenuButton);
                                 }
 
                                 case "toggle" -> {
@@ -260,7 +379,7 @@ public final class UiSimpleMenuWindowBuilder {
                                                         binding.state(),
                                                         binding.action());
 
-                                        scroll.content().add(toggle);
+                                        destination.add(toggle);
                                 }
 
                                 case "cycle" -> {
@@ -285,7 +404,7 @@ public final class UiSimpleMenuWindowBuilder {
                                                         binding.value(),
                                                         binding.action());
 
-                                        scroll.content().add(cycle);
+                                        destination.add(cycle);
                                 }
 
                                 case "slider" -> {
@@ -317,7 +436,23 @@ public final class UiSimpleMenuWindowBuilder {
                                                         binding::commit,
                                                         binding.formatter());
 
-                                        scroll.content().add(slider);
+                                        destination.add(slider);
+                                }
+
+                                case "keyboard" -> {
+
+                                        if (keyboardRows == null) {
+                                                throw new UnsupportedOperationException(
+                                                                "Keyboard binding is not configured: "
+                                                                                + item.getId());
+                                        }
+
+                                        UiKeyBindingRow row = Objects.requireNonNull(
+                                                        keyboardRows.apply(item),
+                                                        "No keyboard row for XML item: "
+                                                                        + item.getId());
+
+                                        destination.add(row);
                                 }
 
                                 case "back" -> {
@@ -350,8 +485,6 @@ public final class UiSimpleMenuWindowBuilder {
                         }
                 }
 
-                window.content().add(scroll);
-
                 if (backButton != null) {
                         window.content().add(backButton);
                 }
@@ -366,6 +499,24 @@ public final class UiSimpleMenuWindowBuilder {
                                 onBack);
 
                 return window;
+        }
+
+        private record PlacedItem(
+                        MenuItemDefinition item,
+                        UiContainer destination) {
+        }
+
+        /**
+         * Creates a standard scroll container for XML
+         * menu contents or an individual tab page.
+         */
+        private static UiScrollContainer createScroll() {
+
+                UiScrollContainer scroll = new UiScrollContainer();
+
+                scroll.content().setSpacing(4);
+
+                return scroll;
         }
 
         private static final Pattern LEGACY_DYNAMIC_SUFFIX = Pattern.compile("\\s*__[A-Z0-9_]+__\\s*$");
