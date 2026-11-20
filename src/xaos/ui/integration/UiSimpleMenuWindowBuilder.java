@@ -8,6 +8,7 @@ import java.util.function.Function;
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
 import xaos.ui.components.UiButton;
+import xaos.ui.components.UiCycleButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.components.UiToggleButton;
@@ -89,6 +90,7 @@ public final class UiSimpleMenuWindowBuilder {
          * Builds an XML menu with optional submenu
          * navigation and boolean setting bindings.
          */
+
         public static UiWindow build(
                         MenuDefinition definition,
                         Function<String, String> localize,
@@ -96,6 +98,29 @@ public final class UiSimpleMenuWindowBuilder {
                         Runnable onBack,
                         Consumer<String> onSubmenu,
                         Function<MenuItemDefinition, UiToggleBinding> toggleBindings) {
+
+                return build(
+                                definition,
+                                localize,
+                                textMetrics,
+                                onBack,
+                                onSubmenu,
+                                toggleBindings,
+                                null);
+        }
+
+        /**
+         * Builds an XML menu with optional submenu,
+         * toggle and cycle bindings.
+         */
+        public static UiWindow build(
+                        MenuDefinition definition,
+                        Function<String, String> localize,
+                        UiTextMetrics textMetrics,
+                        Runnable onBack,
+                        Consumer<String> onSubmenu,
+                        Function<MenuItemDefinition, UiToggleBinding> toggleBindings,
+                        Function<MenuItemDefinition, UiCycleBinding> cycleBindings) {
 
                 Objects.requireNonNull(definition, "definition");
                 Objects.requireNonNull(localize, "localize");
@@ -211,6 +236,32 @@ public final class UiSimpleMenuWindowBuilder {
                                         scroll.content().add(toggle);
                                 }
 
+                                case "cycle" -> {
+
+                                        if (cycleBindings == null) {
+                                                throw new UnsupportedOperationException(
+                                                                "Cycle binding is not configured: "
+                                                                                + item.getId());
+                                        }
+
+                                        UiCycleBinding binding = Objects.requireNonNull(
+                                                        cycleBindings.apply(item),
+                                                        "No cycle binding for XML item: "
+                                                                        + item.getId());
+
+                                        String label = resolve(
+                                                        localize,
+                                                        item.getTitleKey());
+
+                                        UiCycleButton cycle = new UiCycleButton(
+                                                        label,
+                                                        textMetrics,
+                                                        binding.value(),
+                                                        binding.action());
+
+                                        scroll.content().add(cycle);
+                                }
+
                                 case "back" -> {
 
                                         if (backButton != null) {
@@ -257,7 +308,6 @@ public final class UiSimpleMenuWindowBuilder {
                                 onBack);
 
                 return window;
-
         }
 
         private static String resolve(

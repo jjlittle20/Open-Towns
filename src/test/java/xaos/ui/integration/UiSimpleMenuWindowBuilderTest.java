@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuXmlLoader;
 import xaos.ui.components.UiButton;
+import xaos.ui.components.UiCycleButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.components.UiToggleButton;
@@ -419,6 +420,53 @@ class UiSimpleMenuWindowBuilderTest {
                 assertTrue(
                                 exception.getMessage().contains(
                                                 "Toggle binding"));
+        }
+
+        @Test
+        void buildsAllGameSettingsFromOriginalXml()
+                        throws Exception {
+
+                MenuDefinition definition = loadMenu(
+                                "data/menus/main/options/game_menu.xml");
+
+                UiLegacyToggleBindings toggles = new UiLegacyToggleBindings(
+                                command -> false,
+                                command -> {
+                                });
+
+                UiLegacyCycleBindings cycles = new UiLegacyCycleBindings(
+                                command -> "Current Value",
+                                command -> {
+                                });
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                definition,
+                                UiSimpleMenuWindowBuilderTest::localize,
+                                FONT,
+                                () -> {
+                                },
+                                null,
+                                toggles::forItem,
+                                cycles::forItem);
+
+                UiScrollContainer scroll = (UiScrollContainer) window.content().children().get(0);
+
+                long toggleCount = scroll.content().children().stream()
+                                .filter(
+                                                UiToggleButton.class::isInstance)
+                                .count();
+
+                long cycleCount = scroll.content().children().stream()
+                                .filter(
+                                                UiCycleButton.class::isInstance)
+                                .count();
+
+                assertEquals(7, toggleCount);
+                assertEquals(2, cycleCount);
+
+                // The XML builder also adds the standard
+                // title-bar close button.
+                assertTrue(window.closeButton().isPresent());
         }
 
 }

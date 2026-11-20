@@ -3,6 +3,7 @@ package xaos.ui.rendering;
 
 import java.util.Objects;
 import xaos.ui.components.UiButton;
+import xaos.ui.components.UiCycleButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiTextField;
@@ -98,6 +99,11 @@ public final class UiStandardPainter
             // state always reflects the actual setting.
             if (button instanceof UiToggleButton toggle) {
                 toggle.refresh();
+            }
+
+            // Cycle values can also change outside this UI.
+            if (button instanceof UiCycleButton cycle) {
+                cycle.refresh();
             }
 
             theme.paintButton(button, renderer);

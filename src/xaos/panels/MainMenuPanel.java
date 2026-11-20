@@ -12,9 +12,11 @@ import xaos.property.PropertyFile;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiWindow;
 import xaos.ui.integration.UiLegacySubmenuBridge;
+import xaos.ui.integration.UiLegacyToggleBindings;
 import xaos.ui.integration.UiMenuNavigation;
 import xaos.ui.integration.UiMenuWindowController;
 import xaos.ui.integration.UiSimpleMenuWindowBuilder;
+import xaos.ui.integration.UiToggleBinding;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
@@ -24,6 +26,7 @@ import xaos.main.Game;
 import xaos.panels.menus.ContextMenu;
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuManager;
+import xaos.panels.menus.MenuStateResolver;
 import xaos.panels.menus.SmartMenu;
 import xaos.utils.ColorGL;
 import xaos.utils.Log;
@@ -62,14 +65,18 @@ public final class MainMenuPanel implements Runnable {
         // Migrated XML menus
         // ------------------------------------------------------------
 
+        private MenuDefinition rootMenuDefinition;
         private static final String CREDITS_MENU_ID = "main.credits.root";
 
-        private MenuDefinition rootMenuDefinition;
         private MenuDefinition creditsDefinition;
 
         private static final String OPTIONS_MENU_ID = "main.options.root";
 
         private MenuDefinition optionsDefinition;
+
+        private static final String GRAPHICS_MENU_ID = "main.options.graphics.root";
+
+        private MenuDefinition graphicsDefinition;
 
         // Retains the original Options menu and its
         // six legacy submenus during the migration.
@@ -77,6 +84,8 @@ public final class MainMenuPanel implements Runnable {
 
         // All migrated menu windows are now managed here.
         private final UiMenuWindowController migratedMenus = new UiMenuWindowController(Game.uiSystem());
+
+        private final UiLegacyToggleBindings legacyToggleBindings = UiLegacyToggleBindings.forGame();
 
         public final ColorGL COLORGL_BLACK = new ColorGL(Color.BLACK);
         public final ColorGL COLORGL_WHITE = new ColorGL(Color.WHITE);
@@ -180,6 +189,11 @@ public final class MainMenuPanel implements Runnable {
                                 OPTIONS_MENU_ID,
                                 this::buildOptionsWindow);
 
+                // Graphics now has a new-framework implementation.
+                migratedMenus.register(
+                                GRAPHICS_MENU_ID,
+                                this::buildGraphicsWindow);
+
                 createMenu();
                 new Thread(this).start();
 
@@ -214,6 +228,14 @@ public final class MainMenuPanel implements Runnable {
                 if (optionsDefinition == null) {
                         throw new IllegalStateException(
                                         "Missing Options menu: " + OPTIONS_MENU_ID);
+                }
+
+                graphicsDefinition = menuManager.getMenu(GRAPHICS_MENU_ID);
+
+                if (graphicsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Missing Graphics menu: "
+                                                        + GRAPHICS_MENU_ID);
                 }
 
                 SmartMenu mainMenu = menuManager.buildSmartMenu(menuRoot, null);
@@ -283,7 +305,7 @@ public final class MainMenuPanel implements Runnable {
 
                                 // Until migrated, child menus
                                 // use their original SmartMenu.
-                                this::openLegacyOptionsSubmenu);
+                                this::openOptionsSubmenu);
 
                 // Same menu-screen behaviour as Credits.
                 window.setCentered(true);
@@ -292,6 +314,83 @@ public final class MainMenuPanel implements Runnable {
                 window.setModal(true);
 
                 return window;
+        }
+
+        /**
+         * Builds the Graphics settings window from
+         * the original Towns XML definition.
+         */
+        private UiWindow buildGraphicsWindow() {
+
+                if (graphicsDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Graphics XML definition not loaded");
+                }
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                graphicsDefinition,
+                                Messages::getString,
+                                TownsUiTextMetrics.INSTANCE,
+
+                                // Back returns to the new Options root.
+                                () -> returnToOptions(GRAPHICS_MENU_ID),
+
+                                // Graphics has no child submenus.
+                                null,
+
+                                // Shared XML-to-command toggle bindings.
+                                legacyToggleBindings::forItem);
+
+                // Same behaviour as Credits and Options.
+                window.setCentered(true);
+                window.setDraggable(false);
+                window.setResizable(false);
+                window.setModal(true);
+
+                // The XML builder automatically installs
+                // the standard X button from Step 37B.1.
+
+                return window;
+        }
+
+        /**
+         * Returns from a migrated Options child
+         * to the new Options root window.
+         *
+         * Both the XML Back button and standard
+         * title-bar X use this method.
+         */
+        private void returnToOptions(String childMenuId) {
+
+                migratedMenus.close(childMenuId);
+
+                migratedMenus.open(OPTIONS_MENU_ID);
+        }
+
+        /**
+         * Opens an Options category using the new
+         * framework when available.
+         *
+         * Unmigrated categories continue using the
+         * original SmartMenu implementation.
+         */
+        private void openOptionsSubmenu(
+                        String targetMenuId) {
+
+                if (migratedMenus.isRegistered(targetMenuId)) {
+
+                        // Replace the Options root modal
+                        // with the selected migrated category.
+                        migratedMenus.close(OPTIONS_MENU_ID);
+
+                        migratedMenus.open(targetMenuId);
+
+                        return;
+                }
+
+                // Temporary compatibility path for
+                // unmigrated settings categories.
+                openLegacyOptionsSubmenu(targetMenuId);
         }
 
         /**

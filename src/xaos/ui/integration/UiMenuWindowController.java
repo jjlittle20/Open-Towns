@@ -165,6 +165,17 @@ public final class UiMenuWindowController {
                 && entry.window.isOpen();
     }
 
+    /**
+     * Returns whether a menu has a registered
+     * new-framework implementation.
+     *
+     * Does not create or open the window.
+     */
+    public boolean isRegistered(String targetMenuId) {
+        return targetMenuId != null
+                && entries.containsKey(targetMenuId);
+    }
+
     public boolean isAnyOpen() {
 
         for (Entry entry : entries.values()) {
