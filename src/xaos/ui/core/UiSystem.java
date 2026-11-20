@@ -152,8 +152,10 @@ public final class UiSystem {
 
         windows.open(window);
 
-        // Restrict keyboard focus to this window.
-        input.focusManager().activateScopeFor(window);
+        // A newly opened modal immediately owns keyboard
+        // navigation. No initial mouse click is necessary.
+        input.activateModalKeyboardNavigation(window);
+
     }
 
     /**
@@ -166,13 +168,15 @@ public final class UiSystem {
         windows.close(window);
         input.cancelInput();
 
-        // Restore the scope of another modal, if one
-        // is still open underneath.
         UiWindow remaining = windows.activeModal();
 
         if (remaining != null) {
-            input.focusManager().activateScopeFor(remaining);
+
+            // If another modal remains open underneath,
+            // restore its keyboard navigation immediately.
+            input.activateModalKeyboardNavigation(remaining);
         }
+
     }
 
 }

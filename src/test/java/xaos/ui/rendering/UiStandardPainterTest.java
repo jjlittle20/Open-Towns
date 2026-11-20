@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+
+import xaos.ui.components.UiButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiSystem;
@@ -42,14 +44,12 @@ class UiStandardPainterTest {
         system.windows().register(window);
         system.updateLayout(new UiSize(800, 600));
 
-        UiStandardPainter painter =
-                new UiStandardPainter(system);
+        UiStandardPainter painter = new UiStandardPainter(system);
 
         // Basic theme uses filled rectangles.
         system.themes().select("basic");
 
-        RecordingRenderer basic =
-                new RecordingRenderer();
+        RecordingRenderer basic = new RecordingRenderer();
 
         system.render(basic, painter);
 
@@ -60,8 +60,7 @@ class UiStandardPainterTest {
         // Classic theme uses the Towns sprite atlas.
         system.themes().select("classic-towns");
 
-        RecordingRenderer classic =
-                new RecordingRenderer();
+        RecordingRenderer classic = new RecordingRenderer();
 
         system.render(classic, painter);
 
@@ -80,13 +79,12 @@ class UiStandardPainterTest {
         int sprites;
 
         final List<String> texts = new ArrayList<>();
+        final List<UiRect> filledBounds = new ArrayList<>();
 
         @Override
-        public void fillRect(
-                UiRect bounds,
-                UiColor color) {
-
+        public void fillRect(UiRect bounds, UiColor color) {
             filledRectangles++;
+            filledBounds.add(bounds);
         }
 
         @Override
@@ -117,4 +115,51 @@ class UiStandardPainterTest {
             // No OpenGL context required.
         }
     }
+
+    @Test
+    void focusedButtonDrawsKeyboardFocusOutline() {
+
+        UiSystem system = new UiSystem();
+
+        system.themes().register(
+                "basic", new BasicUiTheme());
+
+        system.themes().select("basic");
+
+        UiWindow window = new UiWindow("Options");
+
+        UiButton button = new UiButton(
+                "Back",
+                text -> new UiSize(text.length() * 7, 16));
+
+        window.content().add(button);
+        system.windows().register(window);
+
+        system.updateLayout(new UiSize(800, 600));
+
+        assertTrue(
+                system.input()
+                        .focusManager()
+                        .requestFocus(button));
+
+        RecordingRenderer renderer = new RecordingRenderer();
+
+        system.render(
+                renderer,
+                new UiStandardPainter(system));
+
+        UiRect bounds = button.bounds();
+
+        // Check the top edge of the focus outline.
+        UiRect focusTop = new UiRect(
+                bounds.x() + 2,
+                bounds.y() + 2,
+                bounds.width() - 4,
+                2);
+
+        assertTrue(
+                renderer.filledBounds.contains(focusTop),
+                "Focused button should draw its outline");
+    }
+
 }

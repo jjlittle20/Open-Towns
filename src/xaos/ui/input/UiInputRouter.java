@@ -90,6 +90,36 @@ public final class UiInputRouter {
     }
 
     /**
+     * Enables keyboard navigation when a modal window
+     * is opened programmatically.
+     *
+     * The first Tab press will focus the first
+     * available control without requiring a mouse click.
+     *
+     * This does not automatically focus a text field.
+     */
+    public void activateModalKeyboardNavigation(
+            UiWindow window) {
+
+        Objects.requireNonNull(window, "window");
+
+        if (!window.modal() || !window.isOpen()) {
+            throw new IllegalArgumentException(
+                    "Window must be an open modal");
+        }
+
+        focusManager.activateScopeFor(window);
+
+        // The window must belong to this UI root.
+        if (focusManager.activeWindow() != window) {
+            throw new IllegalArgumentException(
+                    "Modal window is not attached to this UI root");
+        }
+
+        keyboardNavigationActive = true;
+    }
+
+    /**
      * Returns true when the new UI owns text input.
      *
      * Only an enabled, focused text field can
@@ -222,6 +252,31 @@ public final class UiInputRouter {
 
                 default -> {
                     // Tab was handled above.
+                }
+            }
+
+        } else if (focusManager.focusedElement() instanceof UiSlider slider) {
+
+            switch (key) {
+
+                case LEFT -> {
+                    slider.stepBackward();
+                    consumed = true;
+                }
+
+                case RIGHT -> {
+                    slider.stepForward();
+                    consumed = true;
+                }
+
+                case ENTER, SPACE -> {
+                    // Retain existing keyboard activation.
+                    slider.activate();
+                    consumed = true;
+                }
+
+                default -> {
+                    // Other keys are not handled here.
                 }
             }
 

@@ -131,6 +131,18 @@ public final class UiStandardPainter
 
             theme.paintButton(button, renderer);
 
+            // Draw the keyboard focus outline on all buttons,
+            // including toggles, cycles and close buttons.
+            if (system.input()
+                    .focusManager()
+                    .isFocused(button)) {
+
+                UiFocusPainter.paint(
+                        button,
+                        renderer,
+                        theme.focusColor());
+            }
+
             // --------------------------------------------------------
             // Text fields
             // --------------------------------------------------------

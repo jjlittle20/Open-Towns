@@ -1683,4 +1683,78 @@ class UiInputRouterTest {
                 assertEquals(1, commits.get());
         }
 
+        @Test
+        void focusedSliderSupportsArrowKeys() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                AtomicInteger value = new AtomicInteger(5);
+                AtomicInteger commits = new AtomicInteger();
+
+                UiSlider slider = new UiSlider(
+                                "Music Volume",
+                                FONT,
+                                1, 10, 1,
+                                value::get,
+                                value::set,
+                                commits::incrementAndGet,
+                                current -> (current * 10) + "%");
+
+                window.content().add(slider);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                // Mouse interaction establishes keyboard focus.
+                UiRect track = slider.trackBounds();
+
+                int x = track.x() + track.width() / 2;
+                int y = track.y() + track.height() / 2;
+
+                input.mousePressed(x, y);
+                input.mouseReleased(x, y);
+
+                assertSame(
+                                slider,
+                                input.focusManager().focusedElement());
+
+                // Reset test state after focusing by mouse.
+                value.set(5);
+                commits.set(0);
+                slider.refresh();
+
+                // Right increases volume by one step.
+                assertTrue(input.keyPressed(UiKey.RIGHT, false));
+
+                assertEquals(6, value.get());
+                assertEquals(1, commits.get());
+
+                // Left/Right may repeat while held.
+                assertTrue(input.keyPressed(UiKey.RIGHT, false));
+
+                assertEquals(7, value.get());
+                assertEquals(2, commits.get());
+
+                input.keyReleased(UiKey.RIGHT);
+
+                // Left decreases volume.
+                assertTrue(input.keyPressed(UiKey.LEFT, false));
+
+                assertEquals(6, value.get());
+                assertEquals(3, commits.get());
+
+                input.keyReleased(UiKey.LEFT);
+
+                assertEquals("Music Volume: 60%", slider.text());
+
+                // Closing the window removes focus.
+                window.close();
+
+                assertFalse(input.keyPressed(UiKey.RIGHT, false));
+
+                assertEquals(6, value.get());
+                assertEquals(3, commits.get());
+        }
+
 }
