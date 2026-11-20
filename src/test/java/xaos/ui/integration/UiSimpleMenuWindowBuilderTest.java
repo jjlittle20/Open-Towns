@@ -16,6 +16,7 @@ import xaos.ui.components.UiButton;
 import xaos.ui.components.UiCycleButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
+import xaos.ui.components.UiSlider;
 import xaos.ui.components.UiToggleButton;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiSystem;
@@ -467,6 +468,196 @@ class UiSimpleMenuWindowBuilderTest {
                 // The XML builder also adds the standard
                 // title-bar close button.
                 assertTrue(window.closeButton().isPresent());
+        }
+
+        @Test
+        void dynamicSettingLabelsDoNotShowLegacyPlaceholders()
+                        throws Exception {
+
+                MenuDefinition definition = loadMenu(
+                                "data/menus/main/options/game_menu.xml");
+
+                UiLegacyToggleBindings toggles = new UiLegacyToggleBindings(
+                                command -> false,
+                                command -> {
+                                });
+
+                UiLegacyCycleBindings cycles = new UiLegacyCycleBindings(
+                                command -> "3 days",
+                                command -> {
+                                });
+
+                // Use real examples from the Towns
+                // language properties.
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                definition,
+                                key -> switch (key) {
+                                        case "MainMenuPanel.20" ->
+                                                "Mouse scroll __MOUSE_SCROLL__";
+                                        case "MainMenuPanel.31" ->
+                                                "Autosave: __SAVE_DAYS__";
+                                        case "MainMenuPanel.32" ->
+                                                "Sieges __SIEGES__";
+                                        default -> "loc:" + key;
+                                },
+                                FONT,
+                                () -> {
+                                },
+                                null,
+                                toggles::forItem,
+                                cycles::forItem);
+
+                UiScrollContainer scroll = (UiScrollContainer) window.content().children().get(0);
+
+                UiToggleButton mouseScroll = scroll.content().children().stream()
+                                .filter(UiToggleButton.class::isInstance)
+                                .map(UiToggleButton.class::cast)
+                                .filter(button -> button.label().equals("Mouse scroll"))
+                                .findFirst()
+                                .orElseThrow();
+
+                assertEquals(
+                                "Mouse scroll: OFF",
+                                mouseScroll.text());
+
+                UiCycleButton autosave = scroll.content().children().stream()
+                                .filter(UiCycleButton.class::isInstance)
+                                .map(UiCycleButton.class::cast)
+                                .filter(button -> button.label().equals("Autosave"))
+                                .findFirst()
+                                .orElseThrow();
+
+                assertEquals(
+                                "Autosave: 3 days",
+                                autosave.text());
+
+                // None of the setting controls should
+                // display the old placeholder syntax.
+                for (var element : scroll.content().children()) {
+
+                        if (element instanceof UiButton button) {
+                                assertFalse(
+                                                button.text().contains("__"),
+                                                "Unresolved placeholder: "
+                                                                + button.text());
+                        }
+                }
+        }
+
+        @Test
+        void buildsAudioControlsFromOriginalXml()
+                        throws Exception {
+
+                MenuDefinition definition = loadMenu(
+                                "data/menus/main/options/audio_menu.xml");
+
+                java.util.concurrent.atomic.AtomicInteger music = new java.util.concurrent.atomic.AtomicInteger(7);
+
+                java.util.concurrent.atomic.AtomicInteger fx = new java.util.concurrent.atomic.AtomicInteger(4);
+
+                java.util.concurrent.atomic.AtomicInteger saves = new java.util.concurrent.atomic.AtomicInteger();
+
+                UiLegacyToggleBindings toggles = new UiLegacyToggleBindings(
+                                command -> false,
+                                command -> {
+                                });
+
+                UiLegacyVolumeBindings volumes = new UiLegacyVolumeBindings(
+                                music::get,
+                                music::set,
+                                fx::get,
+                                fx::set,
+                                saves::incrementAndGet);
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                definition,
+
+                                // Realistic translated labels with
+                                // the original dynamic placeholders.
+                                key -> switch (key) {
+                                        case "MainMenuPanel.5" ->
+                                                "Music __MUSIC__";
+                                        case "MainMenuPanel.6" ->
+                                                "FX __FX__";
+                                        case "MainMenuPanel.56" ->
+                                                "Volume __VOLMUSIC__";
+                                        case "MainMenuPanel.57" ->
+                                                "Volume __VOLFX__";
+                                        default -> "loc:" + key;
+                                },
+
+                                FONT,
+                                () -> {
+                                },
+                                null,
+                                toggles::forItem,
+                                null,
+                                volumes::forItem);
+
+                UiScrollContainer scroll = (UiScrollContainer) window.content().children().get(0);
+
+                var sliders = scroll.content().children().stream()
+                                .filter(UiSlider.class::isInstance)
+                                .map(UiSlider.class::cast)
+                                .toList();
+
+                long toggleCount = scroll.content().children().stream()
+                                .filter(UiToggleButton.class::isInstance)
+                                .count();
+
+                assertEquals(2, toggleCount);
+                assertEquals(2, sliders.size());
+
+                assertEquals("Volume: 70%", sliders.get(0).text());
+                assertEquals("Volume: 40%", sliders.get(1).text());
+
+                // Verify that both sliders update the
+                // correct independent setting.
+                sliders.get(0).stepForward();
+
+                assertEquals(8, music.get());
+                assertEquals(4, fx.get());
+
+                sliders.get(1).stepForward();
+
+                assertEquals(8, music.get());
+                assertEquals(5, fx.get());
+
+                // Each completed keyboard adjustment
+                // commits once.
+                assertEquals(2, saves.get());
+
+                // Legacy placeholders must not appear.
+                for (var child : scroll.content().children()) {
+                        if (child instanceof UiButton button) {
+                                assertFalse(
+                                                button.text().contains("__"),
+                                                "Unresolved placeholder: "
+                                                                + button.text());
+                        }
+                }
+
+                assertTrue(window.closeButton().isPresent());
+        }
+
+        @Test
+        void audioVolumeUsesPercentageFormatting() {
+
+                AtomicInteger value = new AtomicInteger(7);
+
+                UiSliderBinding binding = new UiSliderBinding(
+                                1, 10, 1,
+                                value::get,
+                                value::set,
+                                () -> {
+                                },
+                                current -> (current * 10) + "%");
+
+                assertEquals("70%", binding.formattedValue());
+
+                value.set(10);
+
+                assertEquals("100%", binding.formattedValue());
         }
 
 }

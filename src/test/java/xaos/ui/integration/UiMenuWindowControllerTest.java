@@ -292,4 +292,74 @@ class UiMenuWindowControllerTest {
                 assertEquals(2, ui.windows().windows().size());
         }
 
+        @Test
+        void gameSettingsCanBeOpenedFromOptionsXml()
+                        throws Exception {
+
+                URL resource = UiMenuWindowControllerTest.class
+                                .getClassLoader()
+                                .getResource(
+                                                "data/menus/main/options/root.xml");
+
+                assertNotNull(resource);
+
+                MenuDefinition options = MenuXmlLoader.load(
+                                Path.of(resource.toURI()).toFile());
+
+                UiSystem ui = new UiSystem();
+
+                UiMenuWindowController controller = new UiMenuWindowController(ui);
+
+                controller.register(
+                                "main.options.root",
+                                () -> {
+                                        UiWindow window = new UiWindow("Options");
+                                        window.setModal(true);
+                                        return window;
+                                });
+
+                controller.register(
+                                "main.options.game.root",
+                                () -> {
+                                        UiWindow window = new UiWindow("Game Settings");
+
+                                        window.setModal(true);
+                                        return window;
+                                });
+
+                // Open the new Options root.
+                controller.open("main.options.root");
+
+                // Select Game using its original XML item ID.
+                var action = controller.resolve(
+                                options,
+                                "main.options.game");
+
+                assertTrue(action.isPresent());
+
+                controller.close("main.options.root");
+                action.orElseThrow().run();
+
+                assertTrue(controller.isOpen(
+                                "main.options.game.root"));
+
+                assertFalse(controller.isOpen(
+                                "main.options.root"));
+
+                assertEquals(
+                                "Game Settings",
+                                ui.windows().activeModal().title());
+
+                // Navigate back to Options.
+                controller.close("main.options.game.root");
+                controller.open("main.options.root");
+
+                assertEquals(
+                                "Options",
+                                ui.windows().activeModal().title());
+
+                // Both windows remain registered for reuse.
+                assertEquals(2, ui.windows().windows().size());
+        }
+
 }

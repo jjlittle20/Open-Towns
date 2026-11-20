@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiScrollContainer;
+import xaos.ui.components.UiSlider;
 import xaos.ui.components.UiTextField;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiContainer;
@@ -1628,6 +1629,58 @@ class UiInputRouterTest {
                                 y(backgroundButton));
 
                 assertEquals(1, clicks.get());
+        }
+
+        @Test
+        void draggingSliderThroughInputRouterDoesNotClickButton() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                AtomicInteger value = new AtomicInteger(5);
+                AtomicInteger commits = new AtomicInteger();
+
+                UiSlider slider = new UiSlider(
+                                "Music Volume",
+                                FONT,
+                                1, 10, 1,
+                                value::get,
+                                value::set,
+                                commits::incrementAndGet,
+                                current -> (current * 10) + "%");
+
+                window.content().add(slider);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                UiRect track = slider.trackBounds();
+
+                int startX = track.x() + 1;
+                int endX = track.x() + track.width() - 2;
+                int y = track.y() + track.height() / 2;
+
+                // Begin dragging near the minimum.
+                assertTrue(input.mousePressed(startX, y));
+                assertTrue(slider.dragging());
+
+                // Move towards maximum without releasing.
+                assertTrue(input.mouseMoved(endX, y));
+
+                assertEquals(10, value.get());
+
+                // No settings save should occur during dragging.
+                assertEquals(0, commits.get());
+
+                // Releasing commits the drag.
+                assertTrue(input.mouseReleased(endX, y));
+
+                assertFalse(slider.dragging());
+                assertEquals(10, value.get());
+
+                // The generic UiButton click must NOT
+                // execute a second action.
+                assertEquals(1, commits.get());
         }
 
 }

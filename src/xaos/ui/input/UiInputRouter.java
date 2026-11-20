@@ -7,6 +7,7 @@ import java.util.Objects;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiScrollBar;
 import xaos.ui.components.UiScrollContainer;
+import xaos.ui.components.UiSlider;
 import xaos.ui.components.UiTextField;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiContainer;
@@ -30,7 +31,8 @@ public final class UiInputRouter {
 
     private final UiRoot root;
     private final UiFocusManager focusManager;
-
+    // Slider currently capturing mouse movement.
+    private UiSlider activeSlider;
     /**
      * Keyboard navigation is enabled after clicking
      * inside the new UI and disabled when clicking outside.
@@ -320,6 +322,15 @@ public final class UiInputRouter {
 
     public boolean mouseMoved(int x, int y) {
 
+        // A captured slider continues dragging even when
+        // the pointer moves outside the control.
+        if (activeSlider != null) {
+
+            activeSlider.dragTo(x);
+
+            return true;
+        }
+
         // Continue dragging a captured scrollbar thumb.
         if (draggingScrollBar != null) {
 
@@ -535,29 +546,46 @@ public final class UiInputRouter {
             window.parent().bringToFront(window);
         }
 
-        if (target instanceof UiScrollBar bar) {
+        if (target instanceof UiSlider slider
+                && slider.enabled()) {
 
-            // --------------------------------------------------------
-            // Scrollbar interaction
-            // --------------------------------------------------------
+            // Start horizontal slider dragging.
+            activeSlider = slider;
+            pressedTarget = slider;
 
+            slider.setPressed(true);
+            slider.beginDrag(x);
+
+            return true;
+
+        } else if (target instanceof UiScrollBar bar) {
+
+            // Start vertical scrollbar dragging.
             draggingScrollBar = bar;
 
             UiRect thumb = bar.thumbBounds();
 
-            boolean onThumb = thumb.contains(x, y);
+            if (thumb.contains(x, y)) {
 
-            // Preserve the grab position when clicking the thumb.
-            // Clicking elsewhere on the track centres the thumb
-            // around the pointer and begins dragging.
-            scrollThumbGrabY = onThumb
-                    ? y - thumb.y()
-                    : thumb.height() / 2;
+                // Preserve the offset where the player
+                // grabbed the scrollbar thumb.
+                scrollThumbGrabY = y - thumb.y();
 
-            if (!onThumb) {
-                bar.scrollToPointer(y, scrollThumbGrabY);
-                root.updateLayout(root.viewportSize());
+            } else {
+
+                // Clicking the track moves the thumb
+                // towards the clicked position.
+                scrollThumbGrabY = thumb.height() / 2;
             }
+
+            // Update the scroll position immediately.
+            bar.scrollToPointer(
+                    y,
+                    scrollThumbGrabY);
+
+            root.updateLayout(root.viewportSize());
+
+            return true;
 
         } else if (floatingWindow) {
 
@@ -611,6 +639,30 @@ public final class UiInputRouter {
     public boolean mouseReleased(int x, int y) {
         UiElement target = hitTest(x, y);
         UiElement originalTarget = pressedTarget;
+
+        // --------------------------------------------------------
+        // Finish slider dragging before button activation
+        // --------------------------------------------------------
+
+        if (activeSlider != null) {
+
+            UiSlider slider = activeSlider;
+
+            activeSlider = null;
+
+            // Apply the final position and commit once.
+            slider.endDrag(x);
+            slider.setPressed(false);
+
+            // Release pointer capture.
+            pressedTarget = null;
+
+            updateHovered(hitTest(x, y));
+
+            // CRITICAL:
+            // Do not fall through to UiButton.activate().
+            return true;
+        }
 
         pressedTarget = null;
 
@@ -723,6 +775,16 @@ public final class UiInputRouter {
 
         if (pressedTarget instanceof UiButton button) {
             button.setPressed(false);
+        }
+
+        if (activeSlider != null) {
+
+            // Finish an interrupted drag and save
+            // any live value changes.
+            activeSlider.cancelDrag();
+
+            activeSlider.setPressed(false);
+            activeSlider = null;
         }
 
         pressedTarget = null;

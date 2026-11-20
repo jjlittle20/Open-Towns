@@ -11,8 +11,10 @@ import org.lwjgl.opengl.GL11;
 import xaos.property.PropertyFile;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiWindow;
+import xaos.ui.integration.UiLegacyCycleBindings;
 import xaos.ui.integration.UiLegacySubmenuBridge;
 import xaos.ui.integration.UiLegacyToggleBindings;
+import xaos.ui.integration.UiLegacyVolumeBindings;
 import xaos.ui.integration.UiMenuNavigation;
 import xaos.ui.integration.UiMenuWindowController;
 import xaos.ui.integration.UiSimpleMenuWindowBuilder;
@@ -77,15 +79,24 @@ public final class MainMenuPanel implements Runnable {
         private static final String GRAPHICS_MENU_ID = "main.options.graphics.root";
 
         private MenuDefinition graphicsDefinition;
+        private static final String GAME_MENU_ID = "main.options.game.root";
+
+        private static final String AUDIO_MENU_ID = "main.options.audio.root";
+
+        private MenuDefinition audioDefinition;
+
+        private MenuDefinition gameDefinition;
 
         // Retains the original Options menu and its
         // six legacy submenus during the migration.
         private SmartMenu legacyOptionsMenu;
+        private final UiLegacyVolumeBindings legacyVolumeBindings = UiLegacyVolumeBindings.forGame();
 
         // All migrated menu windows are now managed here.
         private final UiMenuWindowController migratedMenus = new UiMenuWindowController(Game.uiSystem());
 
         private final UiLegacyToggleBindings legacyToggleBindings = UiLegacyToggleBindings.forGame();
+        private final UiLegacyCycleBindings legacyCycleBindings = UiLegacyCycleBindings.forGame();
 
         public final ColorGL COLORGL_BLACK = new ColorGL(Color.BLACK);
         public final ColorGL COLORGL_WHITE = new ColorGL(Color.WHITE);
@@ -193,6 +204,13 @@ public final class MainMenuPanel implements Runnable {
                 migratedMenus.register(
                                 GRAPHICS_MENU_ID,
                                 this::buildGraphicsWindow);
+                // Game settings now use the new UI framework.
+                migratedMenus.register(
+                                GAME_MENU_ID,
+                                this::buildGameWindow);
+                migratedMenus.register(
+                                AUDIO_MENU_ID,
+                                this::buildAudioWindow);
 
                 createMenu();
                 new Thread(this).start();
@@ -236,6 +254,21 @@ public final class MainMenuPanel implements Runnable {
                         throw new IllegalStateException(
                                         "Missing Graphics menu: "
                                                         + GRAPHICS_MENU_ID);
+                }
+                gameDefinition = menuManager.getMenu(GAME_MENU_ID);
+
+                if (gameDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Missing Game settings menu: "
+                                                        + GAME_MENU_ID);
+                }
+
+                audioDefinition = menuManager.getMenu(AUDIO_MENU_ID);
+
+                if (audioDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Missing Audio settings menu: "
+                                                        + AUDIO_MENU_ID);
                 }
 
                 SmartMenu mainMenu = menuManager.buildSmartMenu(menuRoot, null);
@@ -354,6 +387,62 @@ public final class MainMenuPanel implements Runnable {
         }
 
         /**
+         * Builds the Game settings screen from the original
+         * Towns XML definition.
+         *
+         * Uses the existing game commands and settings state.
+         *
+         * The UiMenuWindowController handles registration,
+         * opening, closing and window reuse.
+         */
+        private UiWindow buildGameWindow() {
+
+                if (gameDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Game settings XML definition not loaded");
+                }
+
+                // --------------------------------------------------------
+                // Construct controls directly from XML
+                // --------------------------------------------------------
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                gameDefinition,
+                                Messages::getString,
+                                TownsUiTextMetrics.INSTANCE,
+
+                                // Back and X return to Options.
+                                () -> returnToOptions(GAME_MENU_ID),
+
+                                // No child submenus in Game settings.
+                                null,
+
+                                // Seven boolean settings.
+                                legacyToggleBindings::forItem,
+
+                                // Two cycle selectors.
+                                legacyCycleBindings::forItem);
+
+                // --------------------------------------------------------
+                // Window behaviour
+                // --------------------------------------------------------
+
+                window.setCentered(true);
+                window.setDraggable(false);
+                window.setResizable(false);
+                window.setModal(true);
+
+                // Slightly taller than Credits or Graphics.
+                // Remaining content can be scrolled.
+                window.setPreferredSize(
+                                new UiSize(480, 380));
+
+                // The XML builder already installs the
+                // standard title-bar X close button.
+                return window;
+        }
+
+        /**
          * Returns from a migrated Options child
          * to the new Options root window.
          *
@@ -426,6 +515,54 @@ public final class MainMenuPanel implements Runnable {
                 menu.setSmartMenu(child);
 
                 repositionMenu();
+        }
+
+        /**
+         * Builds the Audio settings screen using
+         * the original Towns XML definition.
+         *
+         * Music and FX toggles use existing commands.
+         * Volume sliders use live audio bindings.
+         */
+        private UiWindow buildAudioWindow() {
+
+                if (audioDefinition == null) {
+                        throw new IllegalStateException(
+                                        "Audio settings XML definition not loaded");
+                }
+
+                UiWindow window = UiSimpleMenuWindowBuilder.build(
+                                audioDefinition,
+                                Messages::getString,
+                                TownsUiTextMetrics.INSTANCE,
+
+                                // Back and X return to Options.
+                                () -> returnToOptions(AUDIO_MENU_ID),
+
+                                // No child submenus.
+                                null,
+
+                                // Music and FX toggles.
+                                legacyToggleBindings::forItem,
+
+                                // No cycle selectors.
+                                null,
+
+                                // Music and FX volume sliders.
+                                legacyVolumeBindings::forItem);
+
+                // Standard menu-screen behaviour.
+                window.setCentered(true);
+                window.setDraggable(false);
+                window.setResizable(false);
+                window.setModal(true);
+
+                window.setPreferredSize(
+                                new UiSize(460, 340));
+
+                // X button is added automatically by the
+                // XML builder, just like Credits and Options.
+                return window;
         }
 
         public void resize(int renderX, int renderY, int renderWidth, int renderHeight) {

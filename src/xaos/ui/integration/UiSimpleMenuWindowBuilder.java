@@ -4,6 +4,7 @@ package xaos.ui.integration;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
@@ -11,6 +12,7 @@ import xaos.ui.components.UiButton;
 import xaos.ui.components.UiCycleButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
+import xaos.ui.components.UiSlider;
 import xaos.ui.components.UiToggleButton;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiElement;
@@ -113,6 +115,7 @@ public final class UiSimpleMenuWindowBuilder {
          * Builds an XML menu with optional submenu,
          * toggle and cycle bindings.
          */
+
         public static UiWindow build(
                         MenuDefinition definition,
                         Function<String, String> localize,
@@ -121,6 +124,31 @@ public final class UiSimpleMenuWindowBuilder {
                         Consumer<String> onSubmenu,
                         Function<MenuItemDefinition, UiToggleBinding> toggleBindings,
                         Function<MenuItemDefinition, UiCycleBinding> cycleBindings) {
+
+                return build(
+                                definition,
+                                localize,
+                                textMetrics,
+                                onBack,
+                                onSubmenu,
+                                toggleBindings,
+                                cycleBindings,
+                                null);
+        }
+
+        /**
+         * Builds XML menus with optional submenu,
+         * toggle, cycle and slider bindings.
+         */
+        public static UiWindow build(
+                        MenuDefinition definition,
+                        Function<String, String> localize,
+                        UiTextMetrics textMetrics,
+                        Runnable onBack,
+                        Consumer<String> onSubmenu,
+                        Function<MenuItemDefinition, UiToggleBinding> toggleBindings,
+                        Function<MenuItemDefinition, UiCycleBinding> cycleBindings,
+                        Function<MenuItemDefinition, UiSliderBinding> sliderBindings) {
 
                 Objects.requireNonNull(definition, "definition");
                 Objects.requireNonNull(localize, "localize");
@@ -223,9 +251,8 @@ public final class UiSimpleMenuWindowBuilder {
                                                         "No toggle binding for XML item: "
                                                                         + item.getId());
 
-                                        String label = resolve(
-                                                        localize,
-                                                        item.getTitleKey());
+                                        String label = settingLabel(
+                                                        resolve(localize, item.getTitleKey()));
 
                                         UiToggleButton toggle = new UiToggleButton(
                                                         label,
@@ -249,9 +276,8 @@ public final class UiSimpleMenuWindowBuilder {
                                                         "No cycle binding for XML item: "
                                                                         + item.getId());
 
-                                        String label = resolve(
-                                                        localize,
-                                                        item.getTitleKey());
+                                        String label = settingLabel(
+                                                        resolve(localize, item.getTitleKey()));
 
                                         UiCycleButton cycle = new UiCycleButton(
                                                         label,
@@ -260,6 +286,38 @@ public final class UiSimpleMenuWindowBuilder {
                                                         binding.action());
 
                                         scroll.content().add(cycle);
+                                }
+
+                                case "slider" -> {
+
+                                        if (sliderBindings == null) {
+                                                throw new UnsupportedOperationException(
+                                                                "Slider binding is not configured: "
+                                                                                + item.getId());
+                                        }
+
+                                        UiSliderBinding binding = Objects.requireNonNull(
+                                                        sliderBindings.apply(item),
+                                                        "No slider binding for XML item: "
+                                                                        + item.getId());
+
+                                        // Strip legacy dynamic placeholders such as
+                                        // __VOLMUSIC__ and __VOLFX__.
+                                        String label = settingLabel(
+                                                        resolve(localize, item.getTitleKey()));
+
+                                        UiSlider slider = new UiSlider(
+                                                        label,
+                                                        textMetrics,
+                                                        binding.minimum(),
+                                                        binding.maximum(),
+                                                        binding.step(),
+                                                        binding::currentValue,
+                                                        requested -> binding.setValue(requested),
+                                                        binding::commit,
+                                                        binding.formatter());
+
+                                        scroll.content().add(slider);
                                 }
 
                                 case "back" -> {
@@ -308,6 +366,52 @@ public final class UiSimpleMenuWindowBuilder {
                                 onBack);
 
                 return window;
+        }
+
+        private static final Pattern LEGACY_DYNAMIC_SUFFIX = Pattern.compile("\\s*__[A-Z0-9_]+__\\s*$");
+
+        /**
+         * Removes a legacy dynamic-state placeholder from
+         * the end of a translated setting label.
+         *
+         * The new toggle/cycle components display their
+         * current value separately.
+         *
+         * Examples:
+         *
+         * "Mouse scroll __MOUSE_SCROLL__"
+         * -> "Mouse scroll"
+         *
+         * "Autosave: __SAVE_DAYS__"
+         * -> "Autosave"
+         *
+         * "Sieges __SIEGES__"
+         * -> "Sieges"
+         */
+        private static String settingLabel(String translated) {
+
+                Objects.requireNonNull(translated, "translated");
+
+                var matcher = LEGACY_DYNAMIC_SUFFIX.matcher(translated);
+
+                // Ordinary labels are left unchanged.
+                if (!matcher.find()) {
+                        return translated;
+                }
+
+                String label = translated
+                                .substring(0, matcher.start())
+                                .stripTrailing();
+
+                // UiToggleButton and UiCycleButton add their
+                // own ": value" suffix.
+                if (label.endsWith(":")) {
+                        label = label.substring(
+                                        0, label.length() - 1)
+                                        .stripTrailing();
+                }
+
+                return label;
         }
 
         private static String resolve(

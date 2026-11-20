@@ -6,6 +6,7 @@ import xaos.ui.components.UiButton;
 import xaos.ui.components.UiCycleButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollBar;
+import xaos.ui.components.UiSlider;
 import xaos.ui.components.UiTextField;
 import xaos.ui.components.UiToggleButton;
 import xaos.ui.components.UiWindow;
@@ -85,6 +86,28 @@ public final class UiStandardPainter
                     label.text(),
                     new UiPoint(bounds.x(), bounds.y()),
                     theme.textColor());
+
+        } else if (element instanceof UiSlider slider) {
+
+            // Read the current setting in case it changed
+            // outside the UI.
+            slider.refresh();
+
+            UiSliderPainter.paint(
+                    slider,
+                    renderer,
+                    theme.textColor());
+
+            // Reuse the framework's focus indicator.
+            if (system.input()
+                    .focusManager()
+                    .isFocused(slider)) {
+
+                UiFocusPainter.paint(
+                        slider,
+                        renderer,
+                        theme.focusColor());
+            }
 
             // --------------------------------------------------------
             // Buttons
