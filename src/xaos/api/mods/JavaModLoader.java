@@ -18,6 +18,7 @@ import xaos.main.Game;
 import xaos.utils.Log;
 import xaos.internal.api.mods.ModDependencyResolver;
 import xaos.internal.api.mods.ModSaveDataRegistry;
+import xaos.internal.api.mods.ModUiErrors;
 import xaos.api.SdkVersion;
 
 /**
@@ -133,6 +134,10 @@ public final class JavaModLoader {
                         }
 
                         if (!dependenciesLoaded) {
+                                ModUiErrors.report(
+                                                modId,
+                                                "Java mod dependencies",
+                                                "A required Java dependency failed to load");
                                 continue;
                         }
 
@@ -212,7 +217,10 @@ public final class JavaModLoader {
                                                                 dependencies));
 
                                 if (registrationResult == DiscoveryRegistrationResult.DUPLICATE_DETECTED) {
-
+                                        ModUiErrors.report(
+                                                        modId,
+                                                        "Java mod discovery",
+                                                        "Duplicate Java mod ID: " + modId);
                                         Log.log(
                                                         Log.LEVEL_ERROR,
                                                         "Duplicate Java mod ID ["
@@ -232,7 +240,11 @@ public final class JavaModLoader {
                                                                 dependencies));
 
                         } catch (Exception exception) {
-
+                                ModUiErrors.report(
+                                                folderName,
+                                                "Java mod metadata",
+                                                "Could not read mod.properties",
+                                                exception);
                                 Log.log(
                                                 Log.LEVEL_ERROR,
                                                 "Could not read Java mod metadata from folder ["
@@ -304,6 +316,11 @@ public final class JavaModLoader {
                                         modFolder,
                                         metadataFile);
                 } catch (Exception | LinkageError exception) {
+                        ModUiErrors.report(
+                                        folderName,
+                                        "Java mod loading",
+                                        "Failed to load Java mod",
+                                        exception);
                         Log.log(
                                         Log.LEVEL_ERROR,
                                         "Failed to load Java mod from folder ["

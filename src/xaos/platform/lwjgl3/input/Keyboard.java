@@ -68,6 +68,7 @@ public final class Keyboard {
 
     public static final int KEY_TAB = GLFW_KEY_TAB;
     public static final int KEY_NUMPADENTER = GLFW_KEY_KP_ENTER;
+    public static final int KEY_F8 = GLFW_KEY_F8;
 
     public static final int KEY_HOME = GLFW_KEY_HOME;
     public static final int KEY_END = GLFW_KEY_END;

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -51,6 +52,7 @@ import xaos.panels.MiniMapPanel;
 import xaos.panels.TypingPanel;
 import xaos.panels.UI.UIPanel;
 import xaos.panels.menus.ContextMenu;
+import xaos.panels.menus.MenuManager;
 import xaos.property.MainProperties;
 import xaos.skills.SkillManager;
 import xaos.tasks.Task;
@@ -89,10 +91,12 @@ import xaos.api.mods.JavaModLoader;
 import xaos.panels.UI.UiDispatcher;
 import xaos.internal.api.selection.SelectionManager;
 import xaos.internal.api.mods.ModSaveDataRegistry;
+import xaos.internal.api.mods.ModUiMenuLoader;
 import xaos.internal.api.inventory.ItemReservationRegistry;
 import xaos.internal.api.definitions.DefinitionOwnershipRegistry;
 import xaos.ui.core.UiSystem;
 import xaos.ui.debug.UiDebugOverlay;
+import xaos.ui.debug.UiModErrorWindow;
 import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
 import xaos.ui.layout.UiSize;
@@ -212,6 +216,13 @@ public final class Game {
 
 	}
 
+	// Registered gameplay menu definitions.
+	// Not yet used by the live legacy panels.
+	private static MenuManager gameplayMenus;
+
+	// Created after the existing game UI has initialised.
+	private static UiModErrorWindow modErrorsWindow;
+
 	/**
 	 * Returns whether the new UI currently owns text input.
 	 *
@@ -289,6 +300,28 @@ public final class Game {
 		themes.select("classic-towns");
 
 		return system;
+	}
+
+	/**
+	 * Rebuilds the gameplay menu registry using
+	 * the currently enabled mods.
+	 *
+	 * Each call creates a new registry, avoiding
+	 * duplicate registrations across world loads.
+	 */
+	private static void reloadGameplayMenus() {
+
+		gameplayMenus = ModUiMenuLoader.load(
+				new File("data/menus/right"),
+				new File(getUserFolder(), MODS_FOLDER1),
+				List.copyOf(getModsLoaded()));
+	}
+
+	/**
+	 * Internal access for the upcoming gameplay UI.
+	 */
+	public static MenuManager gameplayMenus() {
+		return gameplayMenus;
 	}
 
 	public Game() {
@@ -416,21 +449,17 @@ public final class Game {
 
 		panelMainMenu.setActive(true);
 
-		// ------------------------------------------------------------
-		// Install optional UI development windows
-		// ------------------------------------------------------------
-
-		// The UI runtime already belongs to Game.
-		// The debug overlay only contributes test windows.
 		UiDebugOverlay.install(UI_SYSTEM);
 
-		/*
-		 * Load optional Java plugins from enabled mod folders.
-		 *
-		 * This happens after the main engine/UI has been initialised,
-		 * but before the main game loop begins.
-		 */
+		// Register the persistent mod-error window.
+		// It starts hidden.
+		modErrorsWindow = new UiModErrorWindow(UI_SYSTEM);
+
+		// Initialise Java mods first.
 		JavaModLoader.loadEnabledMods();
+
+		// Then register their declarative UI contributions.
+		reloadGameplayMenus();
 
 		// Main loop
 		run();
@@ -838,6 +867,9 @@ public final class Game {
 		 * ready for Java mods to query.
 		 */
 		JavaModLoader.notifyWorldLoaded();
+		// The enabled mod set may have changed while
+		// loading a save or starting a new game.
+		reloadGameplayMenus();
 	}
 
 	public static void generateBury(Cell[][][] cells) {
@@ -1639,6 +1671,16 @@ public final class Game {
 				if (UI_SYSTEM.windows().activeModal() != null) {
 					continue;
 				}
+				// ------------------------------------------------------------
+				// Temporary shortcut: toggle the mod error window
+				// ------------------------------------------------------------
+
+				if (iKEY == Keyboard.KEY_F8
+						&& modErrorsWindow != null) {
+
+					modErrorsWindow.toggle();
+					continue;
+				}
 
 				// --------------------------------------------------------
 				// Original Towns main menu
@@ -1796,7 +1838,10 @@ public final class Game {
 
 		while (!Display.isCloseRequested()) {
 			handleResize();
-
+			// Display newly reported mod errors on the UI thread.
+			if (modErrorsWindow != null) {
+				modErrorsWindow.update();
+			}
 			// ------------------------------------------------------------
 			// Permanent UI layout
 			// ------------------------------------------------------------

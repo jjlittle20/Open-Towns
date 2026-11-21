@@ -1,9 +1,9 @@
 package xaos.api.mods;
 
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import xaos.internal.api.mods.ModUiErrors;
 import xaos.api.mods.ModLogger;
 import xaos.utils.Log;
 
@@ -23,17 +23,19 @@ final class DefaultModLogger implements ModLogger {
         Log.log(
                 Log.LEVEL_DEBUG,
                 message,
-                "Mod:" + modId
-        );
+                "Mod:" + modId);
     }
 
     @Override
     public void error(String message) {
+        ModUiErrors.report(
+                modId,
+                "Mod logger",
+                message);
         Log.log(
                 Log.LEVEL_ERROR,
                 message,
-                "Mod:" + modId
-        );
+                "Mod:" + modId);
     }
 
     @Override
@@ -42,8 +44,7 @@ final class DefaultModLogger implements ModLogger {
 
         if (throwable != null) {
             throwable.printStackTrace(
-                    new PrintWriter(output)
-            );
+                    new PrintWriter(output));
         }
 
         Log.log(
@@ -53,7 +54,6 @@ final class DefaultModLogger implements ModLogger {
                                 ? ""
                                 : System.lineSeparator()
                                         + output),
-                "Mod:" + modId
-        );
+                "Mod:" + modId);
     }
 }
