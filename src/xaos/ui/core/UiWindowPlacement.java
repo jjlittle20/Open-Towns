@@ -8,6 +8,7 @@ import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiWindowAnchor;
+import xaos.ui.layout.UiWindowDockMode;
 
 /**
  * Viewport-aware positioning for floating UI windows.
@@ -19,6 +20,105 @@ import xaos.ui.layout.UiWindowAnchor;
 public final class UiWindowPlacement {
 
     private UiWindowPlacement() {
+    }
+
+    /**
+     * Calculates the temporary size of a docked window.
+     *
+     * Returns null when docking is inactive.
+     *
+     * The unstretched dimension retains the
+     * original user or preferred size.
+     */
+    public static UiSize dockedSize(
+            UiWindow window,
+            UiSize viewport) {
+
+        Objects.requireNonNull(window, "window");
+        Objects.requireNonNull(viewport, "viewport");
+
+        if (!window.isOpen()
+                || window.anchor() == UiWindowAnchor.NONE
+                || window.dockMode() == UiWindowDockMode.NONE
+                || viewport.width() == 0
+                || viewport.height() == 0) {
+
+            return null;
+        }
+
+        UiWindowAnchor anchor = window.anchor();
+        UiWindowDockMode mode = window.dockMode();
+
+        UiInsets insets = window.anchorInsets();
+
+        // Prefer the player's explicit dimensions.
+        // Otherwise use preferred or measured size.
+        UiSize natural = window.userSize()
+                .orElse(window.preferredSize());
+
+        int width = natural.width() > 0
+                ? natural.width()
+                : window.bounds().width();
+
+        int height = natural.height() > 0
+                ? natural.height()
+                : window.bounds().height();
+
+        switch (mode) {
+
+            case FILL_HEIGHT -> {
+
+                if (anchor != UiWindowAnchor.LEFT
+                        && anchor != UiWindowAnchor.RIGHT) {
+
+                    throw new IllegalStateException(
+                            "FILL_HEIGHT requires LEFT or RIGHT anchor");
+                }
+
+                int availableHeight = Math.max(
+                        0,
+                        viewport.height() - insets.vertical());
+
+                return new UiSize(
+                        Math.max(
+                                window.minimumSize().width(),
+                                width),
+
+                        Math.max(
+                                window.minimumSize().height(),
+                                availableHeight));
+            }
+
+            case FILL_WIDTH -> {
+
+                if (anchor != UiWindowAnchor.TOP
+                        && anchor != UiWindowAnchor.BOTTOM) {
+
+                    throw new IllegalStateException(
+                            "FILL_WIDTH requires TOP or BOTTOM anchor");
+                }
+
+                int availableWidth = Math.max(
+                        0,
+                        viewport.width() - insets.horizontal());
+
+                return new UiSize(
+                        Math.max(
+                                window.minimumSize().width(),
+                                availableWidth),
+
+                        Math.max(
+                                window.minimumSize().height(),
+                                height));
+            }
+
+            case NONE -> {
+                return null;
+            }
+        }
+
+        throw new IllegalStateException(
+                "Unsupported docking mode: " + mode);
     }
 
     /**
@@ -117,6 +217,20 @@ public final class UiWindowPlacement {
             case NONE ->
                 window.position().y();
         };
+
+        // A full-height sidebar starts at the top inset,
+        // rather than being vertically centred.
+        if (window.dockMode() == UiWindowDockMode.FILL_HEIGHT) {
+
+            y = margin.top();
+        }
+
+        // A full-width toolbar starts at the left inset,
+        // rather than being horizontally centred.
+        if (window.dockMode() == UiWindowDockMode.FILL_WIDTH) {
+
+            x = margin.left();
+        }
 
         // --------------------------------------------------------
         // Keep the anchored window visible

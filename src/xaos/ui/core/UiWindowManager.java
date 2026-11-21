@@ -47,6 +47,29 @@ public final class UiWindowManager {
         Objects.requireNonNull(viewport, "viewport");
 
         boolean updated = root.updateLayout(viewport);
+
+        // ------------------------------------------------------------
+        // Calculate docking dimensions
+        // ------------------------------------------------------------
+
+        boolean dockSizeChanged = false;
+
+        for (UiWindow window : windows()) {
+
+            UiSize requestedSize = UiWindowPlacement.dockedSize(
+                    window, viewport);
+
+            if (window.applyDockedSize(requestedSize)) {
+                dockSizeChanged = true;
+            }
+        }
+
+        // Window bounds must reflect the new size
+        // before screen-edge positioning is calculated.
+        if (dockSizeChanged) {
+            root.updateLayout(viewport);
+        }
+
         boolean repositioned = false;
 
         for (UiWindow window : windows()) {
@@ -87,7 +110,7 @@ public final class UiWindowManager {
             root.updateLayout(viewport);
         }
 
-        return updated || repositioned;
+        return updated || dockSizeChanged || repositioned;
     }
 
     // ------------------------------------------------------------

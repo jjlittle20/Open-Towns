@@ -11,6 +11,7 @@ import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiWindowAnchor;
+import xaos.ui.layout.UiWindowDockMode;
 
 class UiWindowManagerTest {
 
@@ -431,6 +432,112 @@ class UiWindowManagerTest {
                 assertEquals(
                                 new UiPoint(120, 90),
                                 window.position());
+        }
+
+        @Test
+        void rightDockedPanelFillsAvailableHeight() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow panel = new UiWindow("Actions");
+
+                panel.setUserSize(new UiSize(250, 180));
+                panel.setAnchor(UiWindowAnchor.RIGHT);
+
+                panel.setAnchorInsets(
+                                new UiInsets(8, 12, 20, 6));
+
+                panel.setDockMode(
+                                UiWindowDockMode.FILL_HEIGHT);
+
+                manager.register(panel);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiRect(538, 8, 250, 572),
+                                panel.bounds());
+
+                // Increase the viewport dimensions.
+                manager.updateLayout(new UiSize(1000, 700));
+
+                assertEquals(
+                                new UiRect(738, 8, 250, 672),
+                                panel.bounds());
+
+                // Original user dimensions must survive.
+                assertEquals(
+                                new UiSize(250, 180),
+                                panel.userSize().orElseThrow());
+
+                assertFalse(
+                                manager.updateLayout(new UiSize(1000, 700)));
+        }
+
+        @Test
+        void bottomDockedPanelFillsAvailableWidth() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow panel = new UiWindow("Toolbar");
+
+                panel.setUserSize(new UiSize(400, 96));
+                panel.setAnchor(UiWindowAnchor.BOTTOM);
+
+                panel.setAnchorInsets(
+                                new UiInsets(7, 16, 10, 24));
+
+                panel.setDockMode(
+                                UiWindowDockMode.FILL_WIDTH);
+
+                manager.register(panel);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiRect(24, 494, 760, 96),
+                                panel.bounds());
+
+                manager.updateLayout(new UiSize(1000, 700));
+
+                assertEquals(
+                                new UiRect(24, 594, 960, 96),
+                                panel.bounds());
+        }
+
+        @Test
+        void disablingDockingRestoresOriginalSize() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow panel = new UiWindow("Inventory");
+
+                panel.setUserSize(new UiSize(250, 180));
+                panel.setAnchor(UiWindowAnchor.RIGHT);
+
+                panel.setDockMode(
+                                UiWindowDockMode.FILL_HEIGHT);
+
+                manager.register(panel);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(600, panel.bounds().height());
+
+                // Disable stretching but retain anchoring.
+                panel.setDockMode(UiWindowDockMode.NONE);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiSize(250, 180),
+                                new UiSize(
+                                                panel.bounds().width(),
+                                                panel.bounds().height()));
+
+                assertEquals(
+                                new UiPoint(550, 210),
+                                panel.position());
         }
 
 }

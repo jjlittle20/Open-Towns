@@ -12,6 +12,7 @@ import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiSizePolicy;
 import xaos.ui.layout.UiWindowAnchor;
+import xaos.ui.layout.UiWindowDockMode;
 import xaos.ui.rendering.UiTextMetrics;
 
 /**
@@ -366,6 +367,53 @@ public class UiWindow extends UiContainer {
             invalidateLayout();
         }
     }
+    // ------------------------------------------------------------
+    // Viewport stretch docking
+    // ------------------------------------------------------------
+
+    private UiWindowDockMode dockMode = UiWindowDockMode.NONE;
+
+    /**
+     * Temporary size calculated from the viewport.
+     *
+     * Kept separate from userSize so undocking
+     * restores the player's original dimensions.
+     */
+    private UiSize dockedSize;
+
+    public UiWindowDockMode dockMode() {
+        return dockMode;
+    }
+
+    public void setDockMode(UiWindowDockMode mode) {
+
+        Objects.requireNonNull(mode, "mode");
+
+        if (dockMode != mode) {
+            dockMode = mode;
+            invalidateLayout();
+        }
+    }
+
+    /**
+     * Applies the temporary size calculated by
+     * UiWindowManager.
+     *
+     * Null removes docking's size override.
+     *
+     * Returns true if the effective size changed.
+     */
+    public boolean applyDockedSize(UiSize size) {
+
+        if (Objects.equals(dockedSize, size)) {
+            return false;
+        }
+
+        dockedSize = size;
+        invalidateLayout();
+
+        return true;
+    }
 
     // ------------------------------------------------------------
     // User-controlled sizing
@@ -414,28 +462,32 @@ public class UiWindow extends UiContainer {
 
     @Override
     public UiSize measure(UiSize available) {
+
         Objects.requireNonNull(available, "available");
 
         if (!visible()) {
             return UiSize.ZERO;
         }
 
-        // No user size: use the existing automatic
-        // container measurement.
-        if (userSize == null) {
+        // Docking temporarily overrides normal sizing,
+        // without destroying the saved user size.
+        UiSize effectiveSize = dockedSize != null
+                ? dockedSize
+                : userSize;
+
+        if (effectiveSize == null) {
             return super.measure(available);
         }
 
-        // Explicitly sized windows may be smaller
-        // than their content's preferred dimensions.
-        // Minimum window dimensions still apply.
+        // Respect the window's minimum dimensions.
         return new UiSize(
                 Math.max(
                         minimumSize().width(),
-                        userSize.width()),
+                        effectiveSize.width()),
+
                 Math.max(
                         minimumSize().height(),
-                        userSize.height()));
+                        effectiveSize.height()));
     }
 
     // ------------------------------------------------------------
