@@ -283,4 +283,158 @@ class MenuExtensionXmlTest {
                         .map(MenuItemDefinition::getId)
                         .toList());
     }
+
+    @Test
+    void modCanRegisterAndLinkNewSubmenu()
+            throws Exception {
+
+        MenuManager manager = rightMenus();
+
+        // Create a new standalone mod menu.
+        Path modMenu = tempDir.resolve(
+                "reinforced-walls.xml");
+
+        Files.writeString(modMenu, """
+                <menu
+                    id="examplemod:reinforced-walls"
+                    title="Reinforced Walls">
+
+                    <item
+                        id="examplemod:reinforced-log-wall"
+                        type="action"
+                        title="Reinforced Log Wall"
+                        command="QUEUEANDPLACEAREA"
+                        parameter="examplemod:reinforced-log-wall" />
+
+                    <item
+                        id="examplemod:reinforced.back"
+                        type="back" />
+
+                </menu>
+                """);
+
+        manager.registerMenu(modMenu.toFile());
+
+        assertTrue(manager.hasMenu(
+                "examplemod:reinforced-walls"));
+
+        // Link it into the original Walls menu.
+        Path extensionFile = extension("""
+                <menu-extension
+                    id="examplemod:link-reinforced"
+                    targetMenu="game.right.walls">
+
+                    <item
+                        id="examplemod:reinforced-link"
+                        type="submenu"
+                        title="Reinforced Walls"
+                        targetMenu="examplemod:reinforced-walls"
+                        after="game.right.walls.log" />
+
+                </menu-extension>
+                """);
+
+        manager.applyExtension(
+                extensionFile.toFile());
+
+        MenuDefinition walls = manager.requireMenu("game.right.walls");
+
+        MenuItemDefinition link = walls.getItems()
+                .stream()
+                .filter(item -> "examplemod:reinforced-link"
+                        .equals(item.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        MenuDefinition submenu = manager.resolveSubmenu(link);
+
+        assertEquals(
+                "examplemod:reinforced-walls",
+                submenu.getId());
+
+        assertEquals(
+                "Reinforced Walls",
+                submenu.getTitle());
+
+        // Existing and mod-provided links
+        // must form a valid hierarchy.
+        assertDoesNotThrow(() -> manager.validateMenuTree(
+                "game.right.root"));
+
+        // Correct positioning: after Log Walls.
+        assertEquals(
+                "examplemod:reinforced-link",
+                walls.getItems().get(1).getId());
+    }
+
+    @Test
+    void modCannotReplaceExistingMenuId()
+            throws Exception {
+
+        MenuManager manager = rightMenus();
+
+        MenuDefinition original = manager.requireMenu(
+                "game.right.walls.log");
+
+        Path conflicting = tempDir.resolve(
+                "conflicting-menu.xml");
+
+        Files.writeString(conflicting, """
+                <menu
+                    id="game.right.walls.log"
+                    title="Overwritten">
+
+                    <item
+                        id="examplemod:replacement"
+                        type="back" />
+
+                </menu>
+                """);
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> manager.registerMenu(
+                        conflicting.toFile()));
+
+        assertTrue(
+                error.getMessage().contains(
+                        "Duplicate menu ID"));
+
+        // The original must remain unchanged.
+        assertSame(
+                original,
+                manager.requireMenu(
+                        "game.right.walls.log"));
+    }
+
+    @Test
+    void newSubmenuMustExistBeforeValidation()
+            throws Exception {
+
+        MenuManager manager = rightMenus();
+
+        manager.applyExtension(extension("""
+                <menu-extension
+                    id="examplemod:missing-menu"
+                    targetMenu="game.right.walls">
+
+                    <item
+                        id="examplemod:missing-link"
+                        type="submenu"
+                        title="Missing"
+                        targetMenu="examplemod:not-registered" />
+
+                </menu-extension>
+                """).toFile());
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> manager.validateMenuTree(
+                        "game.right.root"));
+
+        assertTrue(
+                error.getMessage().contains(
+                        "examplemod:not-registered"));
+    }
+
 }

@@ -74,6 +74,50 @@ public final class MenuManager {
         }
     }
 
+    /**
+     * Registers one additional XML menu without
+     * clearing previously loaded definitions.
+     *
+     * Intended for mod-supplied menu definitions.
+     */
+    public void registerMenu(File file) {
+
+        Objects.requireNonNull(file, "file");
+
+        if (!file.isFile()) {
+            throw new IllegalArgumentException(
+                    "Menu file does not exist: " + file);
+        }
+
+        registerMenu(MenuXmlLoader.load(file));
+    }
+
+    /**
+     * Registers a new menu definition.
+     *
+     * A mod cannot silently replace an existing
+     * built-in or mod-provided menu ID.
+     */
+    public void registerMenu(MenuDefinition definition) {
+
+        Objects.requireNonNull(
+                definition, "definition");
+
+        String id = definition.getId();
+
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Menu ID cannot be blank");
+        }
+
+        if (menusById.containsKey(id)) {
+            throw new IllegalArgumentException(
+                    "Duplicate menu ID: " + id);
+        }
+
+        menusById.put(id, definition);
+    }
+
     public MenuDefinition getMenu(String id) {
         return menusById.get(id);
     }
@@ -322,7 +366,15 @@ public final class MenuManager {
 
             merged.add(position, item);
         }
-
+        // Apply tab additions to the same working copy.
+        //
+        // Any failure occurs before the updated
+        // definition is committed to menusById.
+        MenuTabExtensionMerger.apply(
+                original.getId(),
+                merged,
+                usedIds,
+                extension);
         // Build a fresh definition using its normal
         // insertion methods. Both views remain consistent:
         //
