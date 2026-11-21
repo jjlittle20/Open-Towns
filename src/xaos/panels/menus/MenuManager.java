@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -19,6 +20,7 @@ import xaos.utils.Point3D;
 import xaos.main.Game;
 import xaos.panels.CommandPanel;
 import xaos.panels.MainMenuPanel;
+import xaos.panels.menus.MenuExtensionDefinition.Contribution;
 import xaos.utils.LanguageData;
 import xaos.utils.Messages;
 import xaos.utils.Utils;
@@ -27,6 +29,7 @@ import xaos.utils.UtilsKeyboard;
 public final class MenuManager {
 
     private final Map<String, MenuDefinition> menusById = new HashMap<>();
+    private final Set<String> appliedExtensionIds = new HashSet<>();
 
     public void loadMenus(File rootFolder) {
         if (rootFolder == null || !rootFolder.exists()) {
@@ -38,6 +41,7 @@ public final class MenuManager {
         }
 
         menusById.clear();
+        appliedExtensionIds.clear();
         loadMenusRecursive(rootFolder);
     }
 
@@ -239,12 +243,169 @@ public final class MenuManager {
         }
     }
 
+    /**
+     * Loads and applies one menu extension XML file.
+     *
+     * Extension files are loaded explicitly, after
+     * their target menus have been registered.
+     */
+    public void applyExtension(File file) {
+
+        applyExtension(
+                MenuExtensionXmlLoader.load(file));
+    }
+
+    /**
+     * Applies a menu extension without modifying
+     * the original definition on failure.
+     */
+    public void applyExtension(
+            MenuExtensionDefinition extension) {
+
+        Objects.requireNonNull(extension, "extension");
+
+        if (appliedExtensionIds.contains(extension.id())) {
+            throw new IllegalArgumentException(
+                    "Extension already applied: "
+                            + extension.id());
+        }
+
+        MenuDefinition original = requireMenu(extension.targetMenu());
+
+        // Work on a copy of the structured menu.
+        // This preserves existing tab groups and
+        // the order of the original XML.
+        List<MenuContentDefinition> merged = new ArrayList<>(original.getContent());
+
+        Set<String> usedIds = new HashSet<>();
+
+        for (MenuItemDefinition item : original.getItems()) {
+            usedIds.add(item.getId());
+        }
+
+        for (Contribution contribution : extension.contributions()) {
+
+            MenuItemDefinition item = contribution.item();
+
+            if (item.getId() == null
+                    || item.getId().isBlank()) {
+
+                throw new IllegalArgumentException(
+                        "Extension item ID cannot be blank");
+            }
+
+            if (!usedIds.add(item.getId())) {
+                throw new IllegalArgumentException(
+                        "Duplicate menu item ID: "
+                                + item.getId()
+                                + " in " + original.getId());
+            }
+
+            int position;
+
+            if (contribution.before() != null) {
+
+                position = findTopLevelItem(
+                        merged,
+                        contribution.before());
+
+            } else if (contribution.after() != null) {
+
+                position = findTopLevelItem(
+                        merged,
+                        contribution.after()) + 1;
+
+            } else {
+
+                position = defaultInsertionPoint(merged);
+            }
+
+            merged.add(position, item);
+        }
+
+        // Build a fresh definition using its normal
+        // insertion methods. Both views remain consistent:
+        //
+        // getContent() = structured top-level content
+        // getItems() = flattened items, including tabs
+        MenuDefinition updated = new MenuDefinition(
+                original.getId(),
+                original.getTitleKey(),
+                original.getTitle());
+
+        for (MenuContentDefinition entry : merged) {
+
+            if (entry instanceof MenuItemDefinition item) {
+
+                updated.addItem(item);
+
+            } else if (entry instanceof MenuTabsDefinition tabs) {
+
+                updated.addTabs(tabs);
+
+            } else {
+
+                throw new IllegalStateException(
+                        "Unsupported menu content: " + entry);
+            }
+        }
+
+        // Commit only after the complete merge succeeds.
+        menusById.put(updated.getId(), updated);
+        appliedExtensionIds.add(extension.id());
+    }
+
+    /**
+     * Finds an item directly inside the target menu.
+     *
+     * Items nested inside tabs require a separate
+     * tab-targeting extension operation.
+     */
+    private static int findTopLevelItem(
+            List<MenuContentDefinition> content,
+            String itemId) {
+
+        for (int i = 0; i < content.size(); i++) {
+
+            if (content.get(i) instanceof MenuItemDefinition item
+                    && itemId.equals(item.getId())) {
+
+                return i;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "Extension placement target not found "
+                        + "as a direct menu item: "
+                        + itemId);
+    }
+
+    /**
+     * Append items before trailing Back controls,
+     * keeping Back at the end of the menu.
+     */
+    private static int defaultInsertionPoint(
+            List<MenuContentDefinition> content) {
+
+        int index = content.size();
+
+        while (index > 0
+                && content.get(index - 1) instanceof MenuItemDefinition item
+                && "back".equals(item.getType())) {
+
+            index--;
+        }
+
+        return index;
+    }
+
     public Map<String, MenuDefinition> getMenusById() {
         return menusById;
     }
 
     public void clear() {
         menusById.clear();
+        appliedExtensionIds.clear();
     }
 
     public SmartMenu buildSmartMenu(String menuId, SmartMenu parent) {

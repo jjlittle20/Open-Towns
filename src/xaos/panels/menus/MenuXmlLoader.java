@@ -129,7 +129,7 @@ public final class MenuXmlLoader {
         return new MenuTabDefinition(id, titleKey, title, items);
     }
 
-    private static MenuItemDefinition parseItem(Element itemElement, File file) {
+    static MenuItemDefinition parseItem(Element itemElement, File file) {
         String id = required(itemElement, "id", file);
         String type = required(itemElement, "type", file);
         String titleKey = optional(itemElement, "titleKey");
