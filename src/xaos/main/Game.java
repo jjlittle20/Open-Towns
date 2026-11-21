@@ -102,6 +102,7 @@ import xaos.ui.input.UiScreenTransitionTracker;
 import xaos.ui.integration.UiGameplayMenuResolver;
 import xaos.ui.integration.UiLegacyGameplayActionBinding;
 import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
+import xaos.ui.integration.UiLegacyIconSprites;
 import xaos.ui.integration.UiRightMenuPreview;
 import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.opengl.TownsUiPresentation;
@@ -1907,6 +1908,13 @@ public final class Game {
 						// Enable tested legacy placement actions.
 						rightMenuPreview.setActionBinding(
 								new UiLegacyGameplayActionBinding());
+
+						// Use original Towns icons from graphics.ini.
+						UiLegacyIconSprites legacyIcons = UiLegacyIconSprites.fromGraphicsIni();
+
+						rightMenuPreview.setIconResolver(
+								legacyIcons::resolve);
+
 					} else if (rightMenuPreview.menus() != gameplayMenus) {
 
 						// The registry is rebuilt after

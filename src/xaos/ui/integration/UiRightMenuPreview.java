@@ -16,10 +16,16 @@ import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiSystem;
+import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiSize;
+import xaos.ui.rendering.UiSprite;
 import xaos.ui.rendering.UiTextMetrics;
+import java.util.function.Function;
+
+import xaos.ui.rendering.UiSprite;
+import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
 
 /**
  * Temporary preview of XML-defined gameplay menus.
@@ -41,6 +47,9 @@ public final class UiRightMenuPreview {
     private final UiGameplayMenuResolver resolver;
 
     private UiGameplayActionBinding actionBinding = UiGameplayActionBinding.disabled();
+    // Resolves menu icon references into UI sprites.
+    // Defaults to text-only buttons.
+    private Function<IconReference, UiSprite> iconResolver = reference -> null;
 
     private final UiTextMetrics metrics;
     private final Function<String, String> localize;
@@ -155,6 +164,20 @@ public final class UiRightMenuPreview {
         rebuild();
     }
 
+    /**
+     * Installs the icon resolver for gameplay buttons.
+     *
+     * The preview remains usable without one.
+     */
+    public void setIconResolver(
+            Function<IconReference, UiSprite> resolver) {
+
+        iconResolver = Objects.requireNonNull(
+                resolver, "resolver");
+
+        rebuild();
+    }
+
     private void navigate(String targetMenu) {
 
         // Broken submenu references must never
@@ -208,7 +231,7 @@ public final class UiRightMenuPreview {
 
                 UiButton button = new UiButton(
                         "> " + label, metrics);
-
+                applyIcon(button, item);
                 boolean available = target != null
                         && menus.hasMenu(target);
 
@@ -224,7 +247,7 @@ public final class UiRightMenuPreview {
             } else if ("action".equals(type)) {
 
                 UiButton button = new UiButton(label, metrics);
-
+                applyIcon(button, item);
                 button.setEnabled(canExecute(item));
 
                 button.setOnClick(() -> {
@@ -324,4 +347,61 @@ public final class UiRightMenuPreview {
     private static boolean hasText(String value) {
         return value != null && !value.isBlank();
     }
+
+    /**
+     * Attaches an icon from the menu definition
+     * or its resolved gameplay definition.
+     *
+     * Icons fit within 32 x 32 UI units while
+     * preserving their original aspect ratio.
+     */
+    private void applyIcon(
+            UiButton button,
+            MenuItemDefinition item) {
+
+        try {
+
+            var presentation = resolver.resolve(item);
+
+            if (presentation.icon() == null) {
+                return;
+            }
+
+            UiSprite sprite = iconResolver.apply(
+                    presentation.icon());
+
+            if (sprite == null) {
+                return;
+            }
+
+            button.setIcon(sprite);
+
+            int sourceWidth = sprite.source().width();
+            int sourceHeight = sprite.source().height();
+
+            int largest = Math.max(
+                    sourceWidth, sourceHeight);
+
+            int iconWidth = Math.max(
+                    1,
+                    sourceWidth * 32 / largest);
+
+            int iconHeight = Math.max(
+                    1,
+                    sourceHeight * 32 / largest);
+
+            button.setIconSize(
+                    new UiSize(iconWidth, iconHeight));
+
+        } catch (RuntimeException exception) {
+
+            ModUiErrors.report(
+                    "open-towns",
+                    "Gameplay icon resolution",
+                    "Failed to resolve icon for "
+                            + item.getId(),
+                    exception);
+        }
+    }
+
 }
