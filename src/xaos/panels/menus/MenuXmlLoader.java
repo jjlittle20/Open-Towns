@@ -35,9 +35,25 @@ public final class MenuXmlLoader {
             }
 
             String menuId = required(menuElement, "id", file);
-            String titleKey = required(menuElement, "titleKey", file);
 
-            MenuDefinition menuDefinition = new MenuDefinition(menuId, titleKey);
+            String titleKey = optional(
+                    menuElement, "titleKey");
+
+            String title = optional(
+                    menuElement, "title");
+
+            // A menu must have a display name,
+            // either localised or literal.
+            if (titleKey == null && title == null) {
+                throw new IllegalArgumentException(
+                        "Menu must define titleKey or title: "
+                                + menuId);
+            }
+
+            MenuDefinition menuDefinition = new MenuDefinition(
+                    menuId,
+                    titleKey,
+                    title);
 
             NodeList childNodes = menuElement.getChildNodes();
 
@@ -68,8 +84,7 @@ public final class MenuXmlLoader {
 
     private static MenuTabsDefinition parseTabs(Element element, File file) {
         String id = required(element, "id", file);
-        MenuTabsDefinition.Placement placement =
-                MenuTabsDefinition.Placement.fromXml(optional(element, "placement"));
+        MenuTabsDefinition.Placement placement = MenuTabsDefinition.Placement.fromXml(optional(element, "placement"));
 
         List<MenuTabDefinition> tabs = new ArrayList<>();
         NodeList children = element.getChildNodes();
@@ -128,6 +143,51 @@ public final class MenuXmlLoader {
         String textColorName = optional(itemElement, "textColorName");
         boolean transparent = optionalBoolean(itemElement, "transparent", true);
 
+        // ------------------------------------------------------------
+        // Gameplay menu metadata
+        // ------------------------------------------------------------
+
+        // Explicit display title, when no localisation
+        // key is supplied.
+        String title = optional(itemElement, "title");
+
+        // Original icon identifier or future mod asset ID.
+        String icon = optional(itemElement, "icon");
+
+        // Existing Towns command arguments.
+        String parameter = optional(
+                itemElement, "parameter");
+
+        String parameter2 = optional(
+                itemElement, "parameter2");
+
+        // ------------------------------------------------------------
+        // Gameplay menu validation
+        // ------------------------------------------------------------
+
+        // A submenu must explicitly identify the menu
+        // it opens. Its ID alone is not its target.
+        if ("submenu".equals(type)
+                && targetMenu == null) {
+
+            throw new IllegalArgumentException(
+                    "Submenu is missing targetMenu: "
+                            + id);
+        }
+
+        // Our initial gameplay action format uses
+        // an existing Towns command.
+        //
+        // Namespaced mod action callbacks will be
+        // introduced separately.
+        if ("action".equals(type)
+                && command == null) {
+
+            throw new IllegalArgumentException(
+                    "Action is missing command: "
+                            + id);
+        }
+
         return new MenuItemDefinition(
                 id,
                 type,
@@ -140,7 +200,12 @@ public final class MenuXmlLoader {
                 key,
                 condition,
                 textColorName,
-                transparent);
+                transparent,
+                title,
+                icon,
+                parameter,
+                parameter2);
+
     }
 
     private static String required(Element element, String attributeName, File file) {

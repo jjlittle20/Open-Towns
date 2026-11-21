@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.right.walls.log"
+      title="Log walls">
+
+    <item
+        id="game.right.walls.log.scaffold"
+        type="action"
+        command="QUEUEANDPLACEAREA"
+        parameter="qscaffold" />
+
+    <item
+        id="game.right.walls.log.wall"
+        type="action"
+        command="QUEUEANDPLACEAREA"
+        parameter="qlogwall" />
+
+    <item
+        id="game.right.walls.log.block"
+        type="action"
+        command="QUEUEANDPLACEAREA"
+        parameter="qlogblock" />
+
+    <item
+        id="game.right.walls.log.block2"
+        type="action"
+        command="QUEUEANDPLACEAREA"
+        parameter="qlogblock2" />
+
+    <item
+        id="game.right.walls.log.diagonal-block"
+        type="action"
+        command="QUEUEANDPLACEAREA"
+        parameter="qdiagonallogblock" />
+
+    <item
+        id="game.right.walls.log.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

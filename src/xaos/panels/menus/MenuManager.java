@@ -1,11 +1,14 @@
 package xaos.panels.menus;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.awt.Color;
 
@@ -73,6 +76,167 @@ public final class MenuManager {
 
     public boolean hasMenu(String id) {
         return menusById.containsKey(id);
+    }
+
+    /**
+     * Returns a registered menu or reports a missing ID.
+     *
+     * Unlike getMenu(), this does not silently return null.
+     */
+    public MenuDefinition requireMenu(String id) {
+
+        MenuDefinition menu = menusById.get(id);
+
+        if (menu == null) {
+            throw new IllegalArgumentException(
+                    "Menu not found: " + id);
+        }
+
+        return menu;
+    }
+
+    /**
+     * Resolves the target of a declarative submenu item.
+     *
+     * Both built-in menus and future mod contributions
+     * can use this method.
+     */
+    public MenuDefinition resolveSubmenu(
+            MenuItemDefinition item) {
+
+        Objects.requireNonNull(item, "item");
+
+        if (!"submenu".equals(item.getType())) {
+            throw new IllegalArgumentException(
+                    "Not a submenu item: " + item.getId());
+        }
+
+        String targetId = item.getTargetMenu();
+
+        if (targetId == null || targetId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Submenu has no targetMenu: "
+                            + item.getId());
+        }
+
+        MenuDefinition target = menusById.get(targetId);
+
+        if (target == null) {
+            throw new IllegalArgumentException(
+                    "Missing submenu target '"
+                            + targetId
+                            + "' referenced by '"
+                            + item.getId()
+                            + "'");
+        }
+
+        return target;
+    }
+
+    /**
+     * Validates the menus reachable from a root menu.
+     *
+     * Checks:
+     * - Every referenced submenu exists.
+     * - Item IDs are unique within their menu.
+     * - Submenu references contain no cycles.
+     *
+     * Only the requested hierarchy is validated,
+     * allowing unfinished migrations to coexist.
+     */
+    public void validateMenuTree(String rootMenuId) {
+
+        Objects.requireNonNull(
+                rootMenuId, "rootMenuId");
+
+        requireMenu(rootMenuId);
+
+        Set<String> visited = new HashSet<>();
+        Set<String> visiting = new HashSet<>();
+
+        Deque<String> path = new ArrayDeque<>();
+
+        validateMenuTree(
+                rootMenuId,
+                visited,
+                visiting,
+                path);
+    }
+
+    /**
+     * Depth-first validation of submenu references.
+     */
+    private void validateMenuTree(
+            String menuId,
+            Set<String> visited,
+            Set<String> visiting,
+            Deque<String> path) {
+
+        // A menu reached again while it is still
+        // being explored indicates a circular link.
+        if (visiting.contains(menuId)) {
+
+            throw new IllegalArgumentException(
+                    "Circular submenu reference: "
+                            + path
+                            + " -> " + menuId);
+        }
+
+        // Already validated through another branch.
+        if (visited.contains(menuId)) {
+            return;
+        }
+
+        MenuDefinition menu = requireMenu(menuId);
+
+        visiting.add(menuId);
+        path.addLast(menuId);
+
+        try {
+
+            Set<String> itemIds = new HashSet<>();
+
+            // getItems() is the flattened view,
+            // so XML items inside tabs are included.
+            for (MenuItemDefinition item : menu.getItems()) {
+
+                String itemId = item.getId();
+
+                if (itemId == null || itemId.isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Blank item ID in menu: "
+                                    + menuId);
+                }
+
+                if (!itemIds.add(itemId)) {
+
+                    throw new IllegalArgumentException(
+                            "Duplicate item ID '"
+                                    + itemId
+                                    + "' in menu '"
+                                    + menuId
+                                    + "'");
+                }
+
+                if ("submenu".equals(item.getType())) {
+
+                    MenuDefinition target = resolveSubmenu(item);
+
+                    validateMenuTree(
+                            target.getId(),
+                            visited,
+                            visiting,
+                            path);
+                }
+            }
+
+            visited.add(menuId);
+
+        } finally {
+
+            path.removeLast();
+            visiting.remove(menuId);
+        }
     }
 
     public Map<String, MenuDefinition> getMenusById() {

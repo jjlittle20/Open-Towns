@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.right.walls"
+      title="Walls">
+
+    <item
+        id="game.right.walls.log"
+        type="submenu"
+        title="Log walls"
+        icon="ui_l_walls"
+        targetMenu="game.right.walls.log" />
+
+    <item
+        id="game.right.walls.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.right.root"
+      title="Construction">
+
+    <item
+        id="game.right.walls"
+        type="submenu"
+        title="Walls"
+        icon="ui_rwalls"
+        targetMenu="game.right.walls" />
+
+</menu>

@@ -1,7 +1,14 @@
+
 package xaos.panels.menus;
 
-
-public final class MenuItemDefinition implements MenuContentDefinition {
+/**
+ * One declarative menu entry.
+ *
+ * Contains menu metadata only.
+ * It does not execute gameplay commands.
+ */
+public final class MenuItemDefinition
+        implements MenuContentDefinition {
 
     private final String id;
     private final String type;
@@ -16,6 +23,18 @@ public final class MenuItemDefinition implements MenuContentDefinition {
     private final String textColorName;
     private final boolean transparent;
 
+    // Gameplay menu metadata.
+    private final String title;
+    private final String icon;
+    private final String parameter;
+    private final String parameter2;
+
+    /**
+     * Original constructor.
+     *
+     * Preserved for compatibility with existing
+     * menus, tests and legacy adapters.
+     */
     public MenuItemDefinition(
             String id,
             String type,
@@ -28,9 +47,49 @@ public final class MenuItemDefinition implements MenuContentDefinition {
             String key,
             String condition,
             String textColorName,
-            boolean transparent
+            boolean transparent) {
 
-    ) {
+        this(
+                id,
+                type,
+                titleKey,
+                targetMenu,
+                command,
+                dynamic,
+                maintainOpen,
+                provider,
+                key,
+                condition,
+                textColorName,
+                transparent,
+                null,
+                null,
+                null,
+                null);
+    }
+
+    /**
+     * Extended constructor supporting gameplay
+     * menu titles, icons and command parameters.
+     */
+    public MenuItemDefinition(
+            String id,
+            String type,
+            String titleKey,
+            String targetMenu,
+            String command,
+            boolean dynamic,
+            boolean maintainOpen,
+            String provider,
+            String key,
+            String condition,
+            String textColorName,
+            boolean transparent,
+            String title,
+            String icon,
+            String parameter,
+            String parameter2) {
+
         this.id = id;
         this.type = type;
         this.titleKey = titleKey;
@@ -43,18 +102,15 @@ public final class MenuItemDefinition implements MenuContentDefinition {
         this.condition = condition;
         this.textColorName = textColorName;
         this.transparent = transparent;
+
+        this.title = title;
+        this.icon = icon;
+        this.parameter = parameter;
+        this.parameter2 = parameter2;
     }
 
     public String getId() {
         return id;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getProvider() {
-        return provider;
     }
 
     public String getType() {
@@ -81,6 +137,14 @@ public final class MenuItemDefinition implements MenuContentDefinition {
         return maintainOpen;
     }
 
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
     public String getCondition() {
         return condition;
     }
@@ -88,7 +152,24 @@ public final class MenuItemDefinition implements MenuContentDefinition {
     public String getTextColorName() {
         return textColorName;
     }
-    public boolean isTransparent(){
+
+    public boolean isTransparent() {
         return transparent;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getParameter() {
+        return parameter;
+    }
+
+    public String getParameter2() {
+        return parameter2;
     }
 }
