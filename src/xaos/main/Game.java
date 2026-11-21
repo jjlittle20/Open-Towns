@@ -99,8 +99,13 @@ import xaos.ui.debug.UiDebugOverlay;
 import xaos.ui.debug.UiModErrorWindow;
 import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
+import xaos.ui.integration.UiGameplayMenuResolver;
+import xaos.ui.integration.UiLegacyGameplayActionBinding;
+import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
+import xaos.ui.integration.UiRightMenuPreview;
 import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.opengl.TownsUiPresentation;
+import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.ui.theme.BasicUiTheme;
 import xaos.ui.theme.ClassicTownsTheme;
 import xaos.ui.theme.UiThemeRegistry;
@@ -222,6 +227,12 @@ public final class Game {
 
 	// Created after the existing game UI has initialised.
 	private static UiModErrorWindow modErrorsWindow;
+
+	// Temporary developer preview.
+	// This is NOT the replacement gameplay panel yet.
+	private static final boolean SHOW_RIGHT_MENU_XML_PREVIEW = true;
+
+	private static UiRightMenuPreview rightMenuPreview;
 
 	/**
 	 * Returns whether the new UI currently owns text input.
@@ -1829,7 +1840,7 @@ public final class Game {
 		// Track transitions between the main menu
 		// and active game worlds.
 		UiScreenTransitionTracker uiScreenTransitions = new UiScreenTransitionTracker();
-
+		boolean wasRightMenuPreviewInGame = false;
 		// Establish the initial state without triggering
 		// input cancellation.
 		uiScreenTransitions.update(
@@ -1866,6 +1877,57 @@ public final class Game {
 					getWorld())) {
 
 				UI_SYSTEM.cancelInput();
+			}
+			// ------------------------------------------------------------
+			// Temporary XML right-menu preview
+			// ------------------------------------------------------------
+
+			if (SHOW_RIGHT_MENU_XML_PREVIEW) {
+
+				boolean inGameplay = getWorld() != null
+						&& !getPanelMainMenu().isActive()
+						&& gameplayMenus != null
+						&& gameplayMenus.hasMenu(
+								UiRightMenuPreview.ROOT_MENU);
+
+				if (inGameplay) {
+
+					if (rightMenuPreview == null) {
+
+						UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+								Messages::getString,
+								new UiLegacyGameplayDefinitionLookup());
+
+						rightMenuPreview = new UiRightMenuPreview(
+								UI_SYSTEM,
+								gameplayMenus,
+								resolver,
+								TownsUiTextMetrics.INSTANCE,
+								Messages::getString);
+						// Enable tested legacy placement actions.
+						rightMenuPreview.setActionBinding(
+								new UiLegacyGameplayActionBinding());
+					} else if (rightMenuPreview.menus() != gameplayMenus) {
+
+						// The registry is rebuilt after
+						// a world or mod-set change.
+						rightMenuPreview.setMenus(gameplayMenus);
+					}
+
+					// Open only when entering gameplay,
+					// not every frame. The player must
+					// be able to dismiss the preview.
+					if (!wasRightMenuPreviewInGame) {
+						rightMenuPreview.open();
+					}
+
+				} else if (wasRightMenuPreviewInGame
+						&& rightMenuPreview != null) {
+
+					rightMenuPreview.close();
+				}
+
+				wasRightMenuPreviewInGame = inGameplay;
 			}
 
 			// --------------------------------------------------------
