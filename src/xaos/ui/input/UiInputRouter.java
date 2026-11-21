@@ -805,7 +805,7 @@ public final class UiInputRouter {
         } else if (floatingWindow) {
 
             if (target == window
-                    && window.resizable()
+                    && window.resizable() && !window.locked()
                     && window.resizeHandleBounds().contains(x, y)) {
 
                 // Existing resize behaviour.
@@ -817,7 +817,7 @@ public final class UiInputRouter {
                 resizeStartWidth = window.bounds().width();
                 resizeStartHeight = window.bounds().height();
 
-            } else if (target == window && window.draggable()
+            } else if (target == window && window.draggable() && !window.locked()
                     && window.titleBar().bounds().contains(x, y)) {
 
                 // Existing title-bar drag behaviour.
@@ -1061,10 +1061,12 @@ public final class UiInputRouter {
      */
     private void moveDraggedWindow(int x, int y) {
 
-        if (draggingWindow == null) {
+        if (draggingWindow == null
+                || !draggingWindow.draggable()
+                || draggingWindow.locked()) {
+
             return;
         }
-
         int newX = Math.subtractExact(x, dragOffsetX);
         int newY = Math.subtractExact(y, dragOffsetY);
 
@@ -1094,10 +1096,12 @@ public final class UiInputRouter {
 
         UiWindow window = resizingWindow;
 
-        if (!window.isOpen() || !window.resizable()) {
+        if (!window.isOpen()
+                || !window.resizable()
+                || window.locked()) {
+
             return;
         }
-
         UiSize viewport = root.viewportSize();
         UiPoint position = window.position();
         UiSize minimum = window.minimumSize();
@@ -1195,10 +1199,9 @@ public final class UiInputRouter {
             return null;
         }
 
-        // The window resize corner takes priority over
-        // child controls, including scrollbars.
         if (element instanceof UiWindow window
                 && window.resizable()
+                && !window.locked()
                 && window.resizeHandleBounds().contains(x, y)) {
 
             return window;

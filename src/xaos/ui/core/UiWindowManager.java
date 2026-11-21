@@ -6,6 +6,7 @@ import java.util.Objects;
 import xaos.ui.components.UiWindow;
 import xaos.ui.layout.UiAbsoluteLayout;
 import xaos.ui.layout.UiSize;
+import xaos.ui.layout.UiWindowAnchor;
 
 /**
  * Manages windows within a UI desktop.
@@ -52,15 +53,27 @@ public final class UiWindowManager {
 
             boolean moved;
 
-            if (window.centered()) {
+            if (window.anchor() != UiWindowAnchor.NONE) {
 
+                // Anchored panels take priority over
+                // normal floating/centred positioning.
+                moved = UiWindowPlacement.anchorInViewport(
+                        window,
+                        viewport);
+
+            } else if (window.centered()) {
+
+                // Preserve existing modal menu behaviour.
                 moved = UiWindowPlacement.centerInViewport(
-                        window, viewport);
+                        window,
+                        viewport);
 
             } else {
 
+                // Preserve existing floating-window behaviour.
                 moved = UiWindowPlacement.constrainToViewport(
-                        window, viewport);
+                        window,
+                        viewport);
             }
 
             if (moved) {

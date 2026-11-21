@@ -11,6 +11,7 @@ import xaos.ui.layout.UiLinearLayout;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiSizePolicy;
+import xaos.ui.layout.UiWindowAnchor;
 import xaos.ui.rendering.UiTextMetrics;
 
 /**
@@ -36,6 +37,9 @@ public class UiWindow extends UiContainer {
 
     private boolean resizable = true;
     private boolean draggable = true;
+    private boolean locked = false;
+
+    private UiWindowLockButton lockButton;
     private boolean centered = false;
     private boolean modal = false;
     private UiWindowCloseButton closeButton;
@@ -45,7 +49,40 @@ public class UiWindow extends UiContainer {
     }
 
     public void setDraggable(boolean draggable) {
+
         this.draggable = draggable;
+
+        // Only draggable windows display a lock button.
+        if (lockButton != null) {
+            lockButton.setVisible(draggable);
+        }
+    }
+
+    /**
+     * Whether this window is locked against
+     * mouse-driven movement and resizing.
+     */
+    public boolean locked() {
+        return locked;
+    }
+
+    /**
+     * Locks or unlocks this window.
+     *
+     * Locking does not change draggable/resizable,
+     * and does not disable content interaction.
+     */
+    public void setLocked(boolean locked) {
+
+        if (this.locked == locked) {
+            return;
+        }
+
+        this.locked = locked;
+
+        if (lockButton != null) {
+            lockButton.refresh(this);
+        }
     }
 
     public boolean centered() {
@@ -164,6 +201,40 @@ public class UiWindow extends UiContainer {
     }
 
     /**
+     * Installs the standard title-bar lock button.
+     *
+     * Repeated calls reuse the same button.
+     *
+     * The button is only visible when draggable
+     * is enabled.
+     */
+    public void installLockButton(
+            UiTextMetrics textMetrics) {
+
+        Objects.requireNonNull(
+                textMetrics, "textMetrics");
+
+        if (lockButton == null) {
+
+            lockButton = new UiWindowLockButton(
+                    this, textMetrics);
+
+            titleBar.add(lockButton);
+        }
+
+        lockButton.setVisible(draggable);
+        lockButton.refresh(this);
+    }
+
+    /**
+     * Returns the title-bar lock button,
+     * if it has been installed.
+     */
+    public Optional<UiWindowLockButton> lockButton() {
+        return Optional.ofNullable(lockButton);
+    }
+
+    /**
      * Installs or updates the standard title-bar
      * close button.
      *
@@ -182,6 +253,9 @@ public class UiWindow extends UiContainer {
 
         Objects.requireNonNull(
                 onClose, "onClose");
+        // Install Lock before X so the title-bar order
+        // is Lock / Close.
+        installLockButton(textMetrics);
 
         if (closeButton == null) {
 
@@ -246,6 +320,51 @@ public class UiWindow extends UiContainer {
      */
     public boolean isOpen() {
         return visible();
+    }
+
+    // ------------------------------------------------------------
+    // Screen-edge anchoring
+    // ------------------------------------------------------------
+
+    private UiWindowAnchor anchor = UiWindowAnchor.NONE;
+
+    private UiInsets anchorInsets = UiInsets.NONE;
+
+    /**
+     * Returns the window's requested screen anchor.
+     *
+     * NONE means normal floating-window positioning.
+     */
+    public UiWindowAnchor anchor() {
+        return anchor;
+    }
+
+    public void setAnchor(UiWindowAnchor next) {
+
+        Objects.requireNonNull(next, "next");
+
+        if (anchor != next) {
+            anchor = next;
+            invalidateLayout();
+        }
+    }
+
+    /**
+     * Returns the spacing between the window
+     * and the screen edges.
+     */
+    public UiInsets anchorInsets() {
+        return anchorInsets;
+    }
+
+    public void setAnchorInsets(UiInsets next) {
+
+        Objects.requireNonNull(next, "next");
+
+        if (!anchorInsets.equals(next)) {
+            anchorInsets = next;
+            invalidateLayout();
+        }
     }
 
     // ------------------------------------------------------------

@@ -25,10 +25,12 @@ public final class UiResizeGripPainter {
         Objects.requireNonNull(renderer, "renderer");
         Objects.requireNonNull(color, "color");
 
-        if (!window.visible() || !window.resizable()) {
+        if (!window.visible()
+                || !window.resizable()
+                || window.locked()) {
+
             return;
         }
-
         UiRect bounds = window.resizeHandleBounds();
 
         if (bounds.width() < 16 || bounds.height() < 16) {

@@ -1968,4 +1968,90 @@ class UiInputRouterTest {
                 assertFalse(input.isCapturingPhysicalKey());
         }
 
+        @Test
+        void lockedWindowCannotBeDraggedOrResized() {
+
+                UiContainer desktop = desktop();
+
+                UiWindow window = window();
+                window.setPreferredSize(new UiSize(300, 200));
+                window.setCloseAction(FONT, window::close);
+
+                UiButton contentButton = button("Action");
+                AtomicInteger actions = new AtomicInteger();
+
+                contentButton.setOnClick(actions::incrementAndGet);
+                window.content().add(contentButton);
+
+                desktop.add(window);
+
+                UiRoot root = root(desktop);
+                UiInputRouter input = new UiInputRouter(root);
+
+                UiButton lock = window.lockButton().orElseThrow();
+
+                // Lock using the actual mouse input router.
+                assertTrue(input.mousePressed(x(lock), y(lock)));
+                assertTrue(input.mouseReleased(x(lock), y(lock)));
+
+                assertTrue(window.locked());
+
+                root.updateLayout(new UiSize(800, 600));
+
+                UiPoint originalPosition = window.position();
+
+                int titleX = window.titleBar().bounds().x() + 8;
+                int titleY = window.titleBar().bounds().y() + 8;
+
+                // Attempt to drag the locked window.
+                input.mousePressed(titleX, titleY);
+                input.mouseMoved(titleX + 80, titleY + 50);
+                input.mouseReleased(titleX + 80, titleY + 50);
+
+                assertEquals(originalPosition, window.position());
+
+                // Attempt to resize the locked window.
+                UiRect handle = window.resizeHandleBounds();
+
+                int resizeX = handle.x() + handle.width() - 3;
+                int resizeY = handle.y() + handle.height() - 3;
+
+                input.mousePressed(resizeX, resizeY);
+                input.mouseMoved(resizeX + 60, resizeY + 40);
+                input.mouseReleased(resizeX + 60, resizeY + 40);
+
+                assertTrue(window.userSize().isEmpty());
+
+                // Contents remain interactive while locked.
+                input.mousePressed(
+                                x(contentButton), y(contentButton));
+
+                input.mouseReleased(
+                                x(contentButton), y(contentButton));
+
+                assertEquals(1, actions.get());
+
+                // Unlock using the same button.
+                input.mousePressed(x(lock), y(lock));
+                input.mouseReleased(x(lock), y(lock));
+
+                assertFalse(window.locked());
+
+                root.updateLayout(new UiSize(800, 600));
+
+                // Dragging should now work again.
+                titleX = window.titleBar().bounds().x() + 8;
+                titleY = window.titleBar().bounds().y() + 8;
+
+                input.mousePressed(titleX, titleY);
+                input.mouseMoved(titleX + 60, titleY + 30);
+                input.mouseReleased(titleX + 60, titleY + 30);
+
+                assertEquals(
+                                new UiPoint(
+                                                originalPosition.x() + 60,
+                                                originalPosition.y() + 30),
+                                window.position());
+        }
+
 }

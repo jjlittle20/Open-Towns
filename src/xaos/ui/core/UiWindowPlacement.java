@@ -3,9 +3,11 @@ package xaos.ui.core;
 
 import java.util.Objects;
 import xaos.ui.components.UiWindow;
+import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
+import xaos.ui.layout.UiWindowAnchor;
 
 /**
  * Viewport-aware positioning for floating UI windows.
@@ -17,6 +19,131 @@ import xaos.ui.layout.UiSize;
 public final class UiWindowPlacement {
 
     private UiWindowPlacement() {
+    }
+
+    /**
+     * Positions an anchored window relative to
+     * the current logical viewport.
+     *
+     * The window must already have been laid out.
+     *
+     * Anchoring does not change the window's size.
+     *
+     * @return true if its position changed
+     */
+    public static boolean anchorInViewport(
+            UiWindow window,
+            UiSize viewport) {
+
+        Objects.requireNonNull(window, "window");
+        Objects.requireNonNull(viewport, "viewport");
+
+        UiWindowAnchor anchor = window.anchor();
+
+        if (anchor == UiWindowAnchor.NONE
+                || !window.isOpen()
+                || viewport.width() == 0
+                || viewport.height() == 0) {
+
+            return false;
+        }
+
+        UiRect bounds = window.bounds();
+
+        if (bounds.width() == 0
+                || bounds.height() == 0) {
+
+            return false;
+        }
+
+        UiInsets margin = window.anchorInsets();
+
+        // --------------------------------------------------------
+        // Horizontal positions
+        // --------------------------------------------------------
+
+        int left = margin.left();
+
+        int right = viewport.width()
+                - bounds.width()
+                - margin.right();
+
+        int centerX = (viewport.width()
+                - bounds.width()) / 2;
+
+        // --------------------------------------------------------
+        // Vertical positions
+        // --------------------------------------------------------
+
+        int top = margin.top();
+
+        int bottom = viewport.height()
+                - bounds.height()
+                - margin.bottom();
+
+        int centerY = (viewport.height()
+                - bounds.height()) / 2;
+
+        // --------------------------------------------------------
+        // Resolve the anchor
+        // --------------------------------------------------------
+
+        int x = switch (anchor) {
+
+            case TOP_LEFT, BOTTOM_LEFT, LEFT ->
+                left;
+
+            case TOP_RIGHT, BOTTOM_RIGHT, RIGHT ->
+                right;
+
+            case TOP, BOTTOM ->
+                centerX;
+
+            case NONE ->
+                window.position().x();
+        };
+
+        int y = switch (anchor) {
+
+            case TOP_LEFT, TOP_RIGHT, TOP ->
+                top;
+
+            case BOTTOM_LEFT, BOTTOM_RIGHT, BOTTOM ->
+                bottom;
+
+            case LEFT, RIGHT ->
+                centerY;
+
+            case NONE ->
+                window.position().y();
+        };
+
+        // --------------------------------------------------------
+        // Keep the anchored window visible
+        // --------------------------------------------------------
+
+        UiPoint position = new UiPoint(
+                clamp(
+                        x,
+                        0,
+                        Math.max(
+                                0,
+                                viewport.width() - bounds.width())),
+
+                clamp(
+                        y,
+                        0,
+                        Math.max(
+                                0,
+                                viewport.height() - bounds.height())));
+
+        if (window.position().equals(position)) {
+            return false;
+        }
+
+        window.setPosition(position);
+
+        return true;
     }
 
     /**

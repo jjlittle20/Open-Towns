@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import xaos.ui.components.UiWindow;
+import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
+import xaos.ui.layout.UiWindowAnchor;
 
 class UiWindowManagerTest {
 
@@ -293,6 +295,142 @@ class UiWindowManagerTest {
                 assertTrue(manager.bringToFront(normal)
                                 || manager.windows().get(
                                                 manager.windows().size() - 1) == normal);
+        }
+
+        @Test
+        void rightAnchoredWindowTracksViewportChanges() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Actions");
+
+                window.setUserSize(new UiSize(250, 180));
+                window.setAnchor(UiWindowAnchor.RIGHT);
+                window.setAnchorInsets(UiInsets.all(12));
+
+                manager.register(window);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(538, 210),
+                                window.position());
+
+                // Changing resolution should move the window,
+                // without changing its dimensions.
+                manager.updateLayout(new UiSize(1000, 700));
+
+                assertEquals(
+                                new UiPoint(738, 260),
+                                window.position());
+
+                assertEquals(
+                                new UiSize(250, 180),
+                                new UiSize(
+                                                window.bounds().width(),
+                                                window.bounds().height()));
+
+                // No unnecessary layout updates.
+                assertFalse(
+                                manager.updateLayout(new UiSize(1000, 700)));
+        }
+
+        @Test
+        void bottomAnchorTracksViewportHeight() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Toolbar");
+
+                window.setUserSize(new UiSize(400, 100));
+                window.setAnchor(UiWindowAnchor.BOTTOM);
+                window.setAnchorInsets(UiInsets.all(10));
+
+                manager.register(window);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(200, 490),
+                                window.position());
+
+                manager.updateLayout(new UiSize(800, 800));
+
+                assertEquals(
+                                new UiPoint(200, 690),
+                                window.position());
+        }
+
+        @Test
+        void cornerAnchorHonoursMargins() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Messages");
+
+                window.setUserSize(new UiSize(250, 180));
+
+                window.setAnchor(
+                                UiWindowAnchor.TOP_LEFT);
+
+                window.setAnchorInsets(
+                                new UiInsets(8, 12, 16, 20));
+
+                manager.register(window);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(20, 8),
+                                window.position());
+
+                window.setAnchor(
+                                UiWindowAnchor.BOTTOM_RIGHT);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(538, 404),
+                                window.position());
+        }
+
+        @Test
+        void disablingAnchorRestoresFloatingPositioning() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Inventory");
+
+                window.setUserSize(new UiSize(250, 180));
+                window.setPosition(new UiPoint(100, 80));
+
+                manager.register(window);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                // Unanchored windows retain manual positions.
+                assertEquals(
+                                new UiPoint(100, 80),
+                                window.position());
+
+                window.setAnchor(UiWindowAnchor.RIGHT);
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(550, 210),
+                                window.position());
+
+                // Disable anchoring and choose another
+                // ordinary floating position.
+                window.setAnchor(UiWindowAnchor.NONE);
+                window.setPosition(new UiPoint(120, 90));
+
+                manager.updateLayout(new UiSize(800, 600));
+
+                assertEquals(
+                                new UiPoint(120, 90),
+                                window.position());
         }
 
 }
