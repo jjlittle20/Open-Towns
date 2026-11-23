@@ -102,8 +102,10 @@ import xaos.ui.input.UiScreenTransitionTracker;
 import xaos.ui.integration.UiGameplayMenuResolver;
 import xaos.ui.integration.UiLegacyGameplayActionBinding;
 import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
+import xaos.ui.integration.UiLegacyGameplayTooltipResolver;
 import xaos.ui.integration.UiLegacyIconSprites;
 import xaos.ui.integration.UiRightMenuPreview;
+import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.opengl.TownsUiPresentation;
 import xaos.ui.rendering.opengl.TownsUiTextMetrics;
@@ -229,11 +231,31 @@ public final class Game {
 	// Created after the existing game UI has initialised.
 	private static UiModErrorWindow modErrorsWindow;
 
-	// Temporary developer preview.
-	// This is NOT the replacement gameplay panel yet.
-	private static final boolean SHOW_RIGHT_MENU_XML_PREVIEW = true;
+	// Temporary migration switch.
+	//
+	// false = original Towns right-hand panel
+	// true = XML-driven right-hand panel
+	private static final boolean USE_XML_RIGHT_PANEL = true;
 
 	private static UiRightMenuPreview rightMenuPreview;
+
+	/**
+	 * Whether the XML right-hand panel currently
+	 * replaces the original panel.
+	 *
+	 * If the player closes the XML window, this
+	 * immediately becomes false and the legacy
+	 * panel can be used again.
+	 */
+	public static boolean isXmlRightPanelActive() {
+
+		return USE_XML_RIGHT_PANEL
+				&& rightMenuPreview != null
+				&& rightMenuPreview.window().isOpen()
+				&& getWorld() != null
+				&& getPanelMainMenu() != null
+				&& !getPanelMainMenu().isActive();
+	}
 
 	/**
 	 * Returns whether the new UI currently owns text input.
@@ -266,6 +288,38 @@ public final class Game {
 		}
 
 		return UI_SYSTEM.input().textInputActive();
+	}
+
+	/**
+	 * Reserve space for the minimap above and
+	 * the bottom toolbar below the XML right panel.
+	 */
+	private static UiInsets xmlRightPanelInsets() {
+
+		int top = Math.max(
+				8,
+				minimapPanelY + MINIMAP_PANEL_HEIGHT + 12);
+
+		int bottom = BOTTOM_PANEL_HEIGHT + 24;
+
+		// Keep the panel usable in smaller windows.
+		int availableHeight = Math.max(
+				0, UtilsGL.getHeight());
+
+		bottom = Math.min(
+				bottom,
+				Math.max(0, availableHeight - 100));
+
+		top = Math.min(
+				top,
+				Math.max(0,
+						availableHeight - bottom - 100));
+
+		return new UiInsets(
+				top,
+				8,
+				bottom,
+				8);
 	}
 
 	// ------------------------------------------------------------
@@ -1883,14 +1937,13 @@ public final class Game {
 			// Temporary XML right-menu preview
 			// ------------------------------------------------------------
 
-			if (SHOW_RIGHT_MENU_XML_PREVIEW) {
+			if (USE_XML_RIGHT_PANEL) {
 
 				boolean inGameplay = getWorld() != null
 						&& !getPanelMainMenu().isActive()
 						&& gameplayMenus != null
 						&& gameplayMenus.hasMenu(
 								UiRightMenuPreview.ROOT_MENU);
-
 				if (inGameplay) {
 
 					if (rightMenuPreview == null) {
@@ -1899,32 +1952,49 @@ public final class Game {
 								Messages::getString,
 								new UiLegacyGameplayDefinitionLookup());
 
+						// 1. Create the panel first.
 						rightMenuPreview = new UiRightMenuPreview(
 								UI_SYSTEM,
 								gameplayMenus,
 								resolver,
 								TownsUiTextMetrics.INSTANCE,
 								Messages::getString);
-						// Enable tested legacy placement actions.
+
+						// 2. Install gameplay actions.
 						rightMenuPreview.setActionBinding(
 								new UiLegacyGameplayActionBinding());
 
-						// Use original Towns icons from graphics.ini.
+						// 3. Install the icon resolver.
 						UiLegacyIconSprites legacyIcons = UiLegacyIconSprites.fromGraphicsIni();
 
 						rightMenuPreview.setIconResolver(
 								legacyIcons::resolve);
+						// Display original construction descriptions
+						// and prerequisites in the new UI.
+						rightMenuPreview.setTooltipResolver(
+								new UiLegacyGameplayTooltipResolver());
+
+						// 4. Now it is safe to dock the panel.
+						rightMenuPreview.dockRight(
+								xmlRightPanelInsets());
 
 					} else if (rightMenuPreview.menus() != gameplayMenus) {
 
-						// The registry is rebuilt after
-						// a world or mod-set change.
 						rightMenuPreview.setMenus(gameplayMenus);
 					}
 
-					// Open only when entering gameplay,
-					// not every frame. The player must
-					// be able to dismiss the preview.
+					// Update docking margins when the
+					// game window dimensions change.
+					UiInsets newInsets = xmlRightPanelInsets();
+
+					if (!rightMenuPreview.window()
+							.anchorInsets().equals(newInsets)) {
+
+						rightMenuPreview.window()
+								.setAnchorInsets(newInsets);
+					}
+
+					// Open only when entering gameplay.
 					if (!wasRightMenuPreviewInGame) {
 						rightMenuPreview.open();
 					}

@@ -47,4 +47,19 @@ public interface UiTheme {
      */
     void paintButton(UiButton button, UiRenderer renderer);
 
+    /**
+     * Tooltip colours may be overridden by themes.
+     */
+    default UiColor tooltipBackgroundColor() {
+        return UiColor.rgba(25, 29, 36, 245);
+    }
+
+    default UiColor tooltipBorderColor() {
+        return UiColor.rgb(125, 135, 150);
+    }
+
+    default UiColor tooltipTextColor() {
+        return UiColor.WHITE;
+    }
+
 }

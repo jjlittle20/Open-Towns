@@ -4,6 +4,7 @@ package xaos.ui.integration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import xaos.internal.api.mods.ModUiErrors;
@@ -20,6 +21,8 @@ import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiSize;
+import xaos.ui.layout.UiWindowAnchor;
+import xaos.ui.layout.UiWindowDockMode;
 import xaos.ui.rendering.UiSprite;
 import xaos.ui.rendering.UiTextMetrics;
 import java.util.function.Function;
@@ -50,6 +53,21 @@ public final class UiRightMenuPreview {
     // Resolves menu icon references into UI sprites.
     // Defaults to text-only buttons.
     private Function<IconReference, UiSprite> iconResolver = reference -> null;
+
+    private BiFunction<MenuItemDefinition, String, String> tooltipResolver = (item, title) -> title;
+
+    /**
+     * Installs a resolver for action descriptions
+     * and requirements.
+     */
+    public void setTooltipResolver(
+            BiFunction<MenuItemDefinition, String, String> resolver) {
+
+        tooltipResolver = Objects.requireNonNull(
+                resolver, "resolver");
+
+        rebuild();
+    }
 
     private final UiTextMetrics metrics;
     private final Function<String, String> localize;
@@ -94,7 +112,7 @@ public final class UiRightMenuPreview {
         window.content().add(backButton);
 
         window.content().add(new UiLabel(
-                "Preview only - actions disabled",
+                "XML gameplay menu (in development)",
                 metrics));
 
         scroll = new UiScrollContainer();
@@ -210,7 +228,7 @@ public final class UiRightMenuPreview {
         MenuDefinition menu = menus.requireMenu(currentMenuId);
 
         window.setTitle(
-                "Preview: " + menuTitle(menu));
+                "Actions: " + menuTitle(menu));
 
         backButton.setEnabled(!history.isEmpty());
 
@@ -231,6 +249,8 @@ public final class UiRightMenuPreview {
 
                 UiButton button = new UiButton(
                         "> " + label, metrics);
+                button.setTooltip(
+                        label + "\nOpen submenu");
                 applyIcon(button, item);
                 boolean available = target != null
                         && menus.hasMenu(target);
@@ -247,6 +267,8 @@ public final class UiRightMenuPreview {
             } else if ("action".equals(type)) {
 
                 UiButton button = new UiButton(label, metrics);
+                button.setTooltip(
+                        resolveTooltip(item, label));
                 applyIcon(button, item);
                 button.setEnabled(canExecute(item));
 
@@ -288,6 +310,31 @@ public final class UiRightMenuPreview {
         }
     }
 
+    /**
+     * Turns the XML menu window into a fixed
+     * right-hand gameplay panel.
+     *
+     * The insets leave space for other gameplay
+     * elements, including the minimap.
+     */
+    public void dockRight(UiInsets insets) {
+
+        Objects.requireNonNull(insets, "insets");
+
+        window.setCentered(false);
+
+        window.setAnchor(UiWindowAnchor.RIGHT);
+        window.setAnchorInsets(insets);
+
+        window.setDockMode(
+                UiWindowDockMode.FILL_HEIGHT);
+
+        // This panel is positioned by the framework,
+        // not by player dragging or resizing.
+        window.setDraggable(false);
+        window.setResizable(false);
+    }
+
     private String menuTitle(MenuDefinition menu) {
 
         String key = menu.getTitleKey();
@@ -323,6 +370,31 @@ public final class UiRightMenuPreview {
                     exception);
 
             return item.getId();
+        }
+    }
+
+    private String resolveTooltip(
+            MenuItemDefinition item,
+            String title) {
+
+        try {
+
+            String tooltip = tooltipResolver.apply(item, title);
+
+            return tooltip == null || tooltip.isBlank()
+                    ? title
+                    : tooltip;
+
+        } catch (RuntimeException exception) {
+
+            ModUiErrors.report(
+                    "open-towns",
+                    "Gameplay tooltip resolution",
+                    "Could not resolve tooltip for "
+                            + item.getId(),
+                    exception);
+
+            return title;
         }
     }
 

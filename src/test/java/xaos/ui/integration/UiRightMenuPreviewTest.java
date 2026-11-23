@@ -10,12 +10,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
 import xaos.panels.menus.MenuManager;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.core.UiSystem;
+import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
+import xaos.ui.layout.UiWindowAnchor;
+import xaos.ui.layout.UiWindowDockMode;
 import xaos.ui.rendering.UiTextMetrics;
 
 class UiRightMenuPreviewTest {
@@ -214,6 +218,78 @@ class UiRightMenuPreviewTest {
         assertEquals(
                 "game.right.root",
                 preview.currentMenuId());
+    }
+
+    @Test
+    void xmlPanelDocksRightBelowMinimap()
+            throws Exception {
+
+        MenuManager manager = new MenuManager();
+
+        manager.registerMenu(
+                new MenuDefinition(
+                        "game.right.root",
+                        null,
+                        "Construction"));
+
+        UiSystem ui = new UiSystem();
+
+        UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+                key -> key,
+                (command, parameter) -> null);
+
+        UiRightMenuPreview panel = new UiRightMenuPreview(
+                ui,
+                manager,
+                resolver,
+                FONT,
+                key -> key);
+
+        panel.dockRight(
+                new UiInsets(190, 8, 80, 8));
+
+        assertEquals(
+                UiWindowAnchor.RIGHT,
+                panel.window().anchor());
+
+        assertEquals(
+                UiWindowDockMode.FILL_HEIGHT,
+                panel.window().dockMode());
+
+        assertFalse(panel.window().draggable());
+        assertFalse(panel.window().resizable());
+
+        panel.open();
+
+        ui.updateLayout(new UiSize(1280, 720));
+
+        var bounds = panel.window().bounds();
+
+        // The panel sits against the right edge,
+        // leaving the requested 8-unit margin.
+        assertEquals(
+                1272,
+                bounds.x() + bounds.width());
+
+        // The minimap area is preserved.
+        assertEquals(190, bounds.y());
+
+        // Fill remaining height between margins.
+        assertEquals(
+                720 - 190 - 80,
+                bounds.height());
+
+        // A viewport resize must also resize the dock.
+        ui.updateLayout(new UiSize(1400, 800));
+
+        assertEquals(
+                1392,
+                panel.window().bounds().x()
+                        + panel.window().bounds().width());
+
+        assertEquals(
+                800 - 190 - 80,
+                panel.window().bounds().height());
     }
 
 }

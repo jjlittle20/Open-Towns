@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.other" title="Other" esES="Otros">
+    <item id="game.right.walls.other.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.other.qbonewall" type="action" command="QUEUEANDPLACEAREA" parameter="qbonewall" />
+    <item id="game.right.walls.other.qboneblock" type="action" command="QUEUEANDPLACEAREA" parameter="qboneblock" />
+    <item id="game.right.walls.other.qmudwall" type="action" command="QUEUEANDPLACEAREA" parameter="qmudwall" />
+    <item id="game.right.walls.other.qsandwall" type="action" command="QUEUEANDPLACEAREA" parameter="qsandwall" />
+    <item id="game.right.walls.other.qicewall" type="action" command="QUEUEANDPLACEAREA" parameter="qicewall" />
+    <item id="game.right.walls.other.qsandwallblock" type="action" command="QUEUEANDPLACEAREA" parameter="qsandwallblock" />
+    <item id="game.right.walls.other.qglasswall" type="action" command="QUEUEANDPLACEAREA" parameter="qglasswall" />
+    <item id="game.right.walls.other.qclaybrickwall" type="action" command="QUEUEANDPLACEAREA" parameter="qclaybrickwall" />
+    <item id="game.right.walls.other.qclayblock" type="action" command="QUEUEANDPLACEAREA" parameter="qclayblock" />
+    <item id="game.right.walls.other.qgoldenblock" type="action" command="QUEUEANDPLACEAREA" parameter="qgoldenblock" />
+    <item id="game.right.walls.other.qwheatblock" type="action" command="QUEUEANDPLACEAREA" parameter="qwheatblock" />
+    <item id="game.right.walls.other.qbambooblock" type="action" command="QUEUEANDPLACEAREA" parameter="qbambooblock" />
+    <item id="game.right.walls.other.qwoodenfloor" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodenfloor" />
+    <item id="game.right.walls.other.qstonefloor" type="action" command="QUEUEANDPLACEAREA" parameter="qstonefloor" />
+    <item id="game.right.walls.other.qglassfloor" type="action" command="QUEUEANDPLACEAREA" parameter="qglassfloor" />
+    <item id="game.right.walls.other.qrounddarkblock" type="action" command="QUEUEANDPLACEAREA" parameter="qrounddarkblock" />
+    <item id="game.right.walls.other.qroundgrayblock" type="action" command="QUEUEANDPLACEAREA" parameter="qroundgrayblock" />
+    <item id="game.right.walls.other.qroundwhiteblock" type="action" command="QUEUEANDPLACEAREA" parameter="qroundwhiteblock" />
+    <item id="game.right.walls.other.qroundclayblock" type="action" command="QUEUEANDPLACEAREA" parameter="qroundclayblock" />
+    <item id="game.right.walls.other.qdiagonalbrickblock" type="action" command="QUEUEANDPLACEAREA" parameter="qdiagonalbrickblock" />
+    <item id="game.right.walls.other.qroundbrickblock" type="action" command="QUEUEANDPLACEAREA" parameter="qroundbrickblock" />
+    <item id="game.right.walls.other.qroundgrassblock" type="action" command="QUEUEANDPLACEAREA" parameter="qroundgrassblock" />
+    <item id="game.right.walls.other.qdiagonalgrassblock" type="action" command="QUEUEANDPLACEAREA" parameter="qdiagonalgrassblock" />
+    <item id="game.right.walls.other.qinwardgrassblock" type="action" command="QUEUEANDPLACEAREA" parameter="qinwardgrassblock" />
+    <item id="game.right.walls.other.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.utils.ladders" title="Ladders" esES="Escaleras">
+    <item id="game.right.utils.ladders.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.utils.ladders.qladder" type="action" command="QUEUEANDPLACE" parameter="qladder" />
+    <item id="game.right.utils.ladders.qverticalladder" type="action" command="QUEUEANDPLACE" parameter="qverticalladder" />
+    <item id="game.right.utils.ladders.qlogladder" type="action" command="QUEUEANDPLACE" parameter="qlogladder" />
+    <item id="game.right.utils.ladders.qwoodenladder" type="action" command="QUEUEANDPLACE" parameter="qwoodenladder" />
+    <item id="game.right.utils.ladders.qstoneladder" type="action" command="QUEUEANDPLACE" parameter="qstoneladder" />
+    <item id="game.right.utils.ladders.qstonespindleladder" type="action" command="QUEUEANDPLACE" parameter="qstonespindleladder" />
+    <item id="game.right.utils.ladders.qancientladder" type="action" command="QUEUEANDPLACE" parameter="qancientladder" />
+    <item id="game.right.utils.ladders.qlimestoneramp" type="action" command="QUEUEANDPLACE" parameter="qlimestoneramp" />
+    <item id="game.right.utils.ladders.qbonestairs" type="action" command="QUEUEANDPLACE" parameter="qbonestairs" />
+    <item id="game.right.utils.ladders.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.decorative.indoor" title="Indoor" esES="Interior">
+    <item id="game.right.decorative.indoor.qbarrel" type="action" command="QUEUEANDPLACE" parameter="qbarrel" />
+    <item id="game.right.decorative.indoor.qchest" type="action" command="QUEUEANDPLACE" parameter="qchest" />
+    <item id="game.right.decorative.indoor.qcandle" type="action" command="QUEUEANDPLACE" parameter="qcandle" />
+    <item id="game.right.decorative.indoor.qbonecandle" type="action" command="QUEUEANDPLACE" parameter="qbonecandle" />
+    <item id="game.right.decorative.indoor.qbonetorch" type="action" command="QUEUEANDPLACE" parameter="qbonetorch" />
+    <item id="game.right.decorative.indoor.qhangedlamp" type="action" command="QUEUEANDPLACE" parameter="qhangedlamp" />
+    <item id="game.right.decorative.indoor.qbluehangedlamp" type="action" command="QUEUEANDPLACE" parameter="qbluehangedlamp" />
+    <item id="game.right.decorative.indoor.qgreenhangedlamp" type="action" command="QUEUEANDPLACE" parameter="qgreenhangedlamp" />
+    <item id="game.right.decorative.indoor.qyellowhangedlamp" type="action" command="QUEUEANDPLACE" parameter="qyellowhangedlamp" />
+    <item id="game.right.decorative.indoor.qredhangedlamp" type="action" command="QUEUEANDPLACE" parameter="qredhangedlamp" />
+    <item id="game.right.decorative.indoor.qpotplant" type="action" command="QUEUEANDPLACE" parameter="qpotplant" />
+    <item id="game.right.decorative.indoor.qbirdincage" type="action" command="QUEUEANDPLACE" parameter="qbirdincage" />
+    <item id="game.right.decorative.indoor.qclock" type="action" command="QUEUEANDPLACE" parameter="qclock" />
+    <item id="game.right.decorative.indoor.qharp" type="action" command="QUEUEANDPLACE" parameter="qharp" />
+    <item id="game.right.decorative.indoor.qchesstable" type="action" command="QUEUEANDPLACE" parameter="qchesstable" />
+    <item id="game.right.decorative.indoor.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

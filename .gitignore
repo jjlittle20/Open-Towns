@@ -12,6 +12,7 @@ build/
 out/
 bin/
 target/
+tools/
 
 *.class
 *.jar

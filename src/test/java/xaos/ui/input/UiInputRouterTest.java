@@ -2054,4 +2054,64 @@ class UiInputRouterTest {
                                 window.position());
         }
 
+        @Test
+        void disabledButtonsCanStillExposeTooltips() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton button = button("Build Wall");
+
+                button.setTooltip(
+                                "Build Wall\nRequires wood");
+
+                button.setEnabled(false);
+
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                input.mouseMoved(x(button), y(button));
+
+                // Disabled buttons don't highlight.
+                assertFalse(button.hovered());
+
+                // They can still provide information.
+                assertSame(button, input.hoveredButton());
+
+                assertEquals(
+                                "Build Wall\nRequires wood",
+                                input.hoveredButton().tooltip());
+
+                input.mouseMoved(500, 500);
+
+                assertNull(input.hoveredButton());
+        }
+
+        @Test
+        void closedWindowsCannotShowStaleTooltips() {
+
+                UiContainer desktop = desktop();
+                UiWindow window = window();
+
+                UiButton button = button("Build Wall");
+                button.setTooltip("Requires wood");
+
+                window.content().add(button);
+                desktop.add(window);
+
+                UiInputRouter input = new UiInputRouter(root(desktop));
+
+                input.mouseMoved(x(button), y(button));
+
+                assertSame(button, input.hoveredButton());
+
+                window.close();
+
+                // The pointer hasn't moved, but the tooltip
+                // must disappear with its owning window.
+                assertNull(input.hoveredButton());
+        }
+
 }

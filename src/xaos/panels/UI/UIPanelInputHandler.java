@@ -2204,7 +2204,8 @@ public class UIPanelInputHandler {
 			}
 		}
 		// MENU (right)
-		if (isMenuPanelActive()) {
+		if (!Game.isXmlRightPanelActive()
+				&& isMenuPanelActive()) {
 			if (isMouseOnMenuItems(x, y) != -1) {
 				if (doEdgeMenusStuff) {
 					// Cerramos los menús no locked
@@ -2240,7 +2241,7 @@ public class UIPanelInputHandler {
 					}
 				}
 			}
-		} else {
+		} else if (!Game.isXmlRightPanelActive()) {
 			if (doEdgeMenusStuff) {
 				if (isMouseOnRightMenuOpenClose(x, y, tileOpenRightMenu)) {
 					setMenuPanelActive(true);

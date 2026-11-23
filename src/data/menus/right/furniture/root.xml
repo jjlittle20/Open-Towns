@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.furniture" title="Furniture" esES="Muebles">
+    <item id="game.right.furniture.doors" type="submenu" title="Doors" targetMenu="game.right.furniture.doors" icon="ui_rdoors" esES="Puertas" />
+    <item id="game.right.furniture.windows" type="submenu" title="Windows" targetMenu="game.right.furniture.windows" icon="ui_rwindows" esES="Ventanas" />
+    <item id="game.right.furniture.qwoodenbed" type="action" command="QUEUEANDPLACE" parameter="qwoodenbed" />
+    <item id="game.right.furniture.qwoodendormbed" type="action" command="QUEUEANDPLACE" parameter="qwoodendormbed" />
+    <item id="game.right.furniture.qbonebed" type="action" command="QUEUEANDPLACE" parameter="qbonebed" />
+    <item id="game.right.furniture.qwoodenchair" type="action" command="QUEUEANDPLACE" parameter="qwoodenchair" />
+    <item id="game.right.furniture.qwoodentable" type="action" command="QUEUEANDPLACE" parameter="qwoodentable" />
+    <item id="game.right.furniture.qwoodencupboard" type="action" command="QUEUEANDPLACE" parameter="qwoodencupboard" />
+    <item id="game.right.furniture.qstonechair" type="action" command="QUEUEANDPLACE" parameter="qstonechair" />
+    <item id="game.right.furniture.qstonetable" type="action" command="QUEUEANDPLACE" parameter="qstonetable" />
+    <item id="game.right.furniture.qpurplethrone" type="action" command="QUEUEANDPLACE" parameter="qpurplethrone" />
+    <item id="game.right.furniture.qsquarestable" type="action" command="QUEUEANDPLACE" parameter="qsquarestable" />
+    <item id="game.right.furniture.qarchitecttable" type="action" command="QUEUEANDPLACE" parameter="qarchitecttable" />
+    <item id="game.right.furniture.qchimney" type="action" command="QUEUEANDPLACE" parameter="qchimney" />
+    <item id="game.right.furniture.qanimalfireplace" type="action" command="QUEUEANDPLACE" parameter="qanimalfireplace" />
+    <item id="game.right.furniture.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

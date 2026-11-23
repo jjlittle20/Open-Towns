@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.terraforming" title="Terraforming" esES="Terraforming">
+    <item id="game.right.terraforming.qterragrass" type="action" command="QUEUEANDPLACEAREA" parameter="qterragrass" />
+    <item id="game.right.terraforming.qterrastone" type="action" command="QUEUEANDPLACEAREA" parameter="qterrastone" />
+    <item id="game.right.terraforming.qterrasnow" type="action" command="QUEUEANDPLACEAREA" parameter="qterrasnow" />
+    <item id="game.right.terraforming.qterrasand" type="action" command="QUEUEANDPLACEAREA" parameter="qterrasand" />
+    <item id="game.right.terraforming.qterradirt" type="action" command="QUEUEANDPLACEAREA" parameter="qterradirt" />
+    <item id="game.right.terraforming.qterrajungle" type="action" command="QUEUEANDPLACEAREA" parameter="qterrajungle" />
+    <item id="game.right.terraforming.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

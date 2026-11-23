@@ -30,7 +30,8 @@ import xaos.ui.layout.UiSize;
  * Coordinates use logical UI units.
  */
 public final class UiInputRouter {
-
+    private int pointerX;
+    private int pointerY;
     private final UiRoot root;
     private final UiFocusManager focusManager;
     // Slider currently capturing mouse movement.
@@ -533,7 +534,8 @@ public final class UiInputRouter {
      */
 
     public boolean mouseMoved(int x, int y) {
-
+        pointerX = x;
+        pointerY = y;
         // A captured slider continues dragging even when
         // the pointer moves outside the control.
         if (activeSlider != null) {
@@ -1264,6 +1266,56 @@ public final class UiInputRouter {
         }
 
         return null;
+    }
+
+    /**
+     * Last known pointer position in logical UI units.
+     */
+    public UiPoint pointerPosition() {
+        return new UiPoint(pointerX, pointerY);
+    }
+
+    /**
+     * Returns the button underneath the pointer,
+     * including disabled buttons.
+     *
+     * A button removed from the tree or contained
+     * inside a closed window cannot show a tooltip.
+     */
+    public UiButton hoveredButton() {
+
+        UiButton button = hoveredButton;
+
+        if (button == null) {
+            return null;
+        }
+
+        boolean attachedToRoot = false;
+
+        for (UiElement element = button; element != null; element = element.parent()) {
+
+            if (!element.visible()) {
+                return null;
+            }
+
+            if (element == root.content()) {
+                attachedToRoot = true;
+            }
+        }
+
+        if (!attachedToRoot) {
+            return null;
+        }
+
+        UiWindow modal = activeModal();
+
+        if (modal != null
+                && findOwningWindow(button) != modal) {
+
+            return null;
+        }
+
+        return button;
     }
 
 }

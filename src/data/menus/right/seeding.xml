@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.seeding" title="Planting" esES="Plantar">
+    <item id="game.right.seeding.qwheatseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_wheatseed" parameter="qwheatseed" />
+    <item id="game.right.seeding.qsugarcaneseed" type="action" command="QUEUEANDPLACEAREA" icon="wildsugarcane" parameter="qsugarcaneseed" />
+    <item id="game.right.seeding.qbambooseed" type="action" command="QUEUEANDPLACEAREA" icon="wildbamboo" parameter="qbambooseed" />
+    <item id="game.right.seeding.qappleseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_appleseed" parameter="qappleseed" />
+    <item id="game.right.seeding.qpearseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_pearseed" parameter="qpearseed" />
+    <item id="game.right.seeding.qblueradishseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_blueradishseed" parameter="qblueradishseed" />
+    <item id="game.right.seeding.qsnowcherryseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_snowcherryseed" parameter="qsnowcherryseed" />
+    <item id="game.right.seeding.qbananaseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_bananaseed" parameter="qbananaseed" />
+    <item id="game.right.seeding.qcactusseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_cactusseed" parameter="qcactusseed" />
+    <item id="game.right.seeding.qjunglemushroomseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_forestmushroomseed" parameter="qjunglemushroomseed" />
+    <item id="game.right.seeding.qcavemushroomseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_cavemushroomseed" parameter="qcavemushroomseed" />
+    <item id="game.right.seeding.qredflowerseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_redflower" parameter="qredflowerseed" />
+    <item id="game.right.seeding.qblueflowerseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_blueflower" parameter="qblueflowerseed" />
+    <item id="game.right.seeding.qyellowflowerseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_yellowflower" parameter="qyellowflowerseed" />
+    <item id="game.right.seeding.qtreeseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_treeseed" parameter="qtreeseed" />
+    <item id="game.right.seeding.qtree2seed" type="action" command="QUEUEANDPLACEAREA" icon="ui_tree2seed" parameter="qtree2seed" />
+    <item id="game.right.seeding.qsnowseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_snowseed" parameter="qsnowseed" />
+    <item id="game.right.seeding.qjungleseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_jungleseed" parameter="qjungleseed" />
+    <item id="game.right.seeding.qpalmseed" type="action" command="QUEUEANDPLACEAREA" icon="ui_palmseed" parameter="qpalmseed" />
+    <item id="game.right.seeding.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

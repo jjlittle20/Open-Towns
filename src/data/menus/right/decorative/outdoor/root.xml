@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.decorative.outdoor" title="Outdoor" esES="Exterior">
+    <item id="game.right.decorative.outdoor.statues" type="submenu" title="Statues and poles" targetMenu="game.right.decorative.outdoor.statues" icon="ui_statues" esES="Estátuas y estacas" />
+    <item id="game.right.decorative.outdoor.qpond" type="action" command="QUEUEANDPLACEAREA" parameter="qpond" />
+    <item id="game.right.decorative.outdoor.qbonsai" type="action" command="QUEUEANDPLACE" parameter="qbonsai" />
+    <item id="game.right.decorative.outdoor.qbonsaired" type="action" command="QUEUEANDPLACE" parameter="qbonsaired" />
+    <item id="game.right.decorative.outdoor.qgardenred" type="action" command="QUEUEANDPLACEAREA" parameter="qgardenred" />
+    <item id="game.right.decorative.outdoor.qgardenblue" type="action" command="QUEUEANDPLACEAREA" parameter="qgardenblue" />
+    <item id="game.right.decorative.outdoor.qgardenyellow" type="action" command="QUEUEANDPLACEAREA" parameter="qgardenyellow" />
+    <item id="game.right.decorative.outdoor.qgardenbush1" type="action" command="QUEUEANDPLACEAREA" parameter="qgardenbush1" />
+    <item id="game.right.decorative.outdoor.qgardenbush2" type="action" command="QUEUEANDPLACEAREA" parameter="qgardenbush2" />
+    <item id="game.right.decorative.outdoor.qgardenbush3" type="action" command="QUEUEANDPLACEAREA" parameter="qgardenbush3" />
+    <item id="game.right.decorative.outdoor.qredshortflag" type="action" command="QUEUEANDPLACE" parameter="qredshortflag" />
+    <item id="game.right.decorative.outdoor.qredlongflag" type="action" command="QUEUEANDPLACE" parameter="qredlongflag" />
+    <item id="game.right.decorative.outdoor.qfishingdock" type="action" command="QUEUEANDPLACE" parameter="qfishingdock" />
+    <item id="game.right.decorative.outdoor.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

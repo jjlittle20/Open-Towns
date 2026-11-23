@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.furniture.doors" title="Doors" esES="Puertas">
+    <item id="game.right.furniture.doors.qlogdoor" type="action" command="QUEUEANDPLACE" parameter="qlogdoor" />
+    <item id="game.right.furniture.doors.qwoodendoor" type="action" command="QUEUEANDPLACE" parameter="qwoodendoor" />
+    <item id="game.right.furniture.doors.qhalfdoor" type="action" command="QUEUEANDPLACE" parameter="qhalfdoor" />
+    <item id="game.right.furniture.doors.qblockdoor" type="action" command="QUEUEANDPLACE" parameter="qblockdoor" />
+    <item id="game.right.furniture.doors.qhedgegate" type="action" command="QUEUEANDPLACE" parameter="qhedgegate" />
+    <item id="game.right.furniture.doors.qfencedoor" type="action" command="QUEUEANDPLACE" parameter="qfencedoor" />
+    <item id="game.right.furniture.doors.qwhitefencedoor" type="action" command="QUEUEANDPLACE" parameter="qwhitefencedoor" />
+    <item id="game.right.furniture.doors.qstonearcdoor1" type="action" command="QUEUEANDPLACE" parameter="qstonearcdoor1" />
+    <item id="game.right.furniture.doors.qstonearcdoor2" type="action" command="QUEUEANDPLACE" parameter="qstonearcdoor2" />
+    <item id="game.right.furniture.doors.qbonedoor" type="action" command="QUEUEANDPLACE" parameter="qbonedoor" />
+    <item id="game.right.furniture.doors.qfloodgate" type="action" command="QUEUEANDPLACE" parameter="qfloodgate" />
+    <item id="game.right.furniture.doors.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

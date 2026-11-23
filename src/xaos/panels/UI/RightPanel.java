@@ -10,6 +10,7 @@ import java.awt.Point;
 import org.lwjgl.opengl.GL11;
 
 import xaos.campaign.TutorialFlow;
+import xaos.main.Game;
 import xaos.panels.menus.SmartMenu;
 import xaos.tiles.Tile;
 import xaos.utils.UtilsGL;
@@ -38,6 +39,16 @@ public class RightPanel {
 	}
 
 	public static void renderMenuPanel(int mouseX, int mouseY, int mousePanel) {
+
+		// XML right-hand panel is replacing this renderer.
+		//
+		// Keep the legacy panel and its state intact,
+		// allowing it to become visible again if the
+		// XML panel is closed or disabled.
+		if (Game.isXmlRightPanelActive()) {
+			return;
+		}
+
 		checkBlinkRight = (blinkTurns >= MAX_BLINK_TURNS / 2) && TutorialFlow.isBlinkRight();
 
 		int scaledMenuPanelWidth = ui(MENU_PANEL_WIDTH);

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.decorative" title="Decorative" esES="Decorativo">
+    <item id="game.right.decorative.indoor" type="submenu" title="Indoor" targetMenu="game.right.decorative.indoor" icon="ui_indoor" esES="Interior" />
+    <item id="game.right.decorative.outdoor" type="submenu" title="Outdoor" targetMenu="game.right.decorative.outdoor" icon="ui_outdoor" esES="Exterior" />
+    <item id="game.right.decorative.graves" type="submenu" title="Graves and tombs" targetMenu="game.right.decorative.graves" icon="ui_graves" esES="Tumbas y sepulcros" />
+    <item id="game.right.decorative.signs" type="submenu" title="Signs and writeable items" targetMenu="game.right.decorative.signs" icon="ui_signs" esES="Carteles y objetos para escribir" />
+    <item id="game.right.decorative.qredarenabadger" type="action" command="QUEUEANDPLACE" parameter="qredarenabadger" />
+    <item id="game.right.decorative.qgreenarenabadger" type="action" command="QUEUEANDPLACE" parameter="qgreenarenabadger" />
+    <item id="game.right.decorative.qbluearenabadger" type="action" command="QUEUEANDPLACE" parameter="qbluearenabadger" />
+    <item id="game.right.decorative.qbate" type="action" command="QUEUEANDPLACE" parameter="qbate" />
+    <item id="game.right.decorative.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.containers" title="Containers" esES="Contenedores">
+    <item id="game.right.containers.qrmbarrel" type="action" command="QUEUEANDPLACEAREA" parameter="qrmbarrel" />
+    <item id="game.right.containers.qrawfoodbarrel" type="action" command="QUEUEANDPLACEAREA" parameter="qrawfoodbarrel" />
+    <item id="game.right.containers.qprepfoodbarrel" type="action" command="QUEUEANDPLACEAREA" parameter="qprepfoodbarrel" />
+    <item id="game.right.containers.qutilschest" type="action" command="QUEUEANDPLACEAREA" parameter="qutilschest" />
+    <item id="game.right.containers.qdecorativechest" type="action" command="QUEUEANDPLACEAREA" parameter="qdecorativechest" />
+    <item id="game.right.containers.qitechest" type="action" command="QUEUEANDPLACEAREA" parameter="qitechest" />
+    <item id="game.right.containers.qarmorcabinet" type="action" command="QUEUEANDPLACEAREA" parameter="qarmorcabinet" />
+    <item id="game.right.containers.qweaponcabinet" type="action" command="QUEUEANDPLACEAREA" parameter="qweaponcabinet" />
+    <item id="game.right.containers.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.stone.mayan" title="Mayan walls" esES="Muros maya">
+    <item id="game.right.walls.stone.mayan.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.stone.mayan.qmayanblock" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock" />
+    <item id="game.right.walls.stone.mayan.qmayanblock1" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock1" />
+    <item id="game.right.walls.stone.mayan.qmayanblock2" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock2" />
+    <item id="game.right.walls.stone.mayan.qmayanblock3" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock3" />
+    <item id="game.right.walls.stone.mayan.qmayanblock4" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock4" />
+    <item id="game.right.walls.stone.mayan.qmayanblock5" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock5" />
+    <item id="game.right.walls.stone.mayan.qmayanblock6" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock6" />
+    <item id="game.right.walls.stone.mayan.qmayanblock7" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock7" />
+    <item id="game.right.walls.stone.mayan.qmayanblock8" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock8" />
+    <item id="game.right.walls.stone.mayan.qmayanblock9" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock9" />
+    <item id="game.right.walls.stone.mayan.qmayanblock10" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock10" />
+    <item id="game.right.walls.stone.mayan.qmayanblock11" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock11" />
+    <item id="game.right.walls.stone.mayan.qmayanblock12" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock12" />
+    <item id="game.right.walls.stone.mayan.qmayanblock13" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock13" />
+    <item id="game.right.walls.stone.mayan.qmayanblock14" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock14" />
+    <item id="game.right.walls.stone.mayan.qmayanblock15" type="action" command="QUEUEANDPLACEAREA" parameter="qmayanblock15" />
+    <item id="game.right.walls.stone.mayan.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

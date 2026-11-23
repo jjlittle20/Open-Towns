@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.furniture.windows" title="Windows" esES="Ventanas">
+    <item id="game.right.furniture.windows.qwoodenglasswindow" type="action" command="QUEUEANDPLACE" parameter="qwoodenglasswindow" />
+    <item id="game.right.furniture.windows.qwoodenwindow" type="action" command="QUEUEANDPLACE" parameter="qwoodenwindow" />
+    <item id="game.right.furniture.windows.qstonewindow" type="action" command="QUEUEANDPLACE" parameter="qstonewindow" />
+    <item id="game.right.furniture.windows.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

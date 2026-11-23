@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.roadtiles" title="Roads" esES="Carreteras">
+    <item id="game.right.roadtiles.qwoodenroadtile" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodenroadtile" />
+    <item id="game.right.roadtiles.qstonetile" type="action" command="QUEUEANDPLACEAREA" parameter="qstonetile" />
+    <item id="game.right.roadtiles.qgreentile" type="action" command="QUEUEANDPLACEAREA" parameter="qgreentile" />
+    <item id="game.right.roadtiles.qredtile" type="action" command="QUEUEANDPLACEAREA" parameter="qredtile" />
+    <item id="game.right.roadtiles.qbluetile" type="action" command="QUEUEANDPLACEAREA" parameter="qbluetile" />
+    <item id="game.right.roadtiles.qpavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qpavementtile" />
+    <item id="game.right.roadtiles.qwhitepavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qwhitepavementtile" />
+    <item id="game.right.roadtiles.qbluepavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qbluepavementtile" />
+    <item id="game.right.roadtiles.qredpavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qredpavementtile" />
+    <item id="game.right.roadtiles.qgreenpavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qgreenpavementtile" />
+    <item id="game.right.roadtiles.qyellowpavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qyellowpavementtile" />
+    <item id="game.right.roadtiles.qorangepavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qorangepavementtile" />
+    <item id="game.right.roadtiles.qpurplepavementtile" type="action" command="QUEUEANDPLACEAREA" parameter="qpurplepavementtile" />
+    <item id="game.right.roadtiles.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

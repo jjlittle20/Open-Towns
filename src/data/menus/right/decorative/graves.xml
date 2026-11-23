@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.decorative.graves" title="Graves and tombs" esES="Tumbas y sepulcros">
+    <item id="game.right.decorative.graves.qgrave" type="action" command="QUEUEANDPLACE" parameter="qgrave" />
+    <item id="game.right.decorative.graves.qtomb" type="action" command="QUEUEANDPLACE" parameter="qtomb" />
+    <item id="game.right.decorative.graves.qmosstomb" type="action" command="QUEUEANDPLACE" parameter="qmosstomb" />
+    <item id="game.right.decorative.graves.qlizardtomb" type="action" command="QUEUEANDPLACE" parameter="qlizardtomb" />
+    <item id="game.right.decorative.graves.qelftomb" type="action" command="QUEUEANDPLACE" parameter="qelftomb" />
+    <item id="game.right.decorative.graves.qdwarftomb" type="action" command="QUEUEANDPLACE" parameter="qdwarftomb" />
+    <item id="game.right.decorative.graves.qknighttomb" type="action" command="QUEUEANDPLACE" parameter="qknighttomb" />
+    <item id="game.right.decorative.graves.qhighlandertomb" type="action" command="QUEUEANDPLACE" parameter="qhighlandertomb" />
+    <item id="game.right.decorative.graves.qroguemaletomb" type="action" command="QUEUEANDPLACE" parameter="qroguemaletomb" />
+    <item id="game.right.decorative.graves.qroguefemaletomb" type="action" command="QUEUEANDPLACE" parameter="qroguefemaletomb" />
+    <item id="game.right.decorative.graves.qherbalisttomb" type="action" command="QUEUEANDPLACE" parameter="qherbalisttomb" />
+    <item id="game.right.decorative.graves.qmagetomb" type="action" command="QUEUEANDPLACE" parameter="qmagetomb" />
+    <item id="game.right.decorative.graves.qbarbariantomb" type="action" command="QUEUEANDPLACE" parameter="qbarbariantomb" />
+    <item id="game.right.decorative.graves.qsipstomb" type="action" command="QUEUEANDPLACE" parameter="qsipstomb" />
+    <item id="game.right.decorative.graves.qvechstomb" type="action" command="QUEUEANDPLACE" parameter="qvechstomb" />
+    <item id="game.right.decorative.graves.qpunchwoodtomb" type="action" command="QUEUEANDPLACE" parameter="qpunchwoodtomb" />
+    <item id="game.right.decorative.graves.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

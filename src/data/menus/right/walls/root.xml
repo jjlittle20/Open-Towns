@@ -1,19 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.right.walls"
-      title="Walls">
-
-    <item
-        id="game.right.walls.log"
-        type="submenu"
-        title="Log walls"
-        icon="ui_l_walls"
-        targetMenu="game.right.walls.log" />
-
-    <item
-        id="game.right.walls.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.right.walls" title="Walls" esES="Muros">
+    <item id="game.right.walls.log" type="submenu" title="Log walls" targetMenu="game.right.walls.log" icon="ui_l_walls" esES="Muros de troncos" />
+    <item id="game.right.walls.wooden" type="submenu" title="Wooden walls" targetMenu="game.right.walls.wooden" icon="ui_w_walls" esES="Muros de madera" />
+    <item id="game.right.walls.stone" type="submenu" title="Stone walls" targetMenu="game.right.walls.stone" icon="ui_s_walls" esES="Muros de piedra" />
+    <item id="game.right.walls.roof" type="submenu" title="Roofs" targetMenu="game.right.walls.roof" icon="ui_roofs" esES="Techos" />
+    <item id="game.right.walls.decorative" type="submenu" title="Decorative walls" targetMenu="game.right.walls.decorative" icon="ui_d_walls" esES="Muros decorativos" />
+    <item id="game.right.walls.other" type="submenu" title="Other" targetMenu="game.right.walls.other" icon="ui_o_walls" esES="Otros" />
+    <item id="game.right.walls.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

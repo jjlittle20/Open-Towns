@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.utils.traps" title="Traps" esES="Trampas">
+    <item id="game.right.utils.traps.qlogtrap" type="action" command="QUEUEANDPLACE" parameter="qlogtrap" />
+    <item id="game.right.utils.traps.qspiketrap" type="action" command="QUEUEANDPLACE" parameter="qspiketrap" />
+    <item id="game.right.utils.traps.qbeartrap" type="action" command="QUEUEANDPLACE" parameter="qbeartrap" />
+    <item id="game.right.utils.traps.qpoisontrap" type="action" command="QUEUEANDPLACE" parameter="qpoisontrap" />
+    <item id="game.right.utils.traps.qbambootrap" type="action" command="QUEUEANDPLACE" parameter="qbambootrap" />
+    <item id="game.right.utils.traps.qplantedplanttrap" type="action" command="QUEUEANDPLACE" parameter="qplantedplanttrap" />
+    <item id="game.right.utils.traps.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

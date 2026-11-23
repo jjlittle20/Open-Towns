@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.utils" title="Utilities" esES="Útiles">
+    <item id="game.right.utils.traps" type="submenu" title="Traps" targetMenu="game.right.utils.traps" icon="ui_traps" esES="Trampas" />
+    <item id="game.right.utils.ladders" type="submenu" title="Ladders" targetMenu="game.right.utils.ladders" icon="ui_ladders" esES="Escaleras" />
+    <item id="game.right.utils.qburner" type="action" command="QUEUEANDPLACE" parameter="qburner" />
+    <item id="game.right.utils.qcarpentrybench" type="action" command="QUEUEANDPLACE" parameter="qcarpentrybench" />
+    <item id="game.right.utils.qwooddetailer" type="action" command="QUEUEANDPLACE" parameter="qwooddetailer" />
+    <item id="game.right.utils.qcarvingbench" type="action" command="QUEUEANDPLACE" parameter="qcarvingbench" />
+    <item id="game.right.utils.qmasonbench" type="action" command="QUEUEANDPLACE" parameter="qmasonbench" />
+    <item id="game.right.utils.qbakertable" type="action" command="QUEUEANDPLACE" parameter="qbakertable" />
+    <item id="game.right.utils.qbakeroven" type="action" command="QUEUEANDPLACE" parameter="qbakeroven" />
+    <item id="game.right.utils.qanvil" type="action" command="QUEUEANDPLACE" parameter="qanvil" />
+    <item id="game.right.utils.qsmelter" type="action" command="QUEUEANDPLACE" parameter="qsmelter" />
+    <item id="game.right.utils.qitesmithy" type="action" command="QUEUEANDPLACE" parameter="qitesmithy" />
+    <item id="game.right.utils.qkitchentable" type="action" command="QUEUEANDPLACE" parameter="qkitchentable" />
+    <item id="game.right.utils.qbutchertable" type="action" command="QUEUEANDPLACE" parameter="qbutchertable" />
+    <item id="game.right.utils.qstove" type="action" command="QUEUEANDPLACE" parameter="qstove" />
+    <item id="game.right.utils.qcookingfire" type="action" command="QUEUEANDPLACE" parameter="qcookingfire" />
+    <item id="game.right.utils.qcookingbowl" type="action" command="QUEUEANDPLACE" parameter="qcookingbowl" />
+    <item id="game.right.utils.qcolormixer" type="action" command="QUEUEANDPLACE" parameter="qcolormixer" />
+    <item id="game.right.utils.qskinner" type="action" command="QUEUEANDPLACE" parameter="qskinner" />
+    <item id="game.right.utils.qmedicinecabinet" type="action" command="QUEUEANDPLACE" parameter="qmedicinecabinet" />
+    <item id="game.right.utils.qmill" type="action" command="QUEUEANDPLACE" parameter="qmill" />
+    <item id="game.right.utils.qfishingset" type="action" command="QUEUEANDPLACE" parameter="qfishingset" />
+    <item id="game.right.utils.qfluidselevator" type="action" command="QUEUEANDPLACE" parameter="qfluidselevator" />
+    <item id="game.right.utils.qwell" type="action" command="QUEUEANDPLACE" parameter="qwell" />
+    <item id="game.right.utils.qshrine1" type="action" command="QUEUEANDPLACE" parameter="qshrine1" />
+    <item id="game.right.utils.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

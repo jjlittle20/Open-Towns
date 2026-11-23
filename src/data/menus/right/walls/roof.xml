@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.roof" title="Roofs" esES="Techos">
+    <item id="game.right.walls.roof.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.roof.qstrawroofitem" type="action" command="QUEUEANDPLACEAREA" parameter="qstrawroofitem" />
+    <item id="game.right.walls.roof.qredtileroof" type="action" command="QUEUEANDPLACEAREA" parameter="qredtileroof" />
+    <item id="game.right.walls.roof.qbluetileroof" type="action" command="QUEUEANDPLACEAREA" parameter="qbluetileroof" />
+    <item id="game.right.walls.roof.qcyantileroof" type="action" command="QUEUEANDPLACEAREA" parameter="qcyantileroof" />
+    <item id="game.right.walls.roof.qgreentileroof" type="action" command="QUEUEANDPLACEAREA" parameter="qgreentileroof" />
+    <item id="game.right.walls.roof.qpurpletileroof" type="action" command="QUEUEANDPLACEAREA" parameter="qpurpletileroof" />
+    <item id="game.right.walls.roof.qyellowtileroof" type="action" command="QUEUEANDPLACEAREA" parameter="qyellowtileroof" />
+    <item id="game.right.walls.roof.qbrokenroof" type="action" command="QUEUEANDPLACEAREA" parameter="qbrokenroof" />
+    <item id="game.right.walls.roof.qwoodendarkroofitem" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodendarkroofitem" />
+    <item id="game.right.walls.roof.qclayroof" type="action" command="QUEUEANDPLACEAREA" parameter="qclayroof" />
+    <item id="game.right.walls.roof.qboneroof" type="action" command="QUEUEANDPLACEAREA" parameter="qboneroof" />
+    <item id="game.right.walls.roof.qmarketroof" type="action" command="QUEUEANDPLACEAREA" parameter="qmarketroof" />
+    <item id="game.right.walls.roof.qdomeroof" type="action" command="QUEUEANDPLACEAREA" parameter="qdomeroof" />
+    <item id="game.right.walls.roof.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

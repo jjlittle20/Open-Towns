@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.stone.brick" title="Stone brick walls" esES="Muros de ladrillos de piedra">
+    <item id="game.right.walls.stone.brick.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.stone.brick.qstonebrickblock" type="action" command="QUEUEANDPLACEAREA" parameter="qstonebrickblock" />
+    <item id="game.right.walls.stone.brick.qstonebrickblock2" type="action" command="QUEUEANDPLACEAREA" parameter="qstonebrickblock2" />
+    <item id="game.right.walls.stone.brick.qstonebrickblock3" type="action" command="QUEUEANDPLACEAREA" parameter="qstonebrickblock3" />
+    <item id="game.right.walls.stone.brick.qstonebrickblock4" type="action" command="QUEUEANDPLACEAREA" parameter="qstonebrickblock4" />
+    <item id="game.right.walls.stone.brick.qstonebrickblock5" type="action" command="QUEUEANDPLACEAREA" parameter="qstonebrickblock5" />
+    <item id="game.right.walls.stone.brick.qstonebrickblock6" type="action" command="QUEUEANDPLACEAREA" parameter="qstonebrickblock6" />
+    <item id="game.right.walls.stone.brick.qwhitebrickblock" type="action" command="QUEUEANDPLACEAREA" parameter="qwhitebrickblock" />
+    <item id="game.right.walls.stone.brick.qroughbricks" type="action" command="QUEUEANDPLACEAREA" parameter="qroughbricks" />
+    <item id="game.right.walls.stone.brick.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.decorative.signs" title="Signs and writeable items" esES="Carteles y objetos para escribir">
+    <item id="game.right.decorative.signs.qwoodensign" type="action" command="QUEUEANDPLACE" parameter="qwoodensign" />
+    <item id="game.right.decorative.signs.qwoodenwallsign" type="action" command="QUEUEANDPLACE" parameter="qwoodenwallsign" />
+    <item id="game.right.decorative.signs.qwoodenpointarrow" type="action" command="QUEUEANDPLACE" parameter="qwoodenpointarrow" />
+    <item id="game.right.decorative.signs.qironwoodenwallsign" type="action" command="QUEUEANDPLACE" parameter="qironwoodenwallsign" />
+    <item id="game.right.decorative.signs.qengravingstone" type="action" command="QUEUEANDPLACE" parameter="qengravingstone" />
+    <item id="game.right.decorative.signs.qbook" type="action" command="QUEUEANDPLACE" parameter="qbook" />
+    <item id="game.right.decorative.signs.qscroll" type="action" command="QUEUEANDPLACE" parameter="qscroll" />
+    <item id="game.right.decorative.signs.qdoorsignswords" type="action" command="QUEUEANDPLACE" parameter="qdoorsignswords" />
+    <item id="game.right.decorative.signs.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -29,6 +29,8 @@ public class UiButton extends UiElement implements UiFocusable {
     private boolean pressed;
     private boolean selected;
     private boolean backgroundVisible;
+    private String tooltip;
+    private UiTextMetrics tooltipMetrics;
 
     private Runnable onClick = () -> {
     };
@@ -54,6 +56,7 @@ public class UiButton extends UiElement implements UiFocusable {
         this.text = Objects.requireNonNull(text, "text");
         this.icon = icon;
         this.textMetrics = metrics;
+        this.tooltipMetrics = metrics;
 
         if (!text.isEmpty() && metrics == null) {
             throw new IllegalArgumentException(
@@ -191,7 +194,6 @@ public class UiButton extends UiElement implements UiFocusable {
         return enabled;
     }
 
-
     // ------------------------------------------------------------
     // Visual state
     // ------------------------------------------------------------
@@ -309,4 +311,35 @@ public class UiButton extends UiElement implements UiFocusable {
                         minimumSize().height(),
                         Math.min(desiredHeight, available.height())));
     }
+
+    /**
+     * Optional tooltip displayed when the pointer
+     * rests over this button.
+     *
+     * Newlines separate tooltip lines.
+     */
+    public String tooltip() {
+        return tooltip;
+    }
+
+    public void setTooltip(String tooltip) {
+        this.tooltip = tooltip;
+    }
+
+    /**
+     * Allows icon-only buttons to supply their
+     * own font metrics for tooltip rendering.
+     */
+    public void setTooltip(
+            String tooltip,
+            UiTextMetrics metrics) {
+
+        this.tooltip = tooltip;
+        this.tooltipMetrics = Objects.requireNonNull(metrics, "metrics");
+    }
+
+    public UiTextMetrics tooltipMetrics() {
+        return tooltipMetrics;
+    }
+
 }

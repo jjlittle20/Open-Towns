@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.stone" title="Stone walls" esES="Muros de piedra">
+    <item id="game.right.walls.stone.brick" type="submenu" title="Stone brick walls" targetMenu="game.right.walls.stone.brick" icon="ui_sb_walls" esES="Muros de ladrillos de piedra" />
+    <item id="game.right.walls.stone.mayan" type="submenu" title="Mayan walls" targetMenu="game.right.walls.stone.mayan" icon="ui_sb_walls" esES="Muros maya" />
+    <item id="game.right.walls.stone.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.stone.qstonewall" type="action" command="QUEUEANDPLACEAREA" parameter="qstonewall" />
+    <item id="game.right.walls.stone.qengravedstonewall" type="action" command="QUEUEANDPLACEAREA" parameter="qengravedstonewall" />
+    <item id="game.right.walls.stone.qengravedgreenwall" type="action" command="QUEUEANDPLACEAREA" parameter="qengravedgreenwall" />
+    <item id="game.right.walls.stone.qengravedredwall" type="action" command="QUEUEANDPLACEAREA" parameter="qengravedredwall" />
+    <item id="game.right.walls.stone.qengravedbluewall" type="action" command="QUEUEANDPLACEAREA" parameter="qengravedbluewall" />
+    <item id="game.right.walls.stone.qancientwall" type="action" command="QUEUEANDPLACEAREA" parameter="qancientwall" />
+    <item id="game.right.walls.stone.qstoneblock" type="action" command="QUEUEANDPLACEAREA" parameter="qstoneblock" />
+    <item id="game.right.walls.stone.qstoneblock2" type="action" command="QUEUEANDPLACEAREA" parameter="qstoneblock2" />
+    <item id="game.right.walls.stone.qancientblock" type="action" command="QUEUEANDPLACEAREA" parameter="qancientblock" />
+    <item id="game.right.walls.stone.qancientmossblock" type="action" command="QUEUEANDPLACEAREA" parameter="qancientmossblock" />
+    <item id="game.right.walls.stone.qwoodenstoneblock" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodenstoneblock" />
+    <item id="game.right.walls.stone.qflagblockyellow" type="action" command="QUEUEANDPLACEAREA" parameter="qflagblockyellow" />
+    <item id="game.right.walls.stone.qflagblockred" type="action" command="QUEUEANDPLACEAREA" parameter="qflagblockred" />
+    <item id="game.right.walls.stone.qflagblockwhite" type="action" command="QUEUEANDPLACEAREA" parameter="qflagblockwhite" />
+    <item id="game.right.walls.stone.qflagblockgray" type="action" command="QUEUEANDPLACEAREA" parameter="qflagblockgray" />
+    <item id="game.right.walls.stone.qlimestoneblock" type="action" command="QUEUEANDPLACEAREA" parameter="qlimestoneblock" />
+    <item id="game.right.walls.stone.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

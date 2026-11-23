@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.decorative" title="Decorative walls" esES="Muros decorativos">
+    <item id="game.right.walls.decorative.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.decorative.qhedge" type="action" command="QUEUEANDPLACEAREA" parameter="qhedge" />
+    <item id="game.right.walls.decorative.qbluehedge" type="action" command="QUEUEANDPLACEAREA" parameter="qbluehedge" />
+    <item id="game.right.walls.decorative.qredhedge" type="action" command="QUEUEANDPLACEAREA" parameter="qredhedge" />
+    <item id="game.right.walls.decorative.qyellowhedge" type="action" command="QUEUEANDPLACEAREA" parameter="qyellowhedge" />
+    <item id="game.right.walls.decorative.qhedgebrickfence" type="action" command="QUEUEANDPLACEAREA" parameter="qhedgebrickfence" />
+    <item id="game.right.walls.decorative.qfancybrickfence" type="action" command="QUEUEANDPLACEAREA" parameter="qfancybrickfence" />
+    <item id="game.right.walls.decorative.qgrassterrace" type="action" command="QUEUEANDPLACEAREA" parameter="qgrassterrace" />
+    <item id="game.right.walls.decorative.qpillar" type="action" command="QUEUEANDPLACEAREA" parameter="qpillar" />
+    <item id="game.right.walls.decorative.qlapedrera" type="action" command="QUEUEANDPLACEAREA" parameter="qlapedrera" />
+    <item id="game.right.walls.decorative.qlapedrera2" type="action" command="QUEUEANDPLACEAREA" parameter="qlapedrera2" />
+    <item id="game.right.walls.decorative.qcolombages" type="action" command="QUEUEANDPLACEAREA" parameter="qcolombages" />
+    <item id="game.right.walls.decorative.qcolombagesx" type="action" command="QUEUEANDPLACEAREA" parameter="qcolombagesx" />
+    <item id="game.right.walls.decorative.qironbars" type="action" command="QUEUEANDPLACEAREA" parameter="qironbars" />
+    <item id="game.right.walls.decorative.qflagblockwhitearc" type="action" command="QUEUEANDPLACEAREA" parameter="qflagblockwhitearc" />
+    <item id="game.right.walls.decorative.qroughbrickarc" type="action" command="QUEUEANDPLACEAREA" parameter="qroughbrickarc" />
+    <item id="game.right.walls.decorative.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

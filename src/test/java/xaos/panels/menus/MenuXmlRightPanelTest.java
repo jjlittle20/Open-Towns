@@ -21,391 +21,392 @@ import org.w3c.dom.NodeList;
 
 class MenuXmlRightPanelTest {
 
-    private static final String BASE = "data/menus/right/";
+        private static final String BASE = "data/menus/right/";
 
-    private static MenuDefinition load(String path)
-            throws Exception {
+        private static MenuDefinition load(String path)
+                        throws Exception {
 
-        URL resource = MenuXmlRightPanelTest.class
-                .getClassLoader()
-                .getResource(BASE + path);
+                URL resource = MenuXmlRightPanelTest.class
+                                .getClassLoader()
+                                .getResource(BASE + path);
 
-        assertNotNull(
-                resource,
-                "Missing XML resource: " + path);
+                assertNotNull(
+                                resource,
+                                "Missing XML resource: " + path);
 
-        return MenuXmlLoader.load(
-                Path.of(resource.toURI()).toFile());
-    }
-
-    @Test
-    void convertedMenusHaveStableIdsAndTargets()
-            throws Exception {
-
-        MenuDefinition root = load("root.xml");
-
-        MenuDefinition walls = load("walls/root.xml");
-
-        MenuDefinition log = load("walls/log.xml");
-
-        assertEquals("game.right.root", root.getId());
-
-        assertEquals(
-                "game.right.walls",
-                walls.getId());
-
-        assertEquals(
-                "game.right.walls.log",
-                log.getId());
-
-        // Root → Walls
-        MenuItemDefinition wallsLink = root.getItems().get(0);
-
-        assertEquals(
-                "submenu",
-                wallsLink.getType());
-
-        assertEquals(
-                walls.getId(),
-                wallsLink.getTargetMenu());
-
-        assertEquals(
-                "ui_rwalls",
-                wallsLink.getIcon());
-
-        // Walls → Log Walls
-        MenuItemDefinition logLink = walls.getItems().get(0);
-
-        assertEquals(
-                "submenu",
-                logLink.getType());
-
-        assertEquals(
-                log.getId(),
-                logLink.getTargetMenu());
-
-        assertEquals(
-                "ui_l_walls",
-                logLink.getIcon());
-
-        // Back navigation is a separate item.
-        assertEquals(
-                "back",
-                walls.getItems().get(1).getType());
-
-        assertEquals(
-                "back",
-                log.getItems().get(5).getType());
-    }
-
-    @Test
-    void logWallActionsMatchOriginalGameplayXml()
-            throws Exception {
-
-        // Read the original legacy XML.
-        InputStream stream = getClass()
-                .getClassLoader()
-                .getResourceAsStream(
-                        "data/menu_right.xml");
-
-        assertNotNull(stream);
-
-        Document document;
-
-        try (stream) {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-            factory.setFeature(
-                    "http://apache.org/xml/features/disallow-doctype-decl",
-                    true);
-
-            document = factory
-                    .newDocumentBuilder()
-                    .parse(stream);
+                return MenuXmlLoader.load(
+                                Path.of(resource.toURI()).toFile());
         }
 
-        Element walls = (Element) document
-                .getDocumentElement()
-                .getElementsByTagName("walls")
-                .item(0);
+        @Test
+        void convertedMenusHaveStableIdsAndTargets()
+                        throws Exception {
 
-        assertNotNull(walls);
+                MenuDefinition root = load("root.xml");
 
-        Element log = (Element) walls
-                .getElementsByTagName("log")
-                .item(0);
+                MenuDefinition walls = load("walls/root.xml");
 
-        assertNotNull(log);
+                MenuDefinition log = load("walls/log.xml");
 
-        // Read actions in original declaration order.
-        List<String> oldCommands = new ArrayList<>();
-        List<String> oldParameters = new ArrayList<>();
+                assertEquals("game.right.root", root.getId());
 
-        NodeList children = log.getChildNodes();
+                assertEquals(
+                                "game.right.walls",
+                                walls.getId());
 
-        for (int i = 0; i < children.getLength(); i++) {
+                assertEquals(
+                                "game.right.walls.log",
+                                log.getId());
 
-            Node node = children.item(i);
+                // Root → Walls
+                MenuItemDefinition wallsLink = root.getItems().get(0);
 
-            if (!(node instanceof Element element)
-                    || !"item".equals(element.getTagName())) {
-                continue;
-            }
+                assertEquals(
+                                "submenu",
+                                wallsLink.getType());
 
-            String command = element.getAttribute("code");
+                assertEquals(
+                                walls.getId(),
+                                wallsLink.getTargetMenu());
 
-            if ("BACK".equals(command)) {
-                continue;
-            }
+                assertEquals(
+                                "ui_rwalls",
+                                wallsLink.getIcon());
 
-            oldCommands.add(command);
-            oldParameters.add(
-                    element.getAttribute("parameter"));
+                // Walls → Log Walls
+                MenuItemDefinition logLink = walls.getItems().get(0);
+
+                assertEquals(
+                                "submenu",
+                                logLink.getType());
+
+                assertEquals(
+                                log.getId(),
+                                logLink.getTargetMenu());
+
+                assertEquals(
+                                "ui_l_walls",
+                                logLink.getIcon());
+
+                assertEquals(
+                                "back",
+                                walls.getItems()
+                                                .get(walls.getItems().size() - 1)
+                                                .getType());
+
+                assertEquals(
+                                "back",
+                                log.getItems().get(5).getType());
         }
 
-        // Read converted actions.
-        MenuDefinition converted = load("walls/log.xml");
+        @Test
+        void logWallActionsMatchOriginalGameplayXml()
+                        throws Exception {
 
-        List<MenuItemDefinition> actions = converted.getItems()
-                .stream()
-                .filter(item -> "action".equals(item.getType()))
-                .toList();
+                // Read the original legacy XML.
+                InputStream stream = getClass()
+                                .getClassLoader()
+                                .getResourceAsStream(
+                                                "data/menu_right.xml");
 
-        assertEquals(5, actions.size());
+                assertNotNull(stream);
 
-        // Commands and parameters must remain
-        // identical to the original Towns XML.
-        assertEquals(
-                oldCommands,
-                actions.stream()
-                        .map(MenuItemDefinition::getCommand)
-                        .toList());
+                Document document;
 
-        assertEquals(
-                oldParameters,
-                actions.stream()
-                        .map(MenuItemDefinition::getParameter)
-                        .toList());
+                try (stream) {
+                        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-        // The action IDs are new, stable,
-        // menu-specific identifiers.
-        assertEquals(
-                List.of(
-                        "game.right.walls.log.scaffold",
-                        "game.right.walls.log.wall",
-                        "game.right.walls.log.block",
-                        "game.right.walls.log.block2",
-                        "game.right.walls.log.diagonal-block"),
-                actions.stream()
-                        .map(MenuItemDefinition::getId)
-                        .toList());
-    }
+                        factory.setFeature(
+                                        "http://apache.org/xml/features/disallow-doctype-decl",
+                                        true);
 
-    @Test
-    void menuRegistryDiscoversConvertedBranch()
-            throws Exception {
+                        document = factory
+                                        .newDocumentBuilder()
+                                        .parse(stream);
+                }
 
-        URL resource = getClass()
-                .getClassLoader()
-                .getResource(BASE + "root.xml");
+                Element walls = (Element) document
+                                .getDocumentElement()
+                                .getElementsByTagName("walls")
+                                .item(0);
 
-        assertNotNull(resource);
+                assertNotNull(walls);
 
-        Path directory = Path.of(
-                resource.toURI()).getParent();
+                Element log = (Element) walls
+                                .getElementsByTagName("log")
+                                .item(0);
 
-        MenuManager manager = new MenuManager();
+                assertNotNull(log);
 
-        // Load this directory and its children.
-        manager.loadMenus(directory.toFile());
+                // Read actions in original declaration order.
+                List<String> oldCommands = new ArrayList<>();
+                List<String> oldParameters = new ArrayList<>();
 
-        assertTrue(
-                manager.hasMenu("game.right.root"));
+                NodeList children = log.getChildNodes();
 
-        assertTrue(
-                manager.hasMenu("game.right.walls"));
+                for (int i = 0; i < children.getLength(); i++) {
 
-        assertTrue(
-                manager.hasMenu("game.right.walls.log"));
+                        Node node = children.item(i);
 
-        // Verify the leaf menu is available
-        // through the common menu registry.
-        MenuDefinition log = manager.getMenu(
-                "game.right.walls.log");
+                        if (!(node instanceof Element element)
+                                        || !"item".equals(element.getTagName())) {
+                                continue;
+                        }
 
-        assertNotNull(log);
-        assertEquals(6, log.getItems().size());
-    }
+                        String command = element.getAttribute("code");
 
-    @Test
-    void convertedRightPanelHasValidSubmenuReferences()
-            throws Exception {
+                        if ("BACK".equals(command)) {
+                                continue;
+                        }
 
-        URL resource = getClass()
-                .getClassLoader()
-                .getResource(BASE + "root.xml");
+                        oldCommands.add(command);
+                        oldParameters.add(
+                                        element.getAttribute("parameter"));
+                }
 
-        assertNotNull(resource);
+                // Read converted actions.
+                MenuDefinition converted = load("walls/log.xml");
 
-        Path directory = Path.of(resource.toURI()).getParent();
+                List<MenuItemDefinition> actions = converted.getItems()
+                                .stream()
+                                .filter(item -> "action".equals(item.getType()))
+                                .toList();
 
-        MenuManager manager = new MenuManager();
+                assertEquals(5, actions.size());
 
-        manager.loadMenus(directory.toFile());
+                // Commands and parameters must remain
+                // identical to the original Towns XML.
+                assertEquals(
+                                oldCommands,
+                                actions.stream()
+                                                .map(MenuItemDefinition::getCommand)
+                                                .toList());
 
-        // Every reachable target must exist,
-        // with no duplicate IDs or circular links.
-        assertDoesNotThrow(() -> manager.validateMenuTree(
-                "game.right.root"));
+                assertEquals(
+                                oldParameters,
+                                actions.stream()
+                                                .map(MenuItemDefinition::getParameter)
+                                                .toList());
 
-        MenuDefinition root = manager.requireMenu("game.right.root");
+                // The action IDs are new, stable,
+                // menu-specific identifiers.
+                assertEquals(
+                                List.of(
+                                                "game.right.walls.log.scaffold",
+                                                "game.right.walls.log.wall",
+                                                "game.right.walls.log.block",
+                                                "game.right.walls.log.block2",
+                                                "game.right.walls.log.diagonal-block"),
+                                actions.stream()
+                                                .map(MenuItemDefinition::getId)
+                                                .toList());
+        }
 
-        MenuDefinition walls = manager.resolveSubmenu(
-                root.getItems().get(0));
+        @Test
+        void menuRegistryDiscoversConvertedBranch()
+                        throws Exception {
 
-        assertEquals(
-                "game.right.walls",
-                walls.getId());
+                URL resource = getClass()
+                                .getClassLoader()
+                                .getResource(BASE + "root.xml");
 
-        MenuDefinition log = manager.resolveSubmenu(
-                walls.getItems().get(0));
+                assertNotNull(resource);
 
-        assertEquals(
-                "game.right.walls.log",
-                log.getId());
+                Path directory = Path.of(
+                                resource.toURI()).getParent();
 
-        // Original five actions plus Back.
-        assertEquals(6, log.getItems().size());
+                MenuManager manager = new MenuManager();
 
-        assertEquals(
-                5,
-                log.getItems().stream()
-                        .filter(item -> "action".equals(item.getType()))
-                        .count());
-    }
+                // Load this directory and its children.
+                manager.loadMenus(directory.toFile());
 
-    @Test
-    void validationRejectsMissingSubmenuTarget(
-            @TempDir Path directory) throws Exception {
+                assertTrue(
+                                manager.hasMenu("game.right.root"));
 
-        Files.writeString(
-                directory.resolve("root.xml"),
-                """
-                        <menu id="test.root" title="Root">
+                assertTrue(
+                                manager.hasMenu("game.right.walls"));
 
-                            <item
-                                id="test.missing"
-                                type="submenu"
-                                title="Missing"
-                                targetMenu="test.not-found" />
+                assertTrue(
+                                manager.hasMenu("game.right.walls.log"));
 
-                        </menu>
-                        """);
+                // Verify the leaf menu is available
+                // through the common menu registry.
+                MenuDefinition log = manager.getMenu(
+                                "game.right.walls.log");
 
-        MenuManager manager = new MenuManager();
+                assertNotNull(log);
+                assertEquals(6, log.getItems().size());
+        }
 
-        manager.loadMenus(directory.toFile());
+        @Test
+        void convertedRightPanelHasValidSubmenuReferences()
+                        throws Exception {
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.validateMenuTree(
-                        "test.root"));
+                URL resource = getClass()
+                                .getClassLoader()
+                                .getResource(BASE + "root.xml");
 
-        assertTrue(
-                exception.getMessage().contains(
-                        "test.not-found"));
+                assertNotNull(resource);
 
-        assertTrue(
-                exception.getMessage().contains(
-                        "test.missing"));
-    }
+                Path directory = Path.of(resource.toURI()).getParent();
 
-    @Test
-    void validationRejectsCircularSubmenuReferences(
-            @TempDir Path directory) throws Exception {
+                MenuManager manager = new MenuManager();
 
-        Files.writeString(
-                directory.resolve("root.xml"),
-                """
-                        <menu id="test.root" title="Root">
+                manager.loadMenus(directory.toFile());
 
-                            <item
-                                id="test.root.to-child"
-                                type="submenu"
-                                title="Child"
-                                targetMenu="test.child" />
+                // Every reachable target must exist,
+                // with no duplicate IDs or circular links.
+                assertDoesNotThrow(() -> manager.validateMenuTree(
+                                "game.right.root"));
 
-                        </menu>
-                        """);
+                MenuDefinition root = manager.requireMenu("game.right.root");
 
-        Files.writeString(
-                directory.resolve("child.xml"),
-                """
-                        <menu id="test.child" title="Child">
+                MenuDefinition walls = manager.resolveSubmenu(
+                                root.getItems().get(0));
 
-                            <item
-                                id="test.child.to-root"
-                                type="submenu"
-                                title="Root"
-                                targetMenu="test.root" />
+                assertEquals(
+                                "game.right.walls",
+                                walls.getId());
 
-                        </menu>
-                        """);
+                MenuDefinition log = manager.resolveSubmenu(
+                                walls.getItems().get(0));
 
-        MenuManager manager = new MenuManager();
+                assertEquals(
+                                "game.right.walls.log",
+                                log.getId());
 
-        manager.loadMenus(directory.toFile());
+                // Original five actions plus Back.
+                assertEquals(6, log.getItems().size());
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.validateMenuTree(
-                        "test.root"));
+                assertEquals(
+                                5,
+                                log.getItems().stream()
+                                                .filter(item -> "action".equals(item.getType()))
+                                                .count());
+        }
 
-        assertTrue(
-                exception.getMessage().contains(
-                        "Circular submenu reference"));
-    }
+        @Test
+        void validationRejectsMissingSubmenuTarget(
+                        @TempDir Path directory) throws Exception {
 
-    @Test
-    void validationRejectsDuplicateItemIds(
-            @TempDir Path directory) throws Exception {
+                Files.writeString(
+                                directory.resolve("root.xml"),
+                                """
+                                                <menu id="test.root" title="Root">
 
-        Files.writeString(
-                directory.resolve("root.xml"),
-                """
-                        <menu id="test.root" title="Root">
+                                                    <item
+                                                        id="test.missing"
+                                                        type="submenu"
+                                                        title="Missing"
+                                                        targetMenu="test.not-found" />
 
-                            <item
-                                id="test.action"
-                                type="action"
-                                command="QUEUEANDPLACEAREA"
-                                parameter="qlogwall" />
+                                                </menu>
+                                                """);
 
-                            <item
-                                id="test.action"
-                                type="action"
-                                command="QUEUEANDPLACEAREA"
-                                parameter="qlogblock" />
+                MenuManager manager = new MenuManager();
 
-                        </menu>
-                        """);
+                manager.loadMenus(directory.toFile());
 
-        MenuManager manager = new MenuManager();
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.validateMenuTree(
+                                                "test.root"));
 
-        manager.loadMenus(directory.toFile());
+                assertTrue(
+                                exception.getMessage().contains(
+                                                "test.not-found"));
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> manager.validateMenuTree(
-                        "test.root"));
+                assertTrue(
+                                exception.getMessage().contains(
+                                                "test.missing"));
+        }
 
-        assertTrue(
-                exception.getMessage().contains(
-                        "Duplicate item ID"));
+        @Test
+        void validationRejectsCircularSubmenuReferences(
+                        @TempDir Path directory) throws Exception {
 
-        assertTrue(
-                exception.getMessage().contains(
-                        "test.action"));
-    }
+                Files.writeString(
+                                directory.resolve("root.xml"),
+                                """
+                                                <menu id="test.root" title="Root">
+
+                                                    <item
+                                                        id="test.root.to-child"
+                                                        type="submenu"
+                                                        title="Child"
+                                                        targetMenu="test.child" />
+
+                                                </menu>
+                                                """);
+
+                Files.writeString(
+                                directory.resolve("child.xml"),
+                                """
+                                                <menu id="test.child" title="Child">
+
+                                                    <item
+                                                        id="test.child.to-root"
+                                                        type="submenu"
+                                                        title="Root"
+                                                        targetMenu="test.root" />
+
+                                                </menu>
+                                                """);
+
+                MenuManager manager = new MenuManager();
+
+                manager.loadMenus(directory.toFile());
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.validateMenuTree(
+                                                "test.root"));
+
+                assertTrue(
+                                exception.getMessage().contains(
+                                                "Circular submenu reference"));
+        }
+
+        @Test
+        void validationRejectsDuplicateItemIds(
+                        @TempDir Path directory) throws Exception {
+
+                Files.writeString(
+                                directory.resolve("root.xml"),
+                                """
+                                                <menu id="test.root" title="Root">
+
+                                                    <item
+                                                        id="test.action"
+                                                        type="action"
+                                                        command="QUEUEANDPLACEAREA"
+                                                        parameter="qlogwall" />
+
+                                                    <item
+                                                        id="test.action"
+                                                        type="action"
+                                                        command="QUEUEANDPLACEAREA"
+                                                        parameter="qlogblock" />
+
+                                                </menu>
+                                                """);
+
+                MenuManager manager = new MenuManager();
+
+                manager.loadMenus(directory.toFile());
+
+                IllegalArgumentException exception = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.validateMenuTree(
+                                                "test.root"));
+
+                assertTrue(
+                                exception.getMessage().contains(
+                                                "Duplicate item ID"));
+
+                assertTrue(
+                                exception.getMessage().contains(
+                                                "test.action"));
+        }
 
 }

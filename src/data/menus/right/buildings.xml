@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.buildings" title="Buildings" esES="Edificios">
+    <item id="game.right.buildings.pigfarm" type="action" command="BUILD" icon="ui_pigfarm" parameter="pigfarm" />
+    <item id="game.right.buildings.cowfarm" type="action" command="BUILD" icon="ui_cowfarm" parameter="cowfarm" />
+    <item id="game.right.buildings.unifallowfarm" type="action" command="BUILD" icon="ui_unifallowfarm" parameter="unifallowfarm" />
+    <item id="game.right.buildings.skootenbeetenfarm" type="action" command="BUILD" icon="ui_skootenbeetenfarm" parameter="skootenbeetenfarm" />
+    <item id="game.right.buildings.chickenfarm" type="action" command="BUILD" icon="ui_chickenfarm" parameter="chickenfarm" />
+    <item id="game.right.buildings.badgerfarm" type="action" command="BUILD" icon="ui_badgerfarm" parameter="badgerfarm" />
+    <item id="game.right.buildings.sheepfarm" type="action" command="BUILD" icon="sheepfarm" parameter="sheepfarm" />
+    <item id="game.right.buildings.snoatfarm" type="action" command="BUILD" icon="snoatfarm" parameter="snoatfarm" />
+    <item id="game.right.buildings.mineshaft" type="action" command="BUILD" icon="ui_mineshaft" parameter="mineshaft" />
+    <item id="game.right.buildings.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

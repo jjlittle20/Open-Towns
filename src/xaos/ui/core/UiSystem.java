@@ -9,6 +9,7 @@ import xaos.ui.layout.UiSize;
 import xaos.ui.rendering.UiElementPainter;
 import xaos.ui.rendering.UiRenderer;
 import xaos.ui.rendering.UiSceneRenderer;
+import xaos.ui.rendering.UiTooltipPainter;
 import xaos.ui.theme.UiThemeRegistry;
 
 /**
@@ -98,24 +99,28 @@ public final class UiSystem {
     // Rendering
     // ------------------------------------------------------------
 
-    /**
-     * Renders the current UI tree.
-     *
-     * The caller provides a graphics backend and
-     * component painter.
-     *
-     * Call updateLayout() before rendering.
-     */
     public void render(
             UiRenderer renderer,
             UiElementPainter painter) {
 
+        Objects.requireNonNull(renderer, "renderer");
+        Objects.requireNonNull(painter, "painter");
+
+        // Render the normal component tree.
         UiSceneRenderer.render(
                 root(),
-                Objects.requireNonNull(
-                        renderer, "renderer"),
-                Objects.requireNonNull(
-                        painter, "painter"));
+                renderer,
+                painter);
+
+        // Draw the tooltip after everything else.
+        // This keeps it above all ordinary windows
+        // and avoids clipping it to its parent panel.
+        UiTooltipPainter.paint(
+                input.hoveredButton(),
+                input.pointerPosition(),
+                root().viewportSize(),
+                renderer,
+                themes.activeTheme());
     }
 
     // ------------------------------------------------------------

@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.right.root"
-      title="Construction">
-
-    <item
-        id="game.right.walls"
-        type="submenu"
-        title="Walls"
-        icon="ui_rwalls"
-        targetMenu="game.right.walls" />
-
+<menu id="game.right.root" title="Construction">
+    <item id="game.right.walls" type="submenu" title="Walls" targetMenu="game.right.walls" icon="ui_rwalls" esES="Muros" />
+    <item id="game.right.utils" type="submenu" title="Utilities" targetMenu="game.right.utils" icon="ui_rutils" esES="Útiles" />
+    <item id="game.right.seeding" type="submenu" title="Planting" targetMenu="game.right.seeding" icon="ui_wheatseedmenu" esES="Plantar" />
+    <item id="game.right.roadtiles" type="submenu" title="Roads" targetMenu="game.right.roadtiles" icon="ui_rroads" esES="Carreteras" />
+    <item id="game.right.furniture" type="submenu" title="Furniture" targetMenu="game.right.furniture" icon="ui_rfurniture" esES="Muebles" />
+    <item id="game.right.decorative" type="submenu" title="Decorative" targetMenu="game.right.decorative" icon="ui_rdecorative" esES="Decorativo" />
+    <item id="game.right.containers" type="submenu" title="Containers" targetMenu="game.right.containers" icon="ui_rcontainers" esES="Contenedores" />
+    <item id="game.right.buildings" type="submenu" title="Buildings" targetMenu="game.right.buildings" icon="ui_buildings" esES="Edificios" />
+    <item id="game.right.terraforming" type="submenu" title="Terraforming" targetMenu="game.right.terraforming" icon="ui_terraforming" esES="Terraforming" />
 </menu>

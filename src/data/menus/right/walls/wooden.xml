@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.walls.wooden" title="Wooden walls" esES="Muros de madera">
+    <item id="game.right.walls.wooden.qscaffold" type="action" command="QUEUEANDPLACEAREA" parameter="qscaffold" />
+    <item id="game.right.walls.wooden.qwoodenwall" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodenwall" />
+    <item id="game.right.walls.wooden.qwoodendarkwall" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodendarkwall" />
+    <item id="game.right.walls.wooden.qlightwoodblock" type="action" command="QUEUEANDPLACEAREA" parameter="qlightwoodblock" />
+    <item id="game.right.walls.wooden.qwoodenblock" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodenblock" />
+    <item id="game.right.walls.wooden.qwoodenmossblock" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodenmossblock" />
+    <item id="game.right.walls.wooden.qfarmfence" type="action" command="QUEUEANDPLACEAREA" parameter="qfarmfence" />
+    <item id="game.right.walls.wooden.qwhitefence" type="action" command="QUEUEANDPLACEAREA" parameter="qwhitefence" />
+    <item id="game.right.walls.wooden.qwoodsticks" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodsticks" />
+    <item id="game.right.walls.wooden.qwoodspikes" type="action" command="QUEUEANDPLACEAREA" parameter="qwoodspikes" />
+    <item id="game.right.walls.wooden.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

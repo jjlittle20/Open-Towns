@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.right.decorative.outdoor.statues" title="Statues and poles" esES="Estátuas y estacas">
+    <item id="game.right.decorative.outdoor.statues.qgoblinpole" type="action" command="QUEUEANDPLACE" parameter="qgoblinpole" />
+    <item id="game.right.decorative.outdoor.statues.qhobgoblinpole" type="action" command="QUEUEANDPLACE" parameter="qhobgoblinpole" />
+    <item id="game.right.decorative.outdoor.statues.qghoulpole" type="action" command="QUEUEANDPLACE" parameter="qghoulpole" />
+    <item id="game.right.decorative.outdoor.statues.qsnickerpole" type="action" command="QUEUEANDPLACE" parameter="qsnickerpole" />
+    <item id="game.right.decorative.outdoor.statues.qtrollpole" type="action" command="QUEUEANDPLACE" parameter="qtrollpole" />
+    <item id="game.right.decorative.outdoor.statues.qstonemalestatue" type="action" command="QUEUEANDPLACE" parameter="qstonemalestatue" />
+    <item id="game.right.decorative.outdoor.statues.qnecromancerstatue" type="action" command="QUEUEANDPLACE" parameter="qnecromancerstatue" />
+    <item id="game.right.decorative.outdoor.statues.qgargoylestatue" type="action" command="QUEUEANDPLACE" parameter="qgargoylestatue" />
+    <item id="game.right.decorative.outdoor.statues.qgoldnuxstatue" type="action" command="QUEUEANDPLACE" parameter="qgoldnuxstatue" />
+    <item id="game.right.decorative.outdoor.statues.qgoldunifallowstatue" type="action" command="QUEUEANDPLACE" parameter="qgoldunifallowstatue" />
+    <item id="game.right.decorative.outdoor.statues.qsiriancaesar" type="action" command="QUEUEANDPLACE" parameter="qsiriancaesar" />
+    <item id="game.right.decorative.outdoor.statues.qsilverskootenbeetenstatue" type="action" command="QUEUEANDPLACE" parameter="qsilverskootenbeetenstatue" />
+    <item id="game.right.decorative.outdoor.statues.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>
