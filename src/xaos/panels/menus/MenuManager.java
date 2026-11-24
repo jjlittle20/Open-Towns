@@ -34,6 +34,14 @@ public final class MenuManager {
 
     private final Map<String, MenuDefinition> menusById = new HashMap<>();
     private final Set<String> appliedExtensionIds = new HashSet<>();
+    /**
+     * Runtime-contributed items owned by this registry.
+     *
+     * Keep the actual item instance so an old
+     * registration cannot remove a newer one
+     * that happens to reuse the same ID.
+     */
+    private final Map<String, MenuItemDefinition> runtimeItems = new HashMap<>();
 
     public void loadMenus(File rootFolder) {
         if (rootFolder == null || !rootFolder.exists()) {
@@ -421,6 +429,147 @@ public final class MenuManager {
         throw new IllegalArgumentException(
                 "Legacy menu item not found: "
                         + itemId);
+    }
+
+    /**
+     * Adds one runtime action to an existing menu.
+     *
+     * This is an internal game-thread operation.
+     * The public API will dispatch calls here.
+     */
+    public void addRuntimeItem(
+            String menuId,
+            MenuItemDefinition item) {
+
+        Objects.requireNonNull(item, "item");
+
+        MenuDefinition original = requireMenu(menuId);
+
+        if (item.getId() == null
+                || item.getId().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Runtime item ID cannot be blank");
+        }
+
+        // The first public API milestone exposes
+        // actions only. Submenus and tabs follow.
+        if (!"action".equals(item.getType())
+                || !"MOD_ACTION".equals(item.getCommand())) {
+
+            throw new IllegalArgumentException(
+                    "Runtime menu item must be a MOD_ACTION");
+        }
+
+        String key = runtimeKey(menuId, item.getId());
+
+        // Check the flattened list too, so IDs
+        // inside tab groups cannot be duplicated.
+        for (MenuItemDefinition existing : original.getItems()) {
+
+            if (existing.getId().equals(item.getId())) {
+
+                throw new IllegalArgumentException(
+                        "Duplicate menu item ID: "
+                                + item.getId());
+            }
+        }
+
+        List<MenuContentDefinition> updatedContent = new ArrayList<>(original.getContent());
+
+        updatedContent.add(
+                defaultInsertionPoint(updatedContent),
+                item);
+
+        MenuDefinition updated = copyMenu(original, updatedContent);
+
+        // Commit both changes only after validation.
+        menusById.put(menuId, updated);
+        runtimeItems.put(key, item);
+    }
+
+    /**
+     * Removes only a runtime item registered through
+     * addRuntimeItem().
+     *
+     * Returns false when the registration is no
+     * longer present, or belongs to another handle.
+     */
+    public boolean removeRuntimeItem(
+            String menuId,
+            MenuItemDefinition item) {
+
+        Objects.requireNonNull(item, "item");
+
+        String key = runtimeKey(menuId, item.getId());
+
+        if (runtimeItems.get(key) != item) {
+            return false;
+        }
+
+        MenuDefinition original = menusById.get(menuId);
+
+        if (original == null) {
+            runtimeItems.remove(key);
+            return false;
+        }
+
+        List<MenuContentDefinition> updatedContent = new ArrayList<>(original.getContent());
+
+        boolean removed = updatedContent.removeIf(
+                content -> content == item);
+
+        if (!removed) {
+            runtimeItems.remove(key);
+            return false;
+        }
+
+        MenuDefinition updated = copyMenu(original, updatedContent);
+
+        menusById.put(menuId, updated);
+        runtimeItems.remove(key);
+
+        return true;
+    }
+
+    /**
+     * Rebuild both representations of a menu,
+     * preserving tab groups and menu metadata.
+     */
+    private static MenuDefinition copyMenu(
+            MenuDefinition original,
+            List<MenuContentDefinition> content) {
+
+        MenuDefinition updated = new MenuDefinition(
+                original.getId(),
+                original.getTitleKey(),
+                original.getTitle());
+
+        for (MenuContentDefinition entry : content) {
+
+            if (entry instanceof MenuItemDefinition item) {
+
+                updated.addItem(item);
+
+            } else if (entry instanceof MenuTabsDefinition tabs) {
+
+                updated.addTabs(tabs);
+
+            } else {
+
+                throw new IllegalStateException(
+                        "Unsupported menu content: " + entry);
+            }
+        }
+
+        return updated;
+    }
+
+    private static String runtimeKey(
+            String menuId,
+            String itemId) {
+
+        return menuId + "\u0000" + itemId;
     }
 
     /**
