@@ -540,4 +540,74 @@ class UiWindowManagerTest {
                                 panel.position());
         }
 
+        @Test
+        void unregisterRemovesWindowCompletely() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Mod Window");
+
+                manager.register(window);
+
+                assertTrue(manager.isManaged(window));
+
+                manager.unregister(window);
+
+                assertFalse(manager.isManaged(window));
+                assertFalse(manager.windows().contains(window));
+                assertFalse(window.isOpen());
+                assertNull(window.parent());
+        }
+
+        @Test
+        void unregisteredWindowCanBeRegisteredAgain() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Mod Window");
+
+                manager.register(window);
+                manager.unregister(window);
+
+                manager.register(window);
+                manager.open(window);
+
+                assertTrue(manager.isManaged(window));
+                assertTrue(window.isOpen());
+        }
+
+        @Test
+        void unregisterPreservesOtherWindows() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow first = new UiWindow("First");
+
+                UiWindow second = new UiWindow("Second");
+
+                manager.register(first);
+                manager.register(second);
+
+                manager.unregister(first);
+
+                assertEquals(
+                                List.of(second),
+                                manager.windows());
+
+                assertTrue(manager.isManaged(second));
+                assertFalse(manager.isManaged(first));
+        }
+
+        @Test
+        void unregisterRejectsUnknownWindow() {
+
+                UiWindowManager manager = new UiWindowManager();
+
+                UiWindow window = new UiWindow("Unknown");
+
+                assertThrows(
+                                IllegalArgumentException.class,
+                                () -> manager.unregister(window));
+        }
+
 }

@@ -21,6 +21,10 @@ import xaos.main.Game;
 import xaos.panels.CommandPanel;
 import xaos.panels.MainMenuPanel;
 import xaos.panels.menus.MenuExtensionDefinition.Contribution;
+import xaos.panels.menus.MenuLegacyPatch.Add;
+import xaos.panels.menus.MenuLegacyPatch.Clear;
+import xaos.panels.menus.MenuLegacyPatch.Remove;
+import xaos.panels.menus.MenuLegacyPatch.Replace;
 import xaos.utils.LanguageData;
 import xaos.utils.Messages;
 import xaos.utils.Utils;
@@ -285,6 +289,138 @@ public final class MenuManager {
             path.removeLast();
             visiting.remove(menuId);
         }
+    }
+
+    /**
+     * Applies legacy menu edits to one menu.
+     *
+     * All edits are performed on a working copy.
+     * If any edit fails, the registered definition
+     * remains unchanged.
+     *
+     * Only direct menu items are supported here.
+     * Modern tab extensions use applyExtension().
+     */
+    public void applyLegacyPatch(
+            MenuLegacyPatch patch) {
+
+        Objects.requireNonNull(patch, "patch");
+
+        MenuDefinition original = requireMenu(patch.menuId());
+
+        List<MenuContentDefinition> working = new ArrayList<>(original.getContent());
+
+        // Legacy right-hand menus do not use the
+        // new structured tabs system.
+        //
+        // Reject accidental edits to tab groups
+        // rather than silently corrupting them.
+        for (MenuContentDefinition content : working) {
+
+            if (!(content instanceof MenuItemDefinition)) {
+                throw new IllegalArgumentException(
+                        "Legacy patches cannot edit "
+                                + "menus containing tabs: "
+                                + original.getId());
+            }
+        }
+
+        for (MenuLegacyPatch.Edit edit : patch.edits()) {
+
+            if (edit instanceof Clear) {
+
+                working.clear();
+
+            } else if (edit instanceof Remove removal) {
+
+                int index = findLegacyItem(
+                        working,
+                        removal.itemId());
+
+                working.remove(index);
+
+            } else if (edit instanceof Replace replacement) {
+
+                int index = findLegacyItem(
+                        working,
+                        replacement.itemId());
+
+                working.set(
+                        index,
+                        replacement.item());
+
+            } else if (edit instanceof Add addition) {
+
+                String newId = addition.item().getId();
+
+                if (newId == null || newId.isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Legacy item ID cannot be blank");
+                }
+
+                for (MenuContentDefinition content : working) {
+
+                    MenuItemDefinition existing = (MenuItemDefinition) content;
+
+                    if (existing.getId()
+                            .equalsIgnoreCase(newId)) {
+
+                        throw new IllegalArgumentException(
+                                "Duplicate menu item ID: "
+                                        + newId);
+                    }
+                }
+
+                working.add(
+                        defaultInsertionPoint(working),
+                        addition.item());
+            }
+        }
+
+        // Rebuild both the structured and flattened
+        // representations together.
+        MenuDefinition updated = new MenuDefinition(
+                original.getId(),
+                original.getTitleKey(),
+                original.getTitle());
+
+        for (MenuContentDefinition content : working) {
+
+            updated.addItem(
+                    (MenuItemDefinition) content);
+        }
+
+        // Commit only after every operation succeeds.
+        menusById.put(
+                updated.getId(),
+                updated);
+    }
+
+    /**
+     * Legacy item matching is case-insensitive,
+     * matching the original SmartMenu behaviour.
+     *
+     * The future translator resolves old item
+     * IDs to stable IDs before calling this.
+     */
+    private static int findLegacyItem(
+            List<MenuContentDefinition> items,
+            String itemId) {
+
+        for (int i = 0; i < items.size(); i++) {
+
+            MenuItemDefinition item = (MenuItemDefinition) items.get(i);
+
+            if (item.getId()
+                    .equalsIgnoreCase(itemId)) {
+
+                return i;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "Legacy menu item not found: "
+                        + itemId);
     }
 
     /**

@@ -16,112 +16,138 @@ import xaos.ui.layout.UiSize;
  */
 public final class UiButtonPainter {
 
-    private UiButtonPainter() {}
-
-    public static void paint(
-            UiButton button,
-            UiRenderer renderer,
-            UiColor background,
-            UiColor border,
-            UiColor foreground) {
-
-        Objects.requireNonNull(button, "button");
-        Objects.requireNonNull(renderer, "renderer");
-        Objects.requireNonNull(background, "background");
-        Objects.requireNonNull(border, "border");
-        Objects.requireNonNull(foreground, "foreground");
-
-        UiRect bounds = button.bounds();
-
-        if (!button.visible()
-                || bounds.width() == 0
-                || bounds.height() == 0) {
-            return;
+        private UiButtonPainter() {
         }
 
-        // Draw the button background when requested.
-        if (button.backgroundVisible()) {
-            renderer.fillRect(bounds, border);
+        public static void paint(
+                        UiButton button,
+                        UiRenderer renderer,
+                        UiColor background,
+                        UiColor border,
+                        UiColor foreground) {
 
-            if (bounds.width() > 2 && bounds.height() > 2) {
-                renderer.fillRect(
-                        new UiRect(
-                                bounds.x() + 1,
-                                bounds.y() + 1,
-                                bounds.width() - 2,
-                                bounds.height() - 2),
-                        background);
-            }
+                paint(
+                                button,
+                                renderer,
+                                background,
+                                border,
+                                foreground,
+                                true);
         }
 
-        UiInsets padding = button.padding();
+        /**
+         * Paints button content with optional standard
+         * rectangular background.
+         *
+         * Sprite-based themes may draw their own background
+         * first and pass false here.
+         */
+        public static void paint(
+                        UiButton button,
+                        UiRenderer renderer,
+                        UiColor background,
+                        UiColor border,
+                        UiColor foreground,
+                        boolean drawStandardBackground) {
 
-        int innerWidth = Math.max(
-                0, bounds.width() - padding.horizontal());
+                Objects.requireNonNull(button, "button");
+                Objects.requireNonNull(renderer, "renderer");
+                Objects.requireNonNull(background, "background");
+                Objects.requireNonNull(border, "border");
+                Objects.requireNonNull(foreground, "foreground");
 
-        int innerHeight = Math.max(
-                0, bounds.height() - padding.vertical());
+                UiRect bounds = button.bounds();
 
-        UiSize textSize = button.measuredTextSize();
+                if (!button.visible()
+                                || bounds.width() == 0
+                                || bounds.height() == 0) {
+                        return;
+                }
 
-        UiSprite icon = button.icon();
+                // Draw the button background when requested.
+                if (drawStandardBackground
+                                && button.backgroundVisible()) {
+                        renderer.fillRect(bounds, border);
 
-        UiSize iconSize = icon == null
-                ? UiSize.ZERO
-                : button.iconSize();
+                        if (bounds.width() > 2 && bounds.height() > 2) {
+                                renderer.fillRect(
+                                                new UiRect(
+                                                                bounds.x() + 1,
+                                                                bounds.y() + 1,
+                                                                bounds.width() - 2,
+                                                                bounds.height() - 2),
+                                                background);
+                        }
+                }
 
-        int gap = icon != null && !button.text().isEmpty()
-                ? button.contentSpacing()
-                : 0;
+                UiInsets padding = button.padding();
 
-        int contentWidth = Math.addExact(
-                Math.addExact(iconSize.width(), textSize.width()),
-                gap);
+                int innerWidth = Math.max(
+                                0, bounds.width() - padding.horizontal());
 
-        int contentX = bounds.x() + padding.left()
-                + Math.max(0, (innerWidth - contentWidth) / 2);
+                int innerHeight = Math.max(
+                                0, bounds.height() - padding.vertical());
 
-        int contentY = bounds.y() + padding.top();
+                UiSize textSize = button.measuredTextSize();
 
-        // Prevent oversized content from drawing outside
-        // the button's allocated area.
-        renderer.pushClip(bounds);
+                UiSprite icon = button.icon();
 
-        try {
-            if (icon != null
-                    && iconSize.width() > 0
-                    && iconSize.height() > 0) {
+                UiSize iconSize = icon == null
+                                ? UiSize.ZERO
+                                : button.iconSize();
 
-                int iconY = contentY
-                        + Math.max(
-                                0,
-                                (innerHeight - iconSize.height()) / 2);
+                int gap = icon != null && !button.text().isEmpty()
+                                ? button.contentSpacing()
+                                : 0;
 
-                renderer.drawSprite(
-                        icon,
-                        new UiRect(
-                                contentX,
-                                iconY,
-                                iconSize.width(),
-                                iconSize.height()),
-                        foreground);
-            }
+                int contentWidth = Math.addExact(
+                                Math.addExact(iconSize.width(), textSize.width()),
+                                gap);
 
-            if (!button.text().isEmpty()) {
-                int textX = contentX + iconSize.width() + gap;
+                int contentX = bounds.x() + padding.left()
+                                + Math.max(0, (innerWidth - contentWidth) / 2);
 
-                int textY = contentY
-                        + Math.max(
-                                0,
-                                (innerHeight - textSize.height()) / 2);
+                int contentY = bounds.y() + padding.top();
 
-                renderer.drawText(
-                        button.text(),
-                        new UiPoint(textX, textY),
-                        foreground);
-            }
-        } finally {
-            renderer.popClip();
+                // Prevent oversized content from drawing outside
+                // the button's allocated area.
+                renderer.pushClip(bounds);
+
+                try {
+                        if (icon != null
+                                        && iconSize.width() > 0
+                                        && iconSize.height() > 0) {
+
+                                int iconY = contentY
+                                                + Math.max(
+                                                                0,
+                                                                (innerHeight - iconSize.height()) / 2);
+
+                                renderer.drawSprite(
+                                                icon,
+                                                new UiRect(
+                                                                contentX,
+                                                                iconY,
+                                                                iconSize.width(),
+                                                                iconSize.height()),
+                                                foreground);
+                        }
+
+                        if (!button.text().isEmpty()) {
+                                int textX = contentX + iconSize.width() + gap;
+
+                                int textY = contentY
+                                                + Math.max(
+                                                                0,
+                                                                (innerHeight - textSize.height()) / 2);
+
+                                renderer.drawText(
+                                                button.text(),
+                                                new UiPoint(textX, textY),
+                                                foreground);
+                        }
+                } finally {
+                        renderer.popClip();
+                }
         }
-    }
 }

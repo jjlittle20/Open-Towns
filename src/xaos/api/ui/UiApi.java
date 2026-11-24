@@ -10,28 +10,40 @@ import java.util.List;
  */
 public interface UiApi {
 
-    void showMessage(
-            UiMessageType type,
-            String message
-    );
+        void showMessage(
+                        UiMessageType type,
+                        String message);
 
-    default void showMessage(
-            String message
-    ) {
-        showMessage(
-                UiMessageType.SYSTEM,
-                message
-        );
-    }
+        default void showMessage(
+                        String message) {
+                showMessage(
+                                UiMessageType.SYSTEM,
+                                message);
+        }
 
-    void showInfoDialog(
-            String title,
-            List<String> lines
-    );
+        void showInfoDialog(
+                        String title,
+                        List<String> lines);
 
-    UiActionRegistration registerGameAction(
-            String id,
-            String label,
-            Runnable action
-    );
+        UiActionRegistration registerGameAction(
+                        String id,
+                        String label,
+                        Runnable action);
+
+        /**
+         * Creates a mod-owned UI window.
+         *
+         * The ID must be namespaced, for example:
+         * "example-mod:inventory".
+         *
+         * The window starts hidden.
+         *
+         * Track the returned handle through
+         * ModContext.worldResource() or resource()
+         * to ensure automatic cleanup.
+         */
+        UiWindowHandle createWindow(
+                        String id,
+                        String title);
+
 }

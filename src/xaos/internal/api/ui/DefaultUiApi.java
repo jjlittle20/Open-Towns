@@ -5,12 +5,14 @@ import java.util.List;
 import xaos.api.ui.UiActionRegistration;
 import xaos.api.ui.UiApi;
 import xaos.api.ui.UiMessageType;
+import xaos.api.ui.UiWindowHandle;
 import xaos.main.Game;
 import xaos.panels.CommandPanel;
 import xaos.panels.MessagesPanel;
 import xaos.panels.UI.UiDispatcher;
 import xaos.panels.menus.ContextMenu;
 import xaos.panels.menus.SmartMenu;
+import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.utils.UtilsGL;
 
 /**
@@ -91,8 +93,6 @@ public final class DefaultUiApi implements UiApi {
                 action);
     }
 
-    
-
     private static void showInfoDialogNow(
             String title,
             List<String> lines) {
@@ -155,4 +155,17 @@ public final class DefaultUiApi implements UiApi {
 
         Game.setContextMenu(dialog);
     }
+
+    @Override
+    public UiWindowHandle createWindow(
+            String id,
+            String title) {
+
+        return DefaultUiWindowHandle.create(
+                Game.uiSystem(),
+                TownsUiTextMetrics.INSTANCE,
+                id,
+                title);
+    }
+
 }

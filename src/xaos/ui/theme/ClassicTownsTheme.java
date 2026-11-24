@@ -10,6 +10,7 @@ import xaos.ui.rendering.UiNineSlice;
 import xaos.ui.rendering.UiRenderer;
 import xaos.ui.rendering.UiSprite;
 import xaos.ui.components.UiButton;
+import xaos.ui.components.UiButtonAppearance;
 import xaos.ui.rendering.UiButtonPainter;
 
 /**
@@ -23,6 +24,27 @@ import xaos.ui.rendering.UiButtonPainter;
 public final class ClassicTownsTheme implements UiTheme {
 
     public static final String UI2_ATLAS = "classic-ui2";
+
+    /**
+     * Original Towns gameplay button artwork.
+     *
+     * These source coordinates match graphics.ini:
+     *
+     * bottom_item = ui.png (0, 320, 64, 64)
+     * bottom_item_sm = ui.png (0, 256, 64, 64)
+     *
+     * TownsUiPresentation already knows how to
+     * resolve towns-legacy texture IDs.
+     */
+    private static final String LEGACY_UI_ATLAS = "towns-legacy:ui.png";
+
+    private static final UiSprite MENU_ACTION_BACKGROUND = new UiSprite(
+            LEGACY_UI_ATLAS,
+            new UiRect(0, 320, 64, 64));
+
+    private static final UiSprite MENU_SUBMENU_BACKGROUND = new UiSprite(
+            LEGACY_UI_ATLAS,
+            new UiRect(0, 256, 64, 64));
 
     private static final UiNineSlice WINDOW_BACKGROUND = new UiNineSlice(
             ui2(7, 2, 64, 64),
@@ -93,6 +115,61 @@ public final class ClassicTownsTheme implements UiTheme {
     public void paintButton(
             UiButton button,
             UiRenderer renderer) {
+
+        if (button.appearance() != UiButtonAppearance.STANDARD) {
+
+            UiRect bounds = button.bounds();
+
+            if (!button.visible()
+                    || bounds.width() <= 0
+                    || bounds.height() <= 0) {
+                return;
+            }
+
+            // The theme owns the background.
+            // Mods only supply their action's icon.
+            UiSprite background = button.appearance() == UiButtonAppearance.MENU_SUBMENU
+                    ? MENU_SUBMENU_BACKGROUND
+                    : MENU_ACTION_BACKGROUND;
+
+            renderer.drawSprite(
+                    background,
+                    bounds,
+                    UiColor.WHITE);
+
+            // The original circle stays visible
+            // even when the action is unavailable.
+            //
+            // Only the content is tinted to reflect
+            // the button's interaction state.
+            UiColor foreground;
+
+            if (!button.enabled()) {
+                foreground = UiColor.rgb(145, 140, 135);
+
+            } else if (button.pressed()) {
+                foreground = UiColor.rgb(255, 215, 135);
+
+            } else if (button.hovered()
+                    || button.selected()) {
+                foreground = UiColor.rgb(255, 240, 190);
+
+            } else {
+                foreground = UiColor.WHITE;
+            }
+
+            // Draw icon/text without adding a
+            // second rectangular background.
+            UiButtonPainter.paint(
+                    button,
+                    renderer,
+                    UiColor.BLACK,
+                    UiColor.BLACK,
+                    foreground,
+                    false);
+
+            return;
+        }
 
         UiColor background;
 

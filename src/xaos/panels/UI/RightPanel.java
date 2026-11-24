@@ -38,6 +38,40 @@ public class RightPanel {
 				scaledMenuPanelPoint);
 	}
 
+	/**
+	 * Draws the original Towns right-edge toggle
+	 * while the XML gameplay panel is in use.
+	 *
+	 * The legacy menu itself is not rendered.
+	 */
+	private static void renderXmlRightMenuToggle() {
+
+		Tile tile = Game.isXmlRightPanelActive()
+				? tileOpenRightMenuON
+				: tileOpenRightMenu;
+
+		Point point = xmlRightMenuTogglePoint();
+
+		GL11.glBindTexture(
+				GL11.GL_TEXTURE_2D,
+				tile.getTextureID());
+
+		GL11.glTexEnvf(
+				GL11.GL_TEXTURE_ENV,
+				GL11.GL_TEXTURE_ENV_MODE,
+				GL11.GL_MODULATE);
+
+		UtilsGL.glBegin(GL11.GL_QUADS);
+
+		drawScaledTile(
+				tile,
+				point,
+				ui(tile.getTileWidth()),
+				ui(tile.getTileHeight()));
+
+		UtilsGL.glEnd();
+	}
+
 	public static void renderMenuPanel(int mouseX, int mouseY, int mousePanel) {
 
 		// XML right-hand panel is replacing this renderer.
@@ -45,7 +79,10 @@ public class RightPanel {
 		// Keep the legacy panel and its state intact,
 		// allowing it to become visible again if the
 		// XML panel is closed or disabled.
-		if (Game.isXmlRightPanelActive()) {
+
+		if (Game.isXmlRightPanelMode()) {
+
+			renderXmlRightMenuToggle();
 			return;
 		}
 

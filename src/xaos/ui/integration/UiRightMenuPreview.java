@@ -13,11 +13,14 @@ import xaos.panels.menus.MenuItemDefinition;
 import xaos.panels.menus.MenuManager;
 
 import xaos.ui.components.UiButton;
+import xaos.ui.components.UiButtonAppearance;
 import xaos.ui.components.UiLabel;
 import xaos.ui.components.UiScrollContainer;
 import xaos.ui.components.UiWindow;
+import xaos.ui.core.UiButtonAvailabilityTracker;
 import xaos.ui.core.UiSystem;
 import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
+import xaos.ui.layout.UiGridLayout;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiSize;
@@ -31,20 +34,24 @@ import xaos.ui.rendering.UiSprite;
 import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
 
 /**
- * Temporary preview of XML-defined gameplay menus.
+ * XML-driven right-hand gameplay menu.
  *
- * Reads the same menu registry that mods extend.
+ * Uses the shared menu registry, including
+ * contributions from enabled mods.
  *
- * Does not execute gameplay commands or replace
- * the legacy RightPanel.
+ * Executes actions through an injected binding
+ * and can replace the legacy RightPanel.
  */
 public final class UiRightMenuPreview {
 
     public static final String ROOT_MENU = "game.right.root";
+    private static final int BUTTON_SIZE = 64;
+    private static final int ICON_SIZE = 52;
+    private static final int BUTTON_SPACING = 16;
 
     private final UiSystem ui;
     private final UiWindow window;
-    private final UiButton backButton;
+
     private final UiScrollContainer scroll;
 
     private final UiGameplayMenuResolver resolver;
@@ -76,6 +83,9 @@ public final class UiRightMenuPreview {
 
     private MenuManager menus;
     private String currentMenuId = ROOT_MENU;
+    private final UiButtonAvailabilityTracker availabilityTracker = new UiButtonAvailabilityTracker();
+    private Runnable clickFeedback = () -> {
+    };
 
     public UiRightMenuPreview(
             UiSystem ui,
@@ -92,8 +102,15 @@ public final class UiRightMenuPreview {
 
         window = new UiWindow("Right Menu Preview");
 
+        // The docked gameplay panel does not need
+        // a floating window's title bar.
+        //
+        // Hiding the container also removes its
+        // 24-pixel height from the window layout.
+        window.titleBar().setVisible(false);
+
         window.setPosition(new UiPoint(30, 80));
-        window.setUserSize(new UiSize(360, 440));
+        window.setUserSize(new UiSize(200, 440));
 
         window.setDraggable(true);
         window.setResizable(true);
@@ -106,17 +123,13 @@ public final class UiRightMenuPreview {
         window.content().setPadding(UiInsets.all(6));
         window.content().setSpacing(6);
 
-        backButton = new UiButton("Back", metrics);
-        backButton.setOnClick(this::goBack);
-
-        window.content().add(backButton);
-
-        window.content().add(new UiLabel(
-                "XML gameplay menu (in development)",
-                metrics));
-
         scroll = new UiScrollContainer();
-        scroll.content().setSpacing(4);
+
+        scroll.content().setLayoutStrategy(
+                new UiGridLayout(2, true));
+
+        scroll.content().setSpacing(
+                BUTTON_SPACING);
 
         window.content().add(scroll);
 
@@ -221,7 +234,10 @@ public final class UiRightMenuPreview {
     }
 
     private void rebuild() {
-
+        // Old buttons are about to be replaced.
+        // Their availability checks must not
+        // remain registered.
+        availabilityTracker.clear();
         scroll.content().clear();
         scroll.scrollTo(0);
 
@@ -229,15 +245,30 @@ public final class UiRightMenuPreview {
 
         window.setTitle(
                 "Actions: " + menuTitle(menu));
-
-        backButton.setEnabled(!history.isEmpty());
-
+        boolean addedBack = false;
         for (MenuItemDefinition item : menu.getItems()) {
 
             String type = item.getType();
 
-            if ("back".equals(type)
-                    || "spacer".equals(type)) {
+            if ("back".equals(type)) {
+                addedBack = true;
+                if (!history.isEmpty()) {
+
+                    UiButton button = createMenuButton(
+                            item,
+                            resolveTitle(item),
+                            UiButtonAppearance.MENU_ACTION);
+
+                    button.setOnClick(
+                            withClickFeedback(this::goBack));
+
+                    scroll.content().add(button);
+                }
+
+                continue;
+            }
+
+            if ("spacer".equals(type)) {
                 continue;
             }
 
@@ -247,8 +278,10 @@ public final class UiRightMenuPreview {
 
                 String target = item.getTargetMenu();
 
-                UiButton button = new UiButton(
-                        "> " + label, metrics);
+                UiButton button = createMenuButton(
+                        item,
+                        label,
+                        UiButtonAppearance.MENU_SUBMENU);
                 button.setTooltip(
                         label + "\nOpen submenu");
                 applyIcon(button, item);
@@ -259,29 +292,68 @@ public final class UiRightMenuPreview {
 
                 if (available) {
                     button.setOnClick(
-                            () -> navigate(target));
+                            withClickFeedback(
+                                    () -> navigate(target)));
                 }
 
                 scroll.content().add(button);
 
             } else if ("action".equals(type)) {
 
-                UiButton button = new UiButton(label, metrics);
-                button.setTooltip(
-                        resolveTooltip(item, label));
+                UiButton button = createMenuButton(
+                        item,
+                        label,
+                        UiButtonAppearance.MENU_ACTION);
+
+                final String constructionTooltip = resolveTooltip(item, label);
+
+                button.setTooltip(constructionTooltip);
+
                 applyIcon(button, item);
-                button.setEnabled(canExecute(item));
 
-                button.setOnClick(() -> {
+                availabilityTracker.track(
+                        button,
+                        () -> {
+                            UiActionAvailability availability = actionBinding.availability(item);
 
-                    // Availability might have changed
-                    // since the button was constructed.
-                    if (!canExecute(item)) {
-                        button.setEnabled(false);
-                        return;
-                    }
+                            button.setTooltip(
+                                    tooltipWithAvailability(
+                                            constructionTooltip,
+                                            availability));
+
+                            return availability.canExecute();
+                        },
+                        exception -> {
+                            button.setTooltip(
+                                    tooltipWithAvailability(
+                                            constructionTooltip,
+                                            UiActionAvailability.unknown(
+                                                    "Availability check failed. "
+                                                            + "See mod errors (F8).")));
+
+                            ModUiErrors.report(
+                                    "open-towns",
+                                    "Gameplay action availability",
+                                    "Failed to check " + item.getId(),
+                                    exception);
+                        });
+
+                button.setOnClick(withClickFeedback(() -> {
 
                     try {
+
+                        // Recheck immediately before execution.
+                        // The state may have changed since the
+                        // previous frame.
+                        if (!updateActionAvailability(
+                                button,
+                                item,
+                                constructionTooltip)) {
+
+                            button.setEnabled(false);
+                            return;
+                        }
+
                         actionBinding.execute(item);
 
                     } catch (RuntimeException exception) {
@@ -296,18 +368,63 @@ public final class UiRightMenuPreview {
                                         + ")",
                                 exception);
                     }
-                });
+                }));
 
                 scroll.content().add(button);
-
             } else {
+                UiButton unsupported = createMenuButton(
+                        item,
+                        label,
+                        UiButtonAppearance.MENU_ACTION);
 
-                // Preserve visibility of unsupported
-                // entries rather than losing them.
-                scroll.content().add(
-                        new UiLabel(label, metrics));
+                unsupported.setTooltip(
+                        label + "\nUnsupported menu entry");
+
+                unsupported.setEnabled(false);
+
+                scroll.content().add(unsupported);
             }
         }
+        // Provide navigation for mod-created menus
+        // that do not include an explicit Back item.
+        if (!history.isEmpty() && !addedBack) {
+
+            UiButton back = new UiButton("<", metrics);
+
+            back.setAppearance(
+                    UiButtonAppearance.MENU_ACTION);
+
+            back.setMinimumSize(
+                    new UiSize(BUTTON_SIZE, BUTTON_SIZE));
+
+            back.setPreferredSize(
+                    new UiSize(BUTTON_SIZE, BUTTON_SIZE));
+
+            back.setPadding(UiInsets.NONE);
+            back.setTooltip("Back");
+
+            back.setOnClick(
+                    withClickFeedback(this::goBack));
+
+            scroll.content().add(back);
+        }
+
+    }
+
+    /**
+     * Recheck visible gameplay actions without
+     * rebuilding the menu.
+     *
+     * Preserves navigation, button instances,
+     * tooltips and scroll position.
+     */
+    public void refreshActionAvailability() {
+
+        if (!window.isOpen()) {
+            return;
+        }
+
+        availabilityTracker.refresh();
     }
 
     /**
@@ -421,6 +538,45 @@ public final class UiRightMenuPreview {
     }
 
     /**
+     * Creates a fixed-size icon button for gameplay
+     * menus.
+     *
+     * The active theme determines its background
+     * appearance.
+     */
+    private UiButton createMenuButton(
+            MenuItemDefinition item,
+            String label,
+            UiButtonAppearance appearance) {
+
+        UiButton button = new UiButton("", metrics);
+
+        button.setAppearance(appearance);
+
+        button.setMinimumSize(
+                new UiSize(BUTTON_SIZE, BUTTON_SIZE));
+
+        button.setPreferredSize(
+                new UiSize(BUTTON_SIZE, BUTTON_SIZE));
+
+        // The icon is centred within the circle.
+        // Its maximum size is 52x52.
+        button.setPadding(UiInsets.NONE);
+
+        applyIcon(button, item);
+
+        // Do not make actions disappear when a
+        // mod forgets to provide an icon.
+        if (button.icon() == null) {
+            button.setText("?");
+        }
+
+        button.setTooltip(label);
+
+        return button;
+    }
+
+    /**
      * Attaches an icon from the menu definition
      * or its resolved gameplay definition.
      *
@@ -456,11 +612,11 @@ public final class UiRightMenuPreview {
 
             int iconWidth = Math.max(
                     1,
-                    sourceWidth * 32 / largest);
+                    sourceWidth * ICON_SIZE / largest);
 
             int iconHeight = Math.max(
                     1,
-                    sourceHeight * 32 / largest);
+                    sourceHeight * ICON_SIZE / largest);
 
             button.setIconSize(
                     new UiSize(iconWidth, iconHeight));
@@ -474,6 +630,103 @@ public final class UiRightMenuPreview {
                             + item.getId(),
                     exception);
         }
+    }
+
+    /**
+     * Combines ordinary construction information
+     * with the current availability result.
+     *
+     * Blocking reasons appear first so they remain
+     * visible even if a long tooltip is truncated.
+     */
+    static String tooltipWithAvailability(
+            String constructionTooltip,
+            UiActionAvailability availability) {
+
+        Objects.requireNonNull(
+                availability, "availability");
+
+        String base = constructionTooltip == null
+                ? ""
+                : constructionTooltip;
+
+        if (availability.canExecute()) {
+            return base;
+        }
+
+        String heading = switch (availability.status()) {
+
+            case UNAVAILABLE -> "Unavailable: ";
+
+            case UNKNOWN -> "Availability unknown: ";
+
+            case AVAILABLE -> "";
+        };
+
+        String explanation = heading + availability.reason();
+
+        if (base.isBlank()) {
+            return explanation;
+        }
+
+        return explanation + "\n\n" + base;
+    }
+
+    /**
+     * Updates one action's tooltip and returns
+     * whether it can currently be executed.
+     *
+     * Does not rebuild the button or its layout.
+     */
+    private boolean updateActionAvailability(
+            UiButton button,
+            MenuItemDefinition item,
+            String constructionTooltip) {
+
+        UiActionAvailability availability = Objects.requireNonNull(
+                actionBinding.availability(item),
+                "Action binding returned null availability");
+
+        String updatedTooltip = tooltipWithAvailability(
+                constructionTooltip,
+                availability);
+
+        // Avoid changing the tooltip unnecessarily
+        // on every availability refresh.
+        if (!Objects.equals(
+                button.tooltip(),
+                updatedTooltip)) {
+
+            button.setTooltip(updatedTooltip);
+        }
+
+        return availability.canExecute();
+    }
+
+    /**
+     * Installs click feedback for gameplay menu buttons.
+     *
+     * The UI framework does not depend directly
+     * on the game's sound implementation.
+     */
+    public void setClickFeedback(Runnable feedback) {
+
+        clickFeedback = Objects.requireNonNull(
+                feedback, "feedback");
+    }
+
+    /**
+     * Wraps an activated menu button's action
+     * with its click feedback.
+     */
+    private Runnable withClickFeedback(Runnable action) {
+
+        Objects.requireNonNull(action, "action");
+
+        return () -> {
+            clickFeedback.run();
+            action.run();
+        };
     }
 
 }

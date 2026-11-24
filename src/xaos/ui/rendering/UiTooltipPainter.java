@@ -21,7 +21,7 @@ public final class UiTooltipPainter {
     private static final int PADDING = 8;
     private static final int SCREEN_MARGIN = 8;
     private static final int MAX_TEXT_WIDTH = 420;
-    private static final int MAX_LINES = 18;
+    private static final int MAX_LINES = 28;
 
     private UiTooltipPainter() {
     }

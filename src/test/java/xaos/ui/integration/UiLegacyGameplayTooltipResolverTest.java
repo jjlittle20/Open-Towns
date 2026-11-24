@@ -132,4 +132,77 @@ class UiLegacyGameplayTooltipResolverTest {
                 "Walls",
                 resolver.apply(submenu, "Walls"));
     }
+
+    @Test
+    void workLocationsAndRepeatedStagesStayDistinct() {
+
+        var step1 = new UiLegacyQueueStepFormatter.Step(
+                4,
+                xaos.actions.QueueItem.TYPE_WAIT,
+                "38",
+                "Wait 38 base turns");
+
+        var step2 = new UiLegacyQueueStepFormatter.Step(
+                8,
+                xaos.actions.QueueItem.TYPE_WAIT,
+                "20",
+                "Wait 20 base turns");
+
+        var phases = List.of(
+                new UiLegacyQueuePhaseGrouper.Phase(
+                        1,
+                        UiLegacyQueuePhaseGrouper.PhaseKind.SETUP,
+                        "Reserve Mason Bench",
+                        List.of()),
+
+                new UiLegacyQueuePhaseGrouper.Phase(
+                        2,
+                        UiLegacyQueuePhaseGrouper.PhaseKind.WORK,
+                        "Work with Raw Stone at Mason Bench",
+                        List.of(step1)),
+
+                new UiLegacyQueuePhaseGrouper.Phase(
+                        3,
+                        UiLegacyQueuePhaseGrouper.PhaseKind.WORK,
+                        "Work with Green Colour or Green Gel"
+                                + " at Mason Bench",
+                        List.of(step2)));
+
+        var resolver = new UiLegacyGameplayTooltipResolver(
+                (command, parameter) -> new UiLegacyGameplayTooltipResolver.Details(
+                        List.of(),
+                        List.of(),
+                        List.of(
+                                "Raw Stone",
+                                "Green Colour or Green Gel"),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of("Mason Bench"),
+                        phases));
+
+        String tooltip = resolver.apply(
+                action("QUEUEANDPLACEAREA",
+                        "qengravedgreenwall"),
+                "Engraved Green Wall");
+
+        // Summary lists the location once.
+        assertTrue(tooltip.contains(
+                "Work locations:\n- Mason Bench"));
+
+        // The two separate work stages remain.
+        assertTrue(tooltip.contains(
+                "2. Work with Raw Stone at Mason Bench"
+                        + " (Wait 38 base turns)"));
+
+        assertTrue(tooltip.contains(
+                "3. Work with Green Colour or Green Gel"
+                        + " at Mason Bench"
+                        + " (Wait 20 base turns)"));
+
+        assertTrue(tooltip.contains(
+                "Item pickups:\n- Raw Stone"
+                        + "\n- Green Colour or Green Gel"));
+    }
+
 }

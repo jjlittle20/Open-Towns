@@ -220,6 +220,35 @@ public final class UiWindowManager {
 
     }
 
+    /**
+     * Permanently removes a window from this manager.
+     *
+     * Unlike close(), this detaches the window from
+     * the UI tree so it can be garbage-collected
+     * or registered with another manager.
+     *
+     * Callers must cancel any active input belonging
+     * to the window before unregistering it.
+     */
+    public void unregister(UiWindow window) {
+
+        requireManaged(window);
+
+        // Hide before detaching it.
+        window.close();
+
+        // Removing the child also clears its parent.
+        desktop.remove(window);
+
+        // Preserve modal stacking if another modal
+        // window remains open underneath.
+        UiWindow modal = activeModal();
+
+        if (modal != null) {
+            desktop.bringToFront(modal);
+        }
+    }
+
     // ------------------------------------------------------------
     // Stacking order
     // ------------------------------------------------------------

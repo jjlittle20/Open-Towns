@@ -104,6 +104,8 @@ import xaos.ui.integration.UiLegacyGameplayActionBinding;
 import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
 import xaos.ui.integration.UiLegacyGameplayTooltipResolver;
 import xaos.ui.integration.UiLegacyIconSprites;
+import xaos.ui.integration.UiLegacyRightMenuCompatibility;
+import xaos.ui.integration.UiRegisteredGameplayActionBinding;
 import xaos.ui.integration.UiRightMenuPreview;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
@@ -238,23 +240,64 @@ public final class Game {
 	private static final boolean USE_XML_RIGHT_PANEL = true;
 
 	private static UiRightMenuPreview rightMenuPreview;
+	/**
+	 * True when the active game has legacy
+	 * campaign, mission or mod menu overrides.
+	 *
+	 * The original panel must remain in use
+	 * until those overrides are supported by
+	 * the replacement XML menu system.
+	 */
+	private static boolean legacyRightMenuOverridesPresent;
 
 	/**
-	 * Whether the XML right-hand panel currently
-	 * replaces the original panel.
+	 * Whether the XML right panel is responsible
+	 * for this part of the gameplay UI.
 	 *
-	 * If the player closes the XML window, this
-	 * immediately becomes false and the legacy
-	 * panel can be used again.
+	 * Remains true even when the player hides
+	 * the panel using the right-edge toggle.
 	 */
-	public static boolean isXmlRightPanelActive() {
+	public static boolean isXmlRightPanelMode() {
 
 		return USE_XML_RIGHT_PANEL
+				&& !legacyRightMenuOverridesPresent
 				&& rightMenuPreview != null
-				&& rightMenuPreview.window().isOpen()
+				&& gameplayMenus != null
+				&& gameplayMenus.hasMenu(
+						UiRightMenuPreview.ROOT_MENU)
 				&& getWorld() != null
 				&& getPanelMainMenu() != null
 				&& !getPanelMainMenu().isActive();
+	}
+
+	/**
+	 * Whether the XML panel is currently visible.
+	 */
+	public static boolean isXmlRightPanelActive() {
+
+		return isXmlRightPanelMode()
+				&& rightMenuPreview.window().isOpen();
+	}
+
+	/**
+	 * Open or close the XML gameplay panel using
+	 * the original Towns right-edge toggle.
+	 */
+	public static void toggleXmlRightPanel() {
+
+		if (!isXmlRightPanelMode()) {
+			return;
+		}
+
+		if (rightMenuPreview.window().isOpen()) {
+
+			UI_SYSTEM.cancelInput();
+			rightMenuPreview.close();
+
+		} else {
+
+			rightMenuPreview.open();
+		}
 	}
 
 	/**
@@ -315,11 +358,15 @@ public final class Game {
 				Math.max(0,
 						availableHeight - bottom - 100));
 
+		int toggleWidth = xaos.panels.UI.UIPanelScaler.ui(
+				tileOpenRightMenu.getTileWidth());
+
 		return new UiInsets(
 				top,
-				8,
+				toggleWidth,
 				bottom,
 				8);
+
 	}
 
 	// ------------------------------------------------------------
@@ -368,19 +415,49 @@ public final class Game {
 		return system;
 	}
 
-	/**
-	 * Rebuilds the gameplay menu registry using
-	 * the currently enabled mods.
-	 *
-	 * Each call creates a new registry, avoiding
-	 * duplicate registrations across world loads.
-	 */
 	private static void reloadGameplayMenus() {
 
+		// Load the new built-in menu registry and
+		// modern mod extensions as before.
 		gameplayMenus = ModUiMenuLoader.load(
 				new File("data/menus/right"),
 				new File(getUserFolder(), MODS_FOLDER1),
 				List.copyOf(getModsLoaded()));
+
+		legacyRightMenuOverridesPresent = false;
+
+		World activeWorld = getWorld();
+
+		if (activeWorld == null) {
+			return;
+		}
+
+		// Resolve the same legacy menu layers used
+		// by SmartMenu.readXMLMenu().
+		//
+		// This includes base, campaign, mission
+		// and enabled legacy mod files.
+		var legacyFiles = Utils.getPathToFile(
+				"menu_right.xml",
+				activeWorld.getCampaignID(),
+				activeWorld.getMissionID());
+
+		File baseMenu = new File(
+				Towns.getPropertiesString("DATA_FOLDER")
+						+ "menu_right.xml");
+
+		legacyRightMenuOverridesPresent = UiLegacyRightMenuCompatibility.hasOverrides(
+				baseMenu,
+				legacyFiles);
+
+		if (legacyRightMenuOverridesPresent) {
+
+			Log.log(
+					Log.LEVEL_DEBUG,
+					"Legacy right-menu overrides detected. "
+							+ "Using the original gameplay panel.",
+					"UI Compatibility");
+		}
 	}
 
 	/**
@@ -1941,9 +2018,11 @@ public final class Game {
 
 				boolean inGameplay = getWorld() != null
 						&& !getPanelMainMenu().isActive()
+						&& !legacyRightMenuOverridesPresent
 						&& gameplayMenus != null
 						&& gameplayMenus.hasMenu(
 								UiRightMenuPreview.ROOT_MENU);
+
 				if (inGameplay) {
 
 					if (rightMenuPreview == null) {
@@ -1952,7 +2031,7 @@ public final class Game {
 								Messages::getString,
 								new UiLegacyGameplayDefinitionLookup());
 
-						// 1. Create the panel first.
+						// Create the panel first.
 						rightMenuPreview = new UiRightMenuPreview(
 								UI_SYSTEM,
 								gameplayMenus,
@@ -1960,11 +2039,13 @@ public final class Game {
 								TownsUiTextMetrics.INSTANCE,
 								Messages::getString);
 
-						// 2. Install gameplay actions.
-						rightMenuPreview.setActionBinding(
-								new UiLegacyGameplayActionBinding());
+						// Install gameplay actions.
 
-						// 3. Install the icon resolver.
+						rightMenuPreview.setActionBinding(
+								new UiRegisteredGameplayActionBinding(
+										new UiLegacyGameplayActionBinding()));
+
+						// Install the icon resolver.
 						UiLegacyIconSprites legacyIcons = UiLegacyIconSprites.fromGraphicsIni();
 
 						rightMenuPreview.setIconResolver(
@@ -1974,7 +2055,12 @@ public final class Game {
 						rightMenuPreview.setTooltipResolver(
 								new UiLegacyGameplayTooltipResolver());
 
-						// 4. Now it is safe to dock the panel.
+						// Use the same UI click effect as original Towns.
+						rightMenuPreview.setClickFeedback(
+								() -> UtilsAL.play(
+										UtilsAL.SOURCE_FX_CLICK));
+
+						// Now it is safe to dock the panel.
 						rightMenuPreview.dockRight(
 								xmlRightPanelInsets());
 
@@ -2547,6 +2633,16 @@ public final class Game {
 				// // Info panel
 				// getCurrentInfoPanel().render();
 			}
+		}
+
+		// Refresh gameplay action availability
+		// without rebuilding the XML menu.
+		//
+		// The helper checks that the world and
+		// replacement panel are both active.
+		if (isXmlRightPanelActive()) {
+
+			rightMenuPreview.refreshActionAvailability();
 		}
 
 		// ------------------------------------------------------------

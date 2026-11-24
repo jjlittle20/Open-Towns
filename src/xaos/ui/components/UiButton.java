@@ -31,7 +31,7 @@ public class UiButton extends UiElement implements UiFocusable {
     private boolean backgroundVisible;
     private String tooltip;
     private UiTextMetrics tooltipMetrics;
-
+    private UiButtonAppearance appearance = UiButtonAppearance.STANDARD;
     private Runnable onClick = () -> {
     };
 
@@ -241,6 +241,27 @@ public class UiButton extends UiElement implements UiFocusable {
 
     public void setBackgroundVisible(boolean visible) {
         backgroundVisible = visible;
+    }
+
+    /**
+     * Semantic appearance requested by this button.
+     *
+     * The theme controls the actual artwork.
+     */
+    public UiButtonAppearance appearance() {
+        return appearance;
+    }
+
+    public void setAppearance(
+            UiButtonAppearance appearance) {
+
+        UiButtonAppearance next = Objects.requireNonNull(
+                appearance, "appearance");
+
+        if (this.appearance != next) {
+            this.appearance = next;
+            invalidateLayout();
+        }
     }
 
     // ------------------------------------------------------------

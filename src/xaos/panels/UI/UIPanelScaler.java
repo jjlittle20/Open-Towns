@@ -118,20 +118,42 @@ public final class UIPanelScaler {
 				&& mouseY >= point.y
 				&& mouseY < point.y + height;
 	}
-    public static Point anchorFromCentreXAndBottom(Point originalPoint, int originalWidth, int originalHeight,
-		int scaledWidth, int scaledHeight) {
-	int originalCentreX = originalPoint.x + (originalWidth / 2);
-	int originalBottomY = originalPoint.y + originalHeight;
 
-	return new Point(
-			originalCentreX - (scaledWidth / 2),
-			originalBottomY - scaledHeight);
-}
-public static Point anchorFromRight(Point originalPoint, int originalWidth, int scaledWidth) {
-	int originalRightX = originalPoint.x + originalWidth;
+	public static Point anchorFromCentreXAndBottom(Point originalPoint, int originalWidth, int originalHeight,
+			int scaledWidth, int scaledHeight) {
+		int originalCentreX = originalPoint.x + (originalWidth / 2);
+		int originalBottomY = originalPoint.y + originalHeight;
 
-	return new Point(
-			originalRightX - scaledWidth,
-			originalPoint.y);
-}
+		return new Point(
+				originalCentreX - (scaledWidth / 2),
+				originalBottomY - scaledHeight);
+	}
+
+	public static Point anchorFromRight(Point originalPoint, int originalWidth, int scaledWidth) {
+		int originalRightX = originalPoint.x + originalWidth;
+
+		return new Point(
+				originalRightX - scaledWidth,
+				originalPoint.y);
+	}
+
+	/**
+	 * Position the original Towns right-menu toggle
+	 * against the right edge of the screen.
+	 *
+	 * Shared by rendering and mouse hit testing
+	 * so both use exactly the same coordinates.
+	 */
+	public static Point xmlRightMenuTogglePoint() {
+
+		Tile tile = UIPanelState.tileOpenRightMenu;
+
+		int width = ui(tile.getTileWidth());
+		int height = ui(tile.getTileHeight());
+
+		return new Point(
+				UtilsGL.getWidth() - width,
+				(UtilsGL.getHeight() - height) / 2);
+	}
+
 }

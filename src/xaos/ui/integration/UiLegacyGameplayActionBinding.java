@@ -29,7 +29,14 @@ public final class UiLegacyGameplayActionBinding
     @Override
     public boolean isAvailable(MenuItemDefinition item) {
 
-        return canExecute(
+        return availability(item).canExecute();
+    }
+
+    @Override
+    public UiActionAvailability availability(
+            MenuItemDefinition item) {
+
+        return determineAvailability(
                 item,
                 Game.getWorld() != null,
                 id -> ActionManager.getItem(id) != null,
@@ -37,11 +44,8 @@ public final class UiLegacyGameplayActionBinding
     }
 
     /**
-     * Separates availability decisions from
-     * game state so they can be unit tested.
-     *
-     * This checks definition existence, not
-     * resource or building prerequisites.
+     * Preserves the existing boolean helper used
+     * by earlier tests.
      */
     static boolean canExecute(
             MenuItemDefinition item,
@@ -49,27 +53,84 @@ public final class UiLegacyGameplayActionBinding
             Predicate<String> actionExists,
             Predicate<String> buildingExists) {
 
-        if (item == null
-                || !"action".equals(item.getType())
-                || !worldLoaded
-                || !hasText(item.getParameter())) {
+        return determineAvailability(
+                item,
+                worldLoaded,
+                actionExists,
+                buildingExists).canExecute();
+    }
 
-            return false;
+    /**
+     * Converts legacy availability checks into
+     * explanatory results.
+     *
+     * Only checks supported commands, loaded world
+     * and definition existence.
+     *
+     * Missing construction materials are NOT
+     * grounds for disabling an action.
+     */
+    static UiActionAvailability determineAvailability(
+            MenuItemDefinition item,
+            boolean worldLoaded,
+            Predicate<String> actionExists,
+            Predicate<String> buildingExists) {
+
+        if (item == null) {
+
+            return UiActionAvailability.blocked(
+                    "Invalid gameplay action.");
+        }
+
+        if (!"action".equals(item.getType())) {
+
+            return UiActionAvailability.blocked(
+                    "This menu entry is not an action.");
+        }
+
+        if (!worldLoaded) {
+
+            return UiActionAvailability.blocked(
+                    "No game world is loaded.");
         }
 
         String command = canonicalCommand(item.getCommand());
 
         if (command == null) {
-            return false;
+
+            return UiActionAvailability.blocked(
+                    "Unsupported gameplay command: "
+                            + item.getCommand());
+        }
+
+        String id = item.getParameter();
+
+        if (!hasText(id)) {
+
+            return UiActionAvailability.blocked(
+                    "Missing gameplay definition ID.");
         }
 
         if (CommandPanel.COMMAND_BUILD.equals(command)) {
-            return buildingExists.test(
-                    item.getParameter());
+
+            if (!buildingExists.test(id)) {
+
+                return UiActionAvailability.blocked(
+                        "Building definition not found: "
+                                + id);
+            }
+
+            return UiActionAvailability.allowed();
         }
 
-        return actionExists.test(
-                item.getParameter());
+        if (!actionExists.test(id)) {
+
+            return UiActionAvailability.blocked(
+                    "Construction action not found: "
+                            + id);
+        }
+
+        return UiActionAvailability.allowed();
     }
 
     /**

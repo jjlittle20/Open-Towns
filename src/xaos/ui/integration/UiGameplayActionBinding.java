@@ -43,4 +43,25 @@ public interface UiGameplayActionBinding {
             }
         };
     }
+
+    /**
+     * Provides a reason when an action cannot
+     * currently be used.
+     *
+     * Existing bindings remain compatible because
+     * this delegates to their boolean availability
+     * check by default.
+     */
+    default UiActionAvailability availability(
+            MenuItemDefinition item) {
+
+        if (isAvailable(item)) {
+            return UiActionAvailability.allowed();
+        }
+
+        return UiActionAvailability.unknown(
+                "This action did not provide "
+                        + "an availability reason.");
+    }
+
 }

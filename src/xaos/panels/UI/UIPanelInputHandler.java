@@ -59,6 +59,9 @@ public class UIPanelInputHandler {
 	}
 
 	private static Point getScaledRightMenuOpenClosePoint() {
+		if (Game.isXmlRightPanelMode()) {
+			return UIPanelScaler.xmlRightMenuTogglePoint();
+		}
 		return UIPanelScaler.scalePointFromAnchor(
 				UIPanelState.tileOpenCloseRightMenuPoint,
 				UIPanelState.menuPanelPoint,
@@ -1506,11 +1509,24 @@ public class UIPanelInputHandler {
 		}
 
 		// MENU
+
 		if (iPanel == MOUSE_MENU_OPENCLOSE) {
-			setMenuPanelLocked(!isMenuPanelLocked());
+
+			if (Game.isXmlRightPanelMode()) {
+
+				Game.toggleXmlRightPanel();
+
+			} else {
+
+				// Original Towns behaviour when the
+				// legacy panel is in use.
+				setMenuPanelLocked(!isMenuPanelLocked());
+			}
+
 			UtilsAL.play(UtilsAL.SOURCE_FX_CLICK);
 			return;
 		}
+
 		if (isMenuPanelActive()) {
 			if (iPanel == MOUSE_MENU_PANEL_ITEMS) {
 				if (mouseButton == 1) { // Botón derecho (back al menú)
@@ -2204,7 +2220,19 @@ public class UIPanelInputHandler {
 			}
 		}
 		// MENU (right)
-		if (!Game.isXmlRightPanelActive()
+
+		// The XML panel's toggle remains clickable
+		// even when the panel itself is hidden.
+		if (Game.isXmlRightPanelMode()) {
+
+			if (isMouseOnRightMenuOpenClose(
+					x, y, tileOpenRightMenu)) {
+
+				return MOUSE_MENU_OPENCLOSE;
+			}
+		}
+
+		if (!Game.isXmlRightPanelMode()
 				&& isMenuPanelActive()) {
 			if (isMouseOnMenuItems(x, y) != -1) {
 				if (doEdgeMenusStuff) {
@@ -2241,7 +2269,7 @@ public class UIPanelInputHandler {
 					}
 				}
 			}
-		} else if (!Game.isXmlRightPanelActive()) {
+		} else if (!Game.isXmlRightPanelMode()) {
 			if (doEdgeMenusStuff) {
 				if (isMouseOnRightMenuOpenClose(x, y, tileOpenRightMenu)) {
 					setMenuPanelActive(true);

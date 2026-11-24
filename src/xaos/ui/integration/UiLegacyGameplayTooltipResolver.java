@@ -23,7 +23,7 @@ import xaos.tiles.entities.items.ItemManagerItem;
 import xaos.tiles.entities.living.LivingEntityManager;
 import xaos.tiles.entities.living.LivingEntityManagerItem;
 import xaos.tiles.terrain.TerrainManager;
-
+import xaos.ui.integration.UiLegacyQueuePhaseGrouper.Phase;
 import xaos.utils.Messages;
 import xaos.utils.Utils;
 import xaos.utils.UtilsIniHeaders;
@@ -42,19 +42,15 @@ import xaos.zones.ZoneManagerItem;
 public final class UiLegacyGameplayTooltipResolver
         implements BiFunction<MenuItemDefinition, String, String> {
 
-    /**
-     * Structured tooltip information.
-     *
-     * Keeping these categories separate allows
-     * future UI themes to render them differently.
-     */
     public record Details(
             List<String> descriptions,
             List<String> materials,
             List<String> requiredItems,
             List<String> requiredCreatures,
             List<String> zones,
-            List<String> habitats) {
+            List<String> habitats,
+            List<String> workLocations,
+            List<Phase> phases) {
 
         public Details {
             descriptions = clean(descriptions);
@@ -63,6 +59,34 @@ public final class UiLegacyGameplayTooltipResolver
             requiredCreatures = clean(requiredCreatures);
             zones = clean(zones);
             habitats = clean(habitats);
+            workLocations = clean(workLocations);
+
+            phases = phases == null
+                    ? List.of()
+                    : List.copyOf(phases);
+        }
+
+        /**
+         * Preserve the existing constructor used
+         * by building tooltips and unit tests.
+         */
+        public Details(
+                List<String> descriptions,
+                List<String> materials,
+                List<String> requiredItems,
+                List<String> requiredCreatures,
+                List<String> zones,
+                List<String> habitats) {
+
+            this(
+                    descriptions,
+                    materials,
+                    requiredItems,
+                    requiredCreatures,
+                    zones,
+                    habitats,
+                    List.of(),
+                    List.of());
         }
     }
 
@@ -120,13 +144,70 @@ public final class UiLegacyGameplayTooltipResolver
         }
 
         append(lines, "Materials", details.materials());
-        append(lines, "Required items", details.requiredItems());
-        append(lines, "Required creatures",
+
+        // Queue actions describe pickup operations.
+        // Building definitions describe prerequisites.
+        boolean hasConstructionProcess = !details.phases().isEmpty();
+
+        append(
+                lines,
+                hasConstructionProcess
+                        ? "Item pickups"
+                        : "Required items",
+                details.requiredItems());
+
+        append(
+                lines,
+                hasConstructionProcess
+                        ? "Creature pickups"
+                        : "Required creatures",
                 details.requiredCreatures());
+
+        append(lines, "Work locations",
+                details.workLocations());
         append(lines, "Required zones", details.zones());
         append(lines, "Habitat", details.habitats());
 
+        // Show the sequence in which the townie
+        // performs the work.
+        if (!details.phases().isEmpty()) {
+
+            lines.add("");
+            lines.add("Construction process:");
+
+            for (Phase phase : details.phases()) {
+                lines.add(formatPhase(phase));
+            }
+        }
+
         return String.join("\n", lines);
+    }
+
+    /**
+     * Include waiting/work durations where present.
+     *
+     * We use the formatter's existing descriptions,
+     * so the phase remains independent of rendering.
+     */
+    private static String formatPhase(Phase phase) {
+
+        List<String> durations = new ArrayList<>();
+
+        for (var step : phase.steps()) {
+
+            if (step.queueType() == QueueItem.TYPE_WAIT) {
+                durations.add(step.description());
+            }
+        }
+
+        String result = phase.number() + ". " + phase.title();
+
+        if (!durations.isEmpty()) {
+            result += " (" + String.join(
+                    ", ", durations) + ")";
+        }
+
+        return result;
     }
 
     private static Details fromLegacy(
@@ -161,6 +242,7 @@ public final class UiLegacyGameplayTooltipResolver
         if (action == null) {
             return null;
         }
+        List<String> workLocations = new ArrayList<>();
 
         List<String> descriptions = new ArrayList<>();
         List<String> materials = new ArrayList<>();
@@ -177,25 +259,16 @@ public final class UiLegacyGameplayTooltipResolver
 
                 switch (step.getType()) {
 
-                    case QueueItem.TYPE_MOVE -> {
-                        addAlternatives(
-                                materials,
+                    case QueueItem.TYPE_MOVE,
+                            QueueItem.TYPE_LOCK -> {
+
+                        // MOVE and LOCK identify locations
+                        // used during the process, not items
+                        // necessarily consumed as materials.
+                        addUniqueAlternatives(
+                                workLocations,
                                 step.getValue(),
                                 UiLegacyGameplayTooltipResolver::itemName);
-                    }
-
-                    case QueueItem.TYPE_PICK -> {
-                        addAlternatives(
-                                requiredItems,
-                                step.getValue(),
-                                UiLegacyGameplayTooltipResolver::itemName);
-                    }
-
-                    case QueueItem.TYPE_PICK_FRIENDLY -> {
-                        addAlternatives(
-                                requiredCreatures,
-                                step.getValue(),
-                                UiLegacyGameplayTooltipResolver::creatureName);
                     }
 
                     case QueueItem.TYPE_CREATE_ITEM -> {
@@ -272,13 +345,47 @@ public final class UiLegacyGameplayTooltipResolver
             }
         }
 
+        List<Phase> phases = List.of();
+
+        if (queue != null && !queue.isEmpty()) {
+
+            UiLegacyQueueStepFormatter formatter = new UiLegacyQueueStepFormatter(
+                    UiLegacyGameplayTooltipResolver::itemName,
+                    UiLegacyGameplayTooltipResolver::creatureName);
+
+            // One ordered representation feeds both
+            // the process view and requirement summary.
+            var steps = formatter.format(queue);
+
+            phases = new UiLegacyQueuePhaseGrouper()
+                    .group(steps);
+
+            // Group repeated pickups without making
+            // claims about consumption or inventory.
+            var pickups = UiLegacyQueuePickupSummary
+                    .summarize(steps);
+
+            for (var pickup : pickups.items()) {
+                requiredItems.add(
+                        pickup.display());
+            }
+
+            for (var pickup : pickups.creatures()) {
+                requiredCreatures.add(
+                        pickup.display());
+            }
+        }
+
         return new Details(
                 descriptions,
                 materials,
                 requiredItems,
                 requiredCreatures,
                 zones,
-                habitats);
+                habitats,
+                workLocations,
+                phases);
+
     }
 
     private static Details buildingDetails(String id) {
@@ -340,6 +447,28 @@ public final class UiLegacyGameplayTooltipResolver
                 && hasText(creature.getName())
                         ? creature.getName()
                         : id;
+    }
+
+    /**
+     * Show a work location once in the summary.
+     *
+     * Repeated visits are still preserved in
+     * the ordered construction phases.
+     */
+    private static void addUniqueAlternatives(
+            List<String> destination,
+            String value,
+            Function<String, String> names) {
+
+        List<String> resolved = new ArrayList<>();
+
+        addAlternatives(resolved, value, names);
+
+        for (String entry : resolved) {
+            if (!destination.contains(entry)) {
+                destination.add(entry);
+            }
+        }
     }
 
     /**
