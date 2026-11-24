@@ -37,27 +37,25 @@ public final class UiActionRegistry {
                     "Action callback cannot be null");
         }
 
+        /*
+         * Every active action ID must be unique.
+         * 
+         */
+        if (actions.containsKey(id)) {
+
+            throw new IllegalArgumentException(
+                    "UI action ID already registered: " + id);
+        }
+
         Registration registration = new Registration(
                 id,
                 label,
                 action);
 
-        /*
-         * Preserve the existing behaviour where registering the
-         * same ID replaces the previous action.
-         *
-         * Mark the old registration inactive so its cleanup
-         * handle cannot later remove this newer registration.
-         */
-        Registration previous = actions.put(
-                id,
-                registration);
-
-        if (previous != null) {
-            previous.deactivate();
-        }
+        actions.put(id, registration);
 
         return registration;
+
     }
 
     public static synchronized void unregister(

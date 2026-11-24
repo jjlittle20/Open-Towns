@@ -9,244 +9,227 @@ import xaos.api.ui.UiActionRegistration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UiActionRegistryTest {
 
-    @AfterEach
-    void tearDown() {
+        @AfterEach
+        void tearDown() {
 
-        /*
-         * Remove any actions created by a test.
-         */
-        for (var action : UiActionRegistry.getActions()) {
-            UiActionRegistry.unregister(
-                    action.id()
-            );
+                /*
+                 * Remove any actions created by a test.
+                 */
+                for (var action : UiActionRegistry.getActions()) {
+                        UiActionRegistry.unregister(
+                                        action.id());
+                }
         }
-    }
 
-    @Test
-    void registrationBecomesActive() {
+        @Test
+        void registrationBecomesActive() {
 
-        UiActionRegistration registration =
+                UiActionRegistration registration = UiActionRegistry.register(
+                                "test:action",
+                                "Test Action",
+                                () -> {
+                                });
+
+                assertTrue(
+                                registration.isActive());
+
+                assertTrue(
+                                UiActionRegistry.hasActions());
+
+                assertEquals(
+                                1,
+                                UiActionRegistry.getActions()
+                                                .size());
+        }
+
+        @Test
+        void unregisterRemovesAction() {
+
+                UiActionRegistration registration = UiActionRegistry.register(
+                                "test:action",
+                                "Test Action",
+                                () -> {
+                                });
+
+                registration.unregister();
+
+                assertFalse(
+                                registration.isActive());
+
+                assertFalse(
+                                UiActionRegistry.hasActions());
+        }
+
+        @Test
+        void closeUnregistersAction() {
+
+                UiActionRegistration registration = UiActionRegistry.register(
+                                "test:action",
+                                "Test Action",
+                                () -> {
+                                });
+
+                registration.close();
+
+                assertFalse(
+                                registration.isActive());
+
+                assertFalse(
+                                UiActionRegistry.hasActions());
+        }
+
+        @Test
+        void actionCanBeExecuted() {
+
+                AtomicInteger executions = new AtomicInteger();
+
                 UiActionRegistry.register(
-                        "test:action",
-                        "Test Action",
-                        () -> {
-                        }
-                );
+                                "test:action",
+                                "Test Action",
+                                executions::incrementAndGet);
 
-        assertTrue(
-                registration.isActive()
-        );
+                assertTrue(
+                                UiActionRegistry.execute(
+                                                "test:action"));
 
-        assertTrue(
-                UiActionRegistry.hasActions()
-        );
+                assertEquals(
+                                1,
+                                executions.get());
+        }
 
-        assertEquals(
-                1,
-                UiActionRegistry.getActions()
-                        .size()
-        );
-    }
+        @Test
+        void unknownActionCannotBeExecuted() {
 
-    @Test
-    void unregisterRemovesAction() {
+                assertFalse(
+                                UiActionRegistry.execute(
+                                                "test:missing"));
+        }
 
-        UiActionRegistration registration =
-                UiActionRegistry.register(
-                        "test:action",
-                        "Test Action",
-                        () -> {
-                        }
-                );
+        @Test
+        void duplicateIdCannotReplaceExistingAction() {
 
-        registration.unregister();
+                AtomicInteger firstExecutions = new AtomicInteger();
 
-        assertFalse(
-                registration.isActive()
-        );
+                AtomicInteger secondExecutions = new AtomicInteger();
 
-        assertFalse(
-                UiActionRegistry.hasActions()
-        );
-    }
+                UiActionRegistration first = UiActionRegistry.register(
+                                "test:action",
+                                "First",
+                                firstExecutions::incrementAndGet);
 
-    @Test
-    void closeUnregistersAction() {
+                IllegalArgumentException error = assertThrows(
+                                IllegalArgumentException.class,
+                                () -> UiActionRegistry.register(
+                                                "test:action",
+                                                "Second",
+                                                secondExecutions::incrementAndGet));
 
-        UiActionRegistration registration =
-                UiActionRegistry.register(
-                        "test:action",
-                        "Test Action",
-                        () -> {
-                        }
-                );
+                assertTrue(
+                                error.getMessage().contains(
+                                                "test:action"));
 
-        registration.close();
+                // Original registration remains active.
+                assertTrue(first.isActive());
 
-        assertFalse(
-                registration.isActive()
-        );
+                assertEquals(
+                                1,
+                                UiActionRegistry.getActions().size());
 
-        assertFalse(
-                UiActionRegistry.hasActions()
-        );
-    }
+                assertEquals(
+                                "First",
+                                UiActionRegistry.getActions()
+                                                .get(0).label());
 
-    @Test
-    void actionCanBeExecuted() {
+                UiActionRegistry.execute("test:action");
 
-        AtomicInteger executions =
-                new AtomicInteger();
+                assertEquals(1, firstExecutions.get());
+                assertEquals(0, secondExecutions.get());
+        }
 
-        UiActionRegistry.register(
-                "test:action",
-                "Test Action",
-                executions::incrementAndGet
-        );
+        @Test
+        void actionIdCanBeReusedAfterUnregister() {
 
-        assertTrue(
-                UiActionRegistry.execute(
-                        "test:action"
-                )
-        );
+                UiActionRegistration first = UiActionRegistry.register(
+                                "test:action",
+                                "First",
+                                () -> {
+                                });
 
-        assertEquals(
-                1,
-                executions.get()
-        );
-    }
+                first.unregister();
 
-    @Test
-    void unknownActionCannotBeExecuted() {
+                assertFalse(first.isActive());
 
-        assertFalse(
-                UiActionRegistry.execute(
-                        "test:missing"
-                )
-        );
-    }
+                // The ID becomes available again when
+                // its original owner unregisters.
+                UiActionRegistration second = UiActionRegistry.register(
+                                "test:action",
+                                "Second",
+                                () -> {
+                                });
 
-    @Test
-    void registeringSameIdReplacesPreviousAction() {
+                assertTrue(second.isActive());
 
-        AtomicInteger firstExecutions =
-                new AtomicInteger();
+                // Repeated cleanup of the old handle
+                // must not affect the new registration.
+                first.unregister();
 
-        AtomicInteger secondExecutions =
-                new AtomicInteger();
+                assertTrue(second.isActive());
 
-        UiActionRegistration first =
-                UiActionRegistry.register(
-                        "test:action",
-                        "First",
-                        firstExecutions::incrementAndGet
-                );
+                assertEquals(
+                                "Second",
+                                UiActionRegistry.getActions()
+                                                .get(0).label());
 
-        UiActionRegistration second =
-                UiActionRegistry.register(
-                        "test:action",
-                        "Second",
-                        secondExecutions::incrementAndGet
-                );
+                assertTrue(
+                                UiActionRegistry.execute(
+                                                "test:action"));
+        }
 
-        assertFalse(
-                first.isActive()
-        );
+        @Test
+        void unregisterByIdDeactivatesRegistration() {
 
-        assertTrue(
-                second.isActive()
-        );
+                UiActionRegistration registration = UiActionRegistry.register(
+                                "test:action",
+                                "Test Action",
+                                () -> {
+                                });
 
-        assertEquals(
-                1,
-                UiActionRegistry.getActions()
-                        .size()
-        );
+                UiActionRegistry.unregister(
+                                "test:action");
 
-        UiActionRegistry.execute(
-                "test:action"
-        );
+                assertFalse(
+                                registration.isActive());
 
-        assertEquals(
-                0,
-                firstExecutions.get()
-        );
+                assertFalse(
+                                UiActionRegistry.hasActions());
+        }
 
-        assertEquals(
-                1,
-                secondExecutions.get()
-        );
-    }
+        @Test
+        void differentModsCanUseSameLocalActionName() {
 
-    @Test
-    void oldRegistrationCannotRemoveReplacement() {
+                UiActionRegistration first = UiActionRegistry.register(
+                                "mod-a:open",
+                                "Open A",
+                                () -> {
+                                });
 
-        UiActionRegistration first =
-                UiActionRegistry.register(
-                        "test:action",
-                        "First",
-                        () -> {
-                        }
-                );
+                UiActionRegistration second = UiActionRegistry.register(
+                                "mod-b:open",
+                                "Open B",
+                                () -> {
+                                });
 
-        UiActionRegistration second =
-                UiActionRegistry.register(
-                        "test:action",
-                        "Second",
-                        () -> {
-                        }
-                );
+                assertTrue(first.isActive());
+                assertTrue(second.isActive());
 
-        /*
-        
-         * Cleanup of the old registration must not delete
-         * the newer action using the same ID.
-         */
-        first.unregister();
+                assertEquals(
+                                2,
+                                UiActionRegistry.getActions().size());
+        }
 
-        assertTrue(
-                second.isActive()
-        );
-
-        assertTrue(
-                UiActionRegistry.execute(
-                        "test:action"
-                )
-        );
-
-        assertEquals(
-                "Second",
-                UiActionRegistry.getActions()
-                        .get(0)
-                        .label()
-        );
-    }
-
-    @Test
-    void unregisterByIdDeactivatesRegistration() {
-
-        UiActionRegistration registration =
-                UiActionRegistry.register(
-                        "test:action",
-                        "Test Action",
-                        () -> {
-                        }
-                );
-
-        UiActionRegistry.unregister(
-                "test:action"
-        );
-
-        assertFalse(
-                registration.isActive()
-        );
-
-        assertFalse(
-                UiActionRegistry.hasActions()
-        );
-    }
 }
