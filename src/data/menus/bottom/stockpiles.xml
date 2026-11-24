@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.bottom.stockpiles" title="Stockpiles">
+
+    <item id="game.bottom.stockpiles.rawmaterials"
+          type="action"
+          title="Raw materials"
+          command="STOCKPILE"
+          parameter="rawmaterials"
+          icon="ui_srawmaterials" />
+
+    <item id="game.bottom.stockpiles.rawfood"
+          type="action"
+          title="Raw food"
+          command="STOCKPILE"
+          parameter="rawfood"
+          icon="ui_srawfood" />
+
+    <item id="game.bottom.stockpiles.prepfood"
+          type="action"
+          title="Prepared food"
+          command="STOCKPILE"
+          parameter="prepfood"
+          icon="ui_sprepfood" />
+
+    <item id="game.bottom.stockpiles.utils"
+          type="action"
+          title="Utilities"
+          command="STOCKPILE"
+          parameter="utils"
+          icon="ui_sutils" />
+
+    <item id="game.bottom.stockpiles.furniture"
+          type="action"
+          title="Furniture"
+          command="STOCKPILE"
+          parameter="furniture"
+          icon="ui_sfurniture" />
+
+    <item id="game.bottom.stockpiles.ites"
+          type="action"
+          title="ITEs"
+          command="STOCKPILE"
+          parameter="ites"
+          icon="ui_sites" />
+
+    <item id="game.bottom.stockpiles.armor"
+          type="action"
+          title="Armor"
+          command="STOCKPILE"
+          parameter="armor"
+          icon="ui_sarmor" />
+
+    <item id="game.bottom.stockpiles.weapon"
+          type="action"
+          title="Weapons"
+          command="STOCKPILE"
+          parameter="weapon"
+          icon="ui_sweapon" />
+
+    <item id="game.bottom.stockpiles.decorative"
+          type="action"
+          title="Decorations"
+          command="STOCKPILE"
+          parameter="decorative"
+          icon="ui_sdecorative" />
+
+    <item id="game.bottom.stockpiles.back"
+          type="back"
+          title="Back"
+          icon="ui_back" />
+
+</menu>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.bottom.root" title="Actions">
+
+    <item
+        id="game.bottom.harvest"
+        type="action"
+        title="Harvest"
+        icon="ui_harvest"
+        command="CUSTOMACTION"
+        parameter="qharvestapple,qharvestpear,qharvestwheat,qharvestsugarcane,qharvestbamboo,qharvestplanttrap,qharvestwildwheat,qharvestwildsugarcane,qharvestwildbamboo,qharvestblueradish,qharvestsnowcherry,qharvestbanana,qpickmushroom,qpickcavemushroom,qharvestcactus,qgatherredflower,qgatherplantedredflower,qgatherblueflower,qgatherplantedblueflower,qgatheryellowflower,qgatherplantedyellowflower,qharvestppear,qharvestpapple,qharvestpbanana,qharvestpblueradish,qharvestpcactus,qharvestpsnowcherry,qpickpcavemushroom,qpickpmushroom" />
+
+    <item
+        id="game.bottom.chop"
+        type="action"
+        title="Chop"
+        icon="ui_chop"
+        command="CUSTOMACTION"
+        parameter="qchop,qchopplantedtree,qchopplantedtree2,qchopplantedsnowtree,qchopplantedjungletree,qchopplantedpalmtree,qchopsleeper,qchopsleeper2" />
+
+    <item
+        id="game.bottom.cut"
+        type="action"
+        title="Cut"
+        icon="ui_cut"
+        command="CUSTOMACTION"
+        parameter="qcut" />
+
+    <item
+        id="game.bottom.dig"
+        type="action"
+        title="Dig"
+        icon="ui_dig"
+        command="DIG" />
+
+    <item
+        id="game.bottom.mine"
+        type="action"
+        title="Mine"
+        icon="ui_mine"
+        command="MINE" />
+
+    <item
+        id="game.bottom.till"
+        type="action"
+        title="Till"
+        icon="ui_till"
+        command="CUSTOMACTION"
+        parameter="qtill,qtilljungle,qtillsand,qtillsnow" />
+
+    <item
+        id="game.bottom.stockpiles"
+        type="submenu"
+        title="Stockpiles"
+        icon="ui_stockpile"
+        targetMenu="game.bottom.stockpiles" />
+
+    <item
+        id="game.bottom.zones"
+        type="submenu"
+        title="Zones"
+        icon="ui_zones"
+        targetMenu="game.bottom.zones" />
+
+    <item
+        id="game.bottom.destroyscaffold"
+        type="action"
+        title="Destroy scaffolds"
+        icon="ui_destroyscaffold"
+        command="CUSTOMACTION"
+        parameter="destroyscaffold" />
+
+    <item
+        id="game.bottom.cancel"
+        type="action"
+        title="Cancel order"
+        icon="ui_cancel"
+        command="CANCELORDER" />
+
+</menu>
