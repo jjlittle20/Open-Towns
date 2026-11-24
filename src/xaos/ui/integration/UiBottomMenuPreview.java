@@ -4,6 +4,7 @@ package xaos.ui.integration;
 import java.util.Objects;
 import java.util.function.Function;
 
+import xaos.internal.api.mods.ModUiErrors;
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
 import xaos.panels.menus.MenuManager;
@@ -12,6 +13,7 @@ import xaos.ui.components.UiButton;
 import xaos.ui.components.UiButtonAppearance;
 import xaos.ui.components.UiWindow;
 import xaos.ui.components.UiWindowAppearance;
+import xaos.ui.core.UiButtonAvailabilityTracker;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiSystem;
 import xaos.ui.layout.UiInsets;
@@ -65,6 +67,13 @@ public final class UiBottomMenuPreview {
     private MenuManager menus;
 
     private Function<IconReference, UiSprite> iconResolver = reference -> null;
+
+    private UiGameplayActionBinding actionBinding = UiGameplayActionBinding.disabled();
+
+    private Runnable clickFeedback = () -> {
+    };
+
+    private final UiButtonAvailabilityTracker availabilityTracker = new UiButtonAvailabilityTracker();
 
     public UiBottomMenuPreview(
             UiSystem ui,
@@ -121,10 +130,10 @@ public final class UiBottomMenuPreview {
 
         leftArrow.setOnClick(() -> {
             if (pager.scrollLeft()) {
+                clickFeedback.run();
                 rebuild();
             }
         });
-
         // --------------------------------------------------
         // Main icon row
         // --------------------------------------------------
@@ -151,6 +160,7 @@ public final class UiBottomMenuPreview {
 
         rightArrow.setOnClick(() -> {
             if (pager.scrollRight()) {
+                clickFeedback.run();
                 rebuild();
             }
         });
@@ -221,6 +231,39 @@ public final class UiBottomMenuPreview {
                 resolver, "resolver");
 
         rebuild();
+    }
+
+    /**
+     * Connects gameplay commands to toolbar buttons.
+     *
+     * This can handle original Towns commands or
+     * registered MOD_ACTION callbacks.
+     */
+    public void setActionBinding(
+            UiGameplayActionBinding binding) {
+
+        actionBinding = Objects.requireNonNull(
+                binding, "binding");
+
+        rebuild();
+    }
+
+    /**
+     * Optional sound or other click feedback.
+     */
+    public void setClickFeedback(Runnable feedback) {
+
+        clickFeedback = Objects.requireNonNull(
+                feedback, "feedback");
+    }
+
+    /**
+     * Update button availability without replacing
+     * the existing UI components.
+     */
+    public void refreshActionAvailability() {
+
+        availabilityTracker.refresh();
     }
 
     /**
@@ -320,15 +363,87 @@ public final class UiBottomMenuPreview {
 
         button.setTooltip(resolved.title());
 
-        // Visual-only milestone.
-        // Enable interaction when gameplay commands
-        // and submenu navigation are connected.
+        // Submenus will use a separate popup above
+        // the toolbar in the next milestone.
+        if ("submenu".equals(item.getType())) {
+
+            button.setEnabled(false);
+            button.setTooltip(
+                    resolved.title() + "\nOpen submenu");
+
+            return button;
+        }
+
+        if ("action".equals(item.getType())) {
+
+            button.setOnClick(
+                    () -> executeAction(item, button));
+
+            // Recheck availability without replacing
+            // the button or resetting the toolbar.
+            availabilityTracker.track(
+                    button,
+                    () -> actionBinding.isAvailable(item),
+                    exception -> ModUiErrors.report(
+                            "open-towns",
+                            "Bottom toolbar availability",
+                            "Cannot check availability of "
+                                    + item.getId(),
+                            exception));
+
+            return button;
+        }
+
+        // Unsupported entry types remain visible
+        // but cannot execute anything.
         button.setEnabled(false);
 
         return button;
+
+    }
+
+    /**
+     * Executes one bottom-toolbar action.
+     *
+     * Availability is checked again at click time
+     * because gameplay state or mod registrations
+     * may have changed since the last refresh.
+     */
+    private void executeAction(
+            MenuItemDefinition item,
+            UiButton button) {
+
+        try {
+
+            if (!actionBinding.isAvailable(item)) {
+
+                button.setEnabled(false);
+                return;
+            }
+
+            clickFeedback.run();
+
+            actionBinding.execute(item);
+
+        } catch (RuntimeException exception) {
+
+            ModUiErrors.report(
+                    "open-towns",
+                    "Bottom toolbar action",
+                    "Failed to execute "
+                            + item.getId()
+                            + " ("
+                            + item.getCommand()
+                            + ")",
+                    exception);
+        }
     }
 
     private void rebuild() {
+
+        // The previous visible buttons are about
+        // to be replaced. Remove their old checks.
+        availabilityTracker.clear();
 
         MenuDefinition menu = menus.requireMenu(ROOT_MENU);
 

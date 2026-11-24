@@ -102,6 +102,7 @@ import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
 import xaos.ui.integration.UiBottomMenuPreview;
 import xaos.ui.integration.UiGameplayMenuResolver;
+import xaos.ui.integration.UiLegacyBottomActionBinding;
 import xaos.ui.integration.UiLegacyGameplayActionBinding;
 import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
 import xaos.ui.integration.UiLegacyGameplayTooltipResolver;
@@ -2179,6 +2180,17 @@ public final class Game {
 								.setAnchorInsets(
 										new UiInsets(0, 0, 128, 0));
 
+						// Original Towns bottom-toolbar commands,
+						// with support for registered mod actions.
+						bottomMenuPreview.setActionBinding(
+								new UiRegisteredGameplayActionBinding(
+										new UiLegacyBottomActionBinding()));
+
+						// Preserve the original Towns menu click sound.
+						bottomMenuPreview.setClickFeedback(
+								() -> UtilsAL.play(
+										UtilsAL.SOURCE_FX_CLICK));
+
 					} else if (bottomMenuPreview.menus() != gameplayMenus) {
 
 						bottomMenuPreview.setMenus(
@@ -2189,7 +2201,7 @@ public final class Game {
 					if (!wasBottomMenuPreviewInGame) {
 						bottomMenuPreview.open();
 					}
-
+					bottomMenuPreview.refreshActionAvailability();
 				} else if (wasBottomMenuPreviewInGame
 						&& bottomMenuPreview != null) {
 

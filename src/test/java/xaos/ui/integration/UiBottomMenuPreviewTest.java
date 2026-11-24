@@ -3,6 +3,10 @@ package xaos.ui.integration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.junit.jupiter.api.Test;
 
 import xaos.panels.menus.MenuDefinition;
@@ -214,4 +218,121 @@ class UiBottomMenuPreviewTest {
 
         assertFalse(right.enabled());
     }
+
+    @Test
+    void bottomActionExecutesThroughInjectedBinding() {
+
+        UiBottomMenuPreview preview = preview(new UiSystem(), 3);
+
+        AtomicReference<String> executed = new AtomicReference<>();
+
+        AtomicInteger clicks = new AtomicInteger();
+
+        preview.setClickFeedback(
+                clicks::incrementAndGet);
+
+        preview.setActionBinding(
+                new UiGameplayActionBinding() {
+
+                    @Override
+                    public boolean isAvailable(
+                            MenuItemDefinition item) {
+
+                        return "DIG".equals(
+                                item.getCommand());
+                    }
+
+                    @Override
+                    public void execute(
+                            MenuItemDefinition item) {
+
+                        executed.set(item.getId());
+                    }
+                });
+
+        UiButton button = (UiButton) preview
+                .buttonRow().children().get(0);
+
+        assertTrue(button.enabled());
+
+        button.activate();
+
+        assertEquals(
+                "game.bottom.test.0",
+                executed.get());
+
+        assertEquals(1, clicks.get());
+
+        // Executing does not change the
+        // toolbar's current scroll position.
+        assertEquals(
+                0,
+                preview.firstVisibleIndex());
+    }
+
+    @Test
+    void availabilityChangesWithoutRebuildingToolbar() {
+
+        UiBottomMenuPreview preview = preview(new UiSystem(), 1);
+
+        AtomicBoolean available = new AtomicBoolean(false);
+
+        AtomicInteger executions = new AtomicInteger();
+
+        preview.setActionBinding(
+                new UiGameplayActionBinding() {
+
+                    @Override
+                    public boolean isAvailable(
+                            MenuItemDefinition item) {
+
+                        return available.get();
+                    }
+
+                    @Override
+                    public void execute(
+                            MenuItemDefinition item) {
+
+                        executions.incrementAndGet();
+                    }
+                });
+
+        UiButton originalButton = (UiButton) preview
+                .buttonRow().children().get(0);
+
+        assertFalse(originalButton.enabled());
+
+        available.set(true);
+
+        preview.refreshActionAvailability();
+
+        assertTrue(originalButton.enabled());
+
+        // The exact same button remains.
+        assertSame(
+                originalButton,
+                preview.buttonRow()
+                        .children().get(0));
+
+        originalButton.activate();
+
+        assertEquals(1, executions.get());
+
+        available.set(false);
+
+        preview.refreshActionAvailability();
+
+        assertFalse(originalButton.enabled());
+
+        assertSame(
+                originalButton,
+                preview.buttonRow()
+                        .children().get(0));
+
+        // Disabled buttons cannot execute.
+        originalButton.activate();
+
+        assertEquals(1, executions.get());
+    }
+
 }
