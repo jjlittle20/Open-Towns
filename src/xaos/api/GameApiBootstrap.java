@@ -15,6 +15,7 @@ import xaos.internal.api.selection.DefaultSelectionApi;
 import xaos.internal.api.stockpiles.DefaultStockpileApi;
 import xaos.internal.api.tasks.DefaultTaskApi;
 import xaos.internal.api.ui.DefaultUiApi;
+import xaos.internal.api.ui.ModOwnedUiApi;
 import xaos.internal.api.world.DefaultWorldApi;
 
 /**
@@ -25,30 +26,43 @@ import xaos.internal.api.world.DefaultWorldApi;
  */
 public final class GameApiBootstrap {
 
-    private static final GameApi INSTANCE =
-            new GameApi(
-                    new DefaultDefinitionsApi(),
-                    new DefaultWorldApi(),
-                    new DefaultEntityApi(),
-                    new DefaultUiApi(),
-                    new DefaultTaskApi(),
-                    new DefaultSelectionApi(),
-                    new DefaultEventApi(),
-                    new DefaultInventoryApi(),
-                    new DefaultStockpileApi(),
-                    new DefaultItemQueryApi(),
-                    new DefaultItemBehaviourApi(),
-                    new DefaultBuildingApi(),
-                    new DefaultBuildingBehaviourApi(),
-                    new DefaultFluidApi(),
-                    new DefaultProductionApi(),
-                    new DefaultActionApi()
-            );
+        private static final GameApi INSTANCE = new GameApi(
+                        new DefaultDefinitionsApi(),
+                        new DefaultWorldApi(),
+                        new DefaultEntityApi(),
+                        new DefaultUiApi(),
+                        new DefaultTaskApi(),
+                        new DefaultSelectionApi(),
+                        new DefaultEventApi(),
+                        new DefaultInventoryApi(),
+                        new DefaultStockpileApi(),
+                        new DefaultItemQueryApi(),
+                        new DefaultItemBehaviourApi(),
+                        new DefaultBuildingApi(),
+                        new DefaultBuildingBehaviourApi(),
+                        new DefaultFluidApi(),
+                        new DefaultProductionApi(),
+                        new DefaultActionApi());
 
-    private GameApiBootstrap() {
-    }
+        private GameApiBootstrap() {
+        }
 
-    public static GameApi get() {
-    return INSTANCE;
-}
+        public static GameApi get() {
+                return INSTANCE;
+        }
+
+        /**
+         * Builds an API view for one loaded Java mod.
+         *
+         * The mod's identity comes from its validated
+         * metadata, not from IDs supplied to UiApi.
+         */
+        public static GameApi forMod(String modId) {
+
+                return INSTANCE.withUi(
+                                new ModOwnedUiApi(
+                                                modId,
+                                                INSTANCE.ui()));
+        }
+
 }

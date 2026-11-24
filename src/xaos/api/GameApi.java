@@ -36,8 +36,6 @@ import xaos.api.definitions.DefinitionsApi;
  */
 public final class GameApi {
 
-   
-
     private final DefinitionsApi definitions;
     private final WorldApi world;
     private final EntityApi entities;
@@ -90,6 +88,35 @@ public final class GameApi {
         this.actions = actions;
     }
 
+    /**
+     * Runtime-only helper for constructing a
+     * GameApi view with a different UiApi.
+     *
+     * Other API services remain shared.
+     *
+     * Package-private: only the runtime bootstrap
+     * should create these views.
+     */
+    GameApi withUi(UiApi replacement) {
+
+        return new GameApi(
+                definitions,
+                world,
+                entities,
+                replacement,
+                tasks,
+                selection,
+                events,
+                inventory,
+                stockpiles,
+                items,
+                itemBehaviours,
+                buildings,
+                buildingBehaviours,
+                fluids,
+                production,
+                actions);
+    }
 
     /**
      * Access to game content definitions such as items,

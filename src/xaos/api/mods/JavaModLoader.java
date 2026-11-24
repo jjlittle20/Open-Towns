@@ -399,11 +399,9 @@ public final class JavaModLoader {
 
                         ModContext context = new ModContext(
                                         metadata,
-                                        GameApiBootstrap.get(),
-                                        new DefaultModLogger(
-                                                        modId),
-                                        ModSaveDataRegistry.forMod(
-                                                        modId));
+                                        GameApiBootstrap.forMod(modId),
+                                        new DefaultModLogger(modId),
+                                        ModSaveDataRegistry.forMod(modId));
 
                         /*
                          * Let the mod initialise before considering it
