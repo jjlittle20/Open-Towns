@@ -100,6 +100,7 @@ import xaos.ui.debug.UiDebugOverlay;
 import xaos.ui.debug.UiModErrorWindow;
 import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
+import xaos.ui.integration.UiBottomMenuPreview;
 import xaos.ui.integration.UiGameplayMenuResolver;
 import xaos.ui.integration.UiLegacyGameplayActionBinding;
 import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
@@ -233,6 +234,19 @@ public final class Game {
 
 	// Created after the existing game UI has initialised.
 	private static UiModErrorWindow modErrorsWindow;
+
+	/**
+	 * Temporary bottom-toolbar visual comparison.
+	 *
+	 * false = original bottom toolbar only
+	 * true = show the new XML toolbar above
+	 * the original toolbar
+	 *
+	 * This does not replace gameplay input yet.
+	 */
+	private static final boolean USE_XML_BOTTOM_PANEL = true;
+
+	private static UiBottomMenuPreview bottomMenuPreview;
 
 	// Temporary migration switch.
 	//
@@ -421,7 +435,7 @@ public final class Game {
 		// Load the new built-in menu registry and
 		// modern mod extensions as before.
 		gameplayMenus = ModUiMenuLoader.load(
-				new File("data/menus/right"),
+				new File("data/menus"),
 				new File(getUserFolder(), MODS_FOLDER1),
 				List.copyOf(getModsLoaded()));
 		UiRuntimeMenuActions.bind(
@@ -482,6 +496,11 @@ public final class Game {
 				&& rightMenuPreview.menus() == gameplayMenus) {
 
 			rightMenuPreview.refreshCurrentMenu();
+		}
+		if (bottomMenuPreview != null
+				&& bottomMenuPreview.menus() == gameplayMenus) {
+
+			bottomMenuPreview.refresh();
 		}
 	}
 
@@ -1991,6 +2010,7 @@ public final class Game {
 		// and active game worlds.
 		UiScreenTransitionTracker uiScreenTransitions = new UiScreenTransitionTracker();
 		boolean wasRightMenuPreviewInGame = false;
+		boolean wasBottomMenuPreviewInGame = false;
 		// Establish the initial state without triggering
 		// input cancellation.
 		uiScreenTransitions.update(
@@ -2110,6 +2130,73 @@ public final class Game {
 				}
 
 				wasRightMenuPreviewInGame = inGameplay;
+			}
+
+			// ------------------------------------------------------------
+			// Temporary XML bottom-toolbar visual preview
+			// ------------------------------------------------------------
+
+			if (USE_XML_BOTTOM_PANEL) {
+
+				boolean inGameplay = getWorld() != null
+						&& !getPanelMainMenu().isActive()
+						&& gameplayMenus != null
+						&& gameplayMenus.hasMenu(
+								UiBottomMenuPreview.ROOT_MENU);
+
+				if (inGameplay) {
+
+					if (bottomMenuPreview == null) {
+
+						UiGameplayMenuResolver bottomResolver = new UiGameplayMenuResolver(
+								Messages::getString,
+								new UiLegacyGameplayDefinitionLookup());
+
+						bottomMenuPreview = new UiBottomMenuPreview(
+								UI_SYSTEM,
+								gameplayMenus,
+								bottomResolver,
+								TownsUiTextMetrics.INSTANCE);
+
+						// Resolve the same graphics.ini assets
+						// used by the Classic right-hand panel.
+						UiLegacyIconSprites icons = UiLegacyIconSprites.fromGraphicsIni();
+
+						bottomMenuPreview.setIconResolver(
+								icons::resolve);
+
+						/*
+						 * Temporary comparison positioning.
+						 *
+						 * Normal bottom inset: 32
+						 * Preview bottom inset: 128
+						 *
+						 * This places the XML toolbar above
+						 * the legacy one, with a gap between
+						 * them.
+						 */
+						bottomMenuPreview.window()
+								.setAnchorInsets(
+										new UiInsets(0, 0, 128, 0));
+
+					} else if (bottomMenuPreview.menus() != gameplayMenus) {
+
+						bottomMenuPreview.setMenus(
+								gameplayMenus);
+					}
+
+					// Open on gameplay entry, not every frame.
+					if (!wasBottomMenuPreviewInGame) {
+						bottomMenuPreview.open();
+					}
+
+				} else if (wasBottomMenuPreviewInGame
+						&& bottomMenuPreview != null) {
+
+					bottomMenuPreview.close();
+				}
+
+				wasBottomMenuPreviewInGame = inGameplay;
 			}
 
 			// --------------------------------------------------------

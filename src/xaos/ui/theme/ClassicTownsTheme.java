@@ -3,6 +3,7 @@ package xaos.ui.theme;
 
 import java.util.Objects;
 import xaos.ui.components.UiWindow;
+import xaos.ui.components.UiWindowAppearance;
 import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiRect;
 import xaos.ui.rendering.UiColor;
@@ -59,6 +60,23 @@ public final class ClassicTownsTheme implements UiTheme {
             32,
             32);
 
+    /**
+     * Original Towns bottom-panel background.
+     *
+     * graphics.ini:
+     * [bottom_panel]
+     * TILE_X = 2
+     * TILE_Y = 0
+     * TILE_WIDTH = 736
+     * TILE_HEIGHT = 64
+     * TEXTURE_FILE = ui.png
+     *
+     * Legacy atlas cells are 64x32.
+     */
+    private static final UiSprite BOTTOM_TOOLBAR_BACKGROUND = new UiSprite(
+            "towns-legacy:ui.png",
+            new UiRect(128, 0, 736, 64));
+
     private static UiSprite ui2(
             int tileX,
             int tileY,
@@ -81,6 +99,22 @@ public final class ClassicTownsTheme implements UiTheme {
 
         Objects.requireNonNull(window, "window");
         Objects.requireNonNull(renderer, "renderer");
+
+        if (window.appearance() == UiWindowAppearance.BOTTOM_TOOLBAR) {
+
+            UiRect bounds = window.bounds();
+
+            if (bounds.width() > 0
+                    && bounds.height() > 0) {
+
+                renderer.drawSprite(
+                        BOTTOM_TOOLBAR_BACKGROUND,
+                        bounds,
+                        UiColor.WHITE);
+            }
+
+            return;
+        }
 
         WINDOW_BACKGROUND.paint(
                 renderer,

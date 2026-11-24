@@ -44,6 +44,7 @@ public class UiWindow extends UiContainer {
     private boolean centered = false;
     private boolean modal = false;
     private UiWindowCloseButton closeButton;
+    private UiWindowAppearance appearance = UiWindowAppearance.STANDARD;
 
     public boolean draggable() {
         return draggable;
@@ -532,6 +533,17 @@ public class UiWindow extends UiContainer {
                         bounds.y(), bounds.height() - height),
                 width,
                 height);
+    }
+
+    public UiWindowAppearance appearance() {
+        return appearance;
+    }
+
+    public void setAppearance(
+            UiWindowAppearance appearance) {
+
+        this.appearance = Objects.requireNonNull(
+                appearance, "appearance");
     }
 
 }

@@ -11,6 +11,7 @@ import xaos.panels.menus.MenuManager;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiButtonAppearance;
 import xaos.ui.components.UiWindow;
+import xaos.ui.components.UiWindowAppearance;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiSystem;
 import xaos.ui.layout.UiInsets;
@@ -83,7 +84,8 @@ public final class UiBottomMenuPreview {
         }
 
         window = new UiWindow("Bottom Toolbar");
-
+        window.setAppearance(
+                UiWindowAppearance.BOTTOM_TOOLBAR);
         // Original toolbar has no title strip.
         window.titleBar().setVisible(false);
 
@@ -168,6 +170,10 @@ public final class UiBottomMenuPreview {
 
     public UiWindow window() {
         return window;
+    }
+
+    public MenuManager menus() {
+        return menus;
     }
 
     public UiContainer buttonRow() {

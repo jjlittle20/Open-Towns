@@ -237,6 +237,29 @@ public final class ModUiMenuLoader {
             }
         }
 
+        /*
+         * Validate the converted bottom toolbar hierarchy.
+         *
+         * Stockpiles and Zones must both resolve through
+         * their stable menu IDs.
+         */
+        if (manager.hasMenu("game.bottom.root")) {
+
+            try {
+
+                manager.validateMenuTree(
+                        "game.bottom.root");
+
+            } catch (Exception exception) {
+
+                ModUiErrors.report(
+                        "open-towns",
+                        "Bottom panel validation",
+                        "Invalid bottom gameplay menu hierarchy",
+                        exception);
+            }
+        }
+
         return manager;
     }
 
