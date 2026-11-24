@@ -221,4 +221,102 @@ class UiRuntimeMenuActionsTest {
         assertFalse(
                 ids(manager).contains("test:cancelled"));
     }
+
+    @Test
+    void xmlItemCollisionDoesNotReplaceExistingButton() {
+
+        MenuManager manager = manager();
+
+        MenuItemDefinition xmlItem = new MenuItemDefinition(
+                "test:collision",
+                "action",
+                null,
+                null,
+                "MOD_ACTION",
+                false,
+                true,
+                null,
+                null,
+                null,
+                null,
+                true,
+                "XML Button",
+                null,
+                "test:callback",
+                null);
+
+        manager.requireMenu(ROOT).addItem(xmlItem);
+
+        UiRuntimeMenuActions.bind(
+                manager, () -> {
+                });
+
+        // Java contribution uses the same ID
+        // as the XML-defined button.
+        UiMenuItemRegistration handle = register("test:collision");
+
+        UiDispatcher.processPending();
+
+        // The Java registration must be invalidated.
+        assertFalse(handle.isActive());
+
+        // The original XML entry must be preserved.
+        List<MenuItemDefinition> matching = manager.requireMenu(ROOT)
+                .getItems()
+                .stream()
+                .filter(item -> item.getId()
+                        .equals("test:collision"))
+                .toList();
+
+        assertEquals(1, matching.size());
+        assertSame(xmlItem, matching.get(0));
+    }
+
+    @Test
+    void twoModsCanAddAndRemoveButtonsIndependently() {
+
+        MenuManager manager = manager();
+
+        UiRuntimeMenuActions.bind(
+                manager, () -> {
+                });
+
+        UiMenuItemRegistration first = register("mod-a:hello");
+
+        UiMenuItemRegistration second = register("mod-b:hello");
+
+        UiDispatcher.processPending();
+
+        assertTrue(first.isActive());
+        assertTrue(second.isActive());
+
+        assertTrue(ids(manager).contains(
+                "mod-a:hello"));
+
+        assertTrue(ids(manager).contains(
+                "mod-b:hello"));
+
+        // Simulate Mod A unloading.
+        first.unregister();
+
+        UiDispatcher.processPending();
+
+        assertFalse(
+                ids(manager).contains("mod-a:hello"));
+
+        // Mod B must remain untouched.
+        assertTrue(second.isActive());
+
+        assertTrue(
+                ids(manager).contains("mod-b:hello"));
+
+        // Simulate Mod B unloading.
+        second.unregister();
+
+        UiDispatcher.processPending();
+
+        assertFalse(
+                ids(manager).contains("mod-b:hello"));
+    }
+
 }

@@ -158,7 +158,20 @@ public final class UiRuntimeMenuActions {
 
             changed(target);
 
-        } catch (RuntimeException exception) {
+        } catch (
+
+        RuntimeException exception) {
+
+            /*
+             * The menu rejected this contribution,
+             * possibly because an XML extension already
+             * uses the same item ID.
+             *
+             * Invalidate the registration rather than
+             * leaving an apparently active handle for
+             * a button that was never installed.
+             */
+            entry.unregister();
 
             ModUiErrors.report(
                     namespace(entry.item.getId()),
@@ -167,6 +180,7 @@ public final class UiRuntimeMenuActions {
                             + " to " + entry.menuId,
                     exception);
         }
+
     }
 
     private static void changed(MenuManager source) {
