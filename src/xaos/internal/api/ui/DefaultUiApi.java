@@ -4,6 +4,7 @@ import java.util.List;
 
 import xaos.api.ui.UiActionRegistration;
 import xaos.api.ui.UiApi;
+import xaos.api.ui.UiMenuItemRegistration;
 import xaos.api.ui.UiMessageType;
 import xaos.api.ui.UiWindowHandle;
 import xaos.main.Game;
@@ -21,151 +22,167 @@ import xaos.utils.UtilsGL;
  */
 public final class DefaultUiApi implements UiApi {
 
-    @Override
-    public void showMessage(
-            UiMessageType type,
-            String message) {
+        @Override
+        public void showMessage(
+                        UiMessageType type,
+                        String message) {
 
-        if (message == null || message.isBlank()) {
-            return;
+                if (message == null || message.isBlank()) {
+                        return;
+                }
+
+                MessagesPanel.addMessage(
+                                mapMessageType(type),
+                                message);
         }
 
-        MessagesPanel.addMessage(
-                mapMessageType(type),
-                message);
-    }
+        private static int mapMessageType(
+                        UiMessageType type) {
 
-    private static int mapMessageType(
-            UiMessageType type) {
+                if (type == null) {
+                        return MessagesPanel.TYPE_SYSTEM;
+                }
 
-        if (type == null) {
-            return MessagesPanel.TYPE_SYSTEM;
+                return switch (type) {
+                        case SYSTEM ->
+                                MessagesPanel.TYPE_SYSTEM;
+
+                        case ANNOUNCEMENT ->
+                                MessagesPanel.TYPE_ANNOUNCEMENT;
+
+                        case COMBAT ->
+                                MessagesPanel.TYPE_COMBAT;
+
+                        case HERO ->
+                                MessagesPanel.TYPE_HEROES;
+                };
         }
 
-        return switch (type) {
-            case SYSTEM ->
-                MessagesPanel.TYPE_SYSTEM;
+        @Override
+        public void showInfoDialog(
+                        String title,
+                        List<String> lines) {
 
-            case ANNOUNCEMENT ->
-                MessagesPanel.TYPE_ANNOUNCEMENT;
+                if ((title == null || title.isBlank())
+                                && (lines == null || lines.isEmpty())) {
+                        return;
+                }
 
-            case COMBAT ->
-                MessagesPanel.TYPE_COMBAT;
+                /*
+                 * Copy the list now so the caller cannot modify it
+                 * before the queued UI task runs.
+                 */
+                List<String> safeLines = lines == null
+                                ? List.of()
+                                : List.copyOf(lines);
 
-            case HERO ->
-                MessagesPanel.TYPE_HEROES;
-        };
-    }
-
-    @Override
-    public void showInfoDialog(
-            String title,
-            List<String> lines) {
-
-        if ((title == null || title.isBlank())
-                && (lines == null || lines.isEmpty())) {
-            return;
+                UiDispatcher.invokeLater(
+                                () -> showInfoDialogNow(
+                                                title,
+                                                safeLines));
         }
 
-        /*
-         * Copy the list now so the caller cannot modify it
-         * before the queued UI task runs.
-         */
-        List<String> safeLines = lines == null
-                ? List.of()
-                : List.copyOf(lines);
+        @Override
+        public UiActionRegistration registerGameAction(
+                        String id,
+                        String label,
+                        Runnable action) {
 
-        UiDispatcher.invokeLater(
-                () -> showInfoDialogNow(
-                        title,
-                        safeLines));
-    }
-
-    @Override
-    public UiActionRegistration registerGameAction(
-            String id,
-            String label,
-            Runnable action) {
-
-        return UiActionRegistry.register(
-                id,
-                label,
-                action);
-    }
-
-    private static void showInfoDialogNow(
-            String title,
-            List<String> lines) {
-
-        SmartMenu contents = new SmartMenu();
-
-        if (title != null && !title.isBlank()) {
-            contents.addItem(
-                    new SmartMenu(
-                            SmartMenu.TYPE_HEADING,
-                            title,
-                            null,
-                            null,
-                            null));
+                return UiActionRegistry.register(
+                                id,
+                                label,
+                                action);
         }
 
-        for (String line : lines) {
-            contents.addItem(
-                    new SmartMenu(
-                            SmartMenu.TYPE_TEXT,
-                            line == null ? "" : line,
-                            null,
-                            null,
-                            null));
+        private static void showInfoDialogNow(
+                        String title,
+                        List<String> lines) {
+
+                SmartMenu contents = new SmartMenu();
+
+                if (title != null && !title.isBlank()) {
+                        contents.addItem(
+                                        new SmartMenu(
+                                                        SmartMenu.TYPE_HEADING,
+                                                        title,
+                                                        null,
+                                                        null,
+                                                        null));
+                }
+
+                for (String line : lines) {
+                        contents.addItem(
+                                        new SmartMenu(
+                                                        SmartMenu.TYPE_TEXT,
+                                                        line == null ? "" : line,
+                                                        null,
+                                                        null,
+                                                        null));
+                }
+
+                contents.addItem(
+                                new SmartMenu(
+                                                SmartMenu.TYPE_SPACER,
+                                                null,
+                                                null,
+                                                null,
+                                                null));
+
+                contents.addItem(
+                                new SmartMenu(
+                                                SmartMenu.TYPE_ITEM,
+                                                "Close",
+                                                null,
+                                                CommandPanel.COMMAND_CLOSE_CONTEXT,
+                                                null));
+
+                ContextMenu dialog = new ContextMenu();
+
+                /*
+                 * setSmartMenu() calculates the final width and height.
+                 */
+                dialog.setSmartMenu(contents);
+
+                /*
+                 * Centre after sizing.
+                 */
+                dialog.setX(
+                                UtilsGL.getWidth() / 2
+                                                - dialog.getWidth() / 2);
+
+                dialog.setY(
+                                UtilsGL.getHeight() / 2
+                                                - dialog.getHeight() / 2);
+
+                Game.setContextMenu(dialog);
         }
 
-        contents.addItem(
-                new SmartMenu(
-                        SmartMenu.TYPE_SPACER,
-                        null,
-                        null,
-                        null,
-                        null));
+        @Override
+        public UiWindowHandle createWindow(
+                        String id,
+                        String title) {
 
-        contents.addItem(
-                new SmartMenu(
-                        SmartMenu.TYPE_ITEM,
-                        "Close",
-                        null,
-                        CommandPanel.COMMAND_CLOSE_CONTEXT,
-                        null));
+                return DefaultUiWindowHandle.create(
+                                Game.uiSystem(),
+                                TownsUiTextMetrics.INSTANCE,
+                                id,
+                                title);
+        }
 
-        ContextMenu dialog = new ContextMenu();
+        @Override
+        public UiMenuItemRegistration addMenuAction(
+                        String menuId,
+                        String itemId,
+                        String title,
+                        String icon,
+                        String actionId) {
 
-        /*
-         * setSmartMenu() calculates the final width and height.
-         */
-        dialog.setSmartMenu(contents);
-
-        /*
-         * Centre after sizing.
-         */
-        dialog.setX(
-                UtilsGL.getWidth() / 2
-                        - dialog.getWidth() / 2);
-
-        dialog.setY(
-                UtilsGL.getHeight() / 2
-                        - dialog.getHeight() / 2);
-
-        Game.setContextMenu(dialog);
-    }
-
-    @Override
-    public UiWindowHandle createWindow(
-            String id,
-            String title) {
-
-        return DefaultUiWindowHandle.create(
-                Game.uiSystem(),
-                TownsUiTextMetrics.INSTANCE,
-                id,
-                title);
-    }
+                return UiRuntimeMenuActions.register(
+                                menuId,
+                                itemId,
+                                title,
+                                icon,
+                                actionId);
+        }
 
 }

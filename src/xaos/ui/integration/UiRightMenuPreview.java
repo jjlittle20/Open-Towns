@@ -181,6 +181,16 @@ public final class UiRightMenuPreview {
     }
 
     /**
+     * Refreshes the current menu without resetting
+     * its navigation history.
+     *
+     * Used after Java mods add or remove items.
+     */
+    public void refreshCurrentMenu() {
+        rebuild();
+    }
+
+    /**
      * Installs the action handler used by this window.
      *
      * Rebuilds the currently displayed menu so action

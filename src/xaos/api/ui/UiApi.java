@@ -46,4 +46,41 @@ public interface UiApi {
                         String id,
                         String title);
 
+        /**
+         * Adds a runtime button to an existing menu.
+         *
+         * The actionId must identify an action registered
+         * through registerGameAction().
+         *
+         * Both IDs must be namespaced.
+         *
+         * The icon may be null.
+         *
+         * Track the returned handle with
+         * ModContext.worldResource() or resource().
+         */
+        UiMenuItemRegistration addMenuAction(
+                        String menuId,
+                        String itemId,
+                        String title,
+                        String icon,
+                        String actionId);
+
+        /**
+         * Convenience overload for an item without an icon.
+         */
+        default UiMenuItemRegistration addMenuAction(
+                        String menuId,
+                        String itemId,
+                        String title,
+                        String actionId) {
+
+                return addMenuAction(
+                                menuId,
+                                itemId,
+                                title,
+                                null,
+                                actionId);
+        }
+
 }

@@ -90,6 +90,7 @@ import static xaos.panels.UI.UIPanelInputHandler.*;
 import xaos.api.mods.JavaModLoader;
 import xaos.panels.UI.UiDispatcher;
 import xaos.internal.api.selection.SelectionManager;
+import xaos.internal.api.ui.UiRuntimeMenuActions;
 import xaos.internal.api.mods.ModSaveDataRegistry;
 import xaos.internal.api.mods.ModUiMenuLoader;
 import xaos.internal.api.inventory.ItemReservationRegistry;
@@ -423,7 +424,9 @@ public final class Game {
 				new File("data/menus/right"),
 				new File(getUserFolder(), MODS_FOLDER1),
 				List.copyOf(getModsLoaded()));
-
+		UiRuntimeMenuActions.bind(
+				gameplayMenus,
+				Game::refreshXmlRightPanel);
 		legacyRightMenuOverridesPresent = false;
 
 		World activeWorld = getWorld();
@@ -465,6 +468,21 @@ public final class Game {
 	 */
 	public static MenuManager gameplayMenus() {
 		return gameplayMenus;
+	}
+
+	/**
+	 * Refresh the XML right-hand panel when its
+	 * active menu registry changes.
+	 *
+	 * Called from the game UI dispatcher.
+	 */
+	public static void refreshXmlRightPanel() {
+
+		if (rightMenuPreview != null
+				&& rightMenuPreview.menus() == gameplayMenus) {
+
+			rightMenuPreview.refreshCurrentMenu();
+		}
 	}
 
 	public Game() {
