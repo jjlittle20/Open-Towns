@@ -2450,6 +2450,40 @@ public class UIPanelInputHandler {
 		return false;
 	}
 
+	/**
+	 * Tests the bottom open/close tab using the
+	 * same scaled position and dimensions that
+	 * UIPanel.render() uses to draw it.
+	 *
+	 * Works whether the bottom toolbar is open
+	 * or closed.
+	 */
+	private static boolean isMouseOnBottomToggle(
+			int x,
+			int y) {
+
+		Tile tile = isBottomMenuPanelLocked()
+				? tileOpenBottomMenuON
+				: tileOpenBottomMenu;
+
+		int width = ui(tile.getTileWidth());
+		int height = ui(tile.getTileHeight());
+
+		Point point = UIPanelScaler.anchorFromCentreXAndBottom(
+				tileOpenCloseBottomMenuPoint,
+				tileOpenBottomMenu.getTileWidth(),
+				tileOpenBottomMenu.getTileHeight(),
+				width,
+				height);
+
+		return UIPanelScaler.isMouseInside(
+				x,
+				y,
+				point,
+				width,
+				height);
+	}
+
 	public static boolean isMouseCloseToOpenCloseBottomIcon(int x, int y) {
 		return isMouseCloseToIcon(x, y, tileOpenCloseBottomMenuPoint, tileOpenBottomMenu, CLOSE_PIXELS);
 	}
