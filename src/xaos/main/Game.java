@@ -22,6 +22,7 @@ import xaos.platform.lwjgl3.opengl.Display;
 import xaos.platform.lwjgl3.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
+import xaos.ui.integration.RightMenuController;
 import xaos.Towns;
 import xaos.TownsProperties;
 import xaos.actions.ActionManager;
@@ -52,6 +53,7 @@ import xaos.panels.MiniMapPanel;
 import xaos.panels.TypingPanel;
 import xaos.panels.UI.UIPanel;
 import xaos.panels.menus.ContextMenu;
+import xaos.panels.menus.MenuItemDefinition;
 import xaos.panels.menus.MenuManager;
 import xaos.property.MainProperties;
 import xaos.skills.SkillManager;
@@ -100,6 +102,9 @@ import xaos.ui.debug.UiDebugOverlay;
 import xaos.ui.debug.UiModErrorWindow;
 import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
+import xaos.ui.integration.BottomToolbarController;
+import xaos.ui.integration.GameplayUiController;
+import xaos.ui.integration.LegacyGameplayUiLayout;
 import xaos.ui.integration.UiBottomMenuPreview;
 import xaos.ui.integration.UiBottomTaskSelection;
 import xaos.ui.integration.UiGameplayMenuResolver;
@@ -118,6 +123,7 @@ import xaos.ui.rendering.opengl.TownsUiTextMetrics;
 import xaos.ui.theme.BasicUiTheme;
 import xaos.ui.theme.ClassicTownsTheme;
 import xaos.ui.theme.UiThemeRegistry;
+import xaos.ui.integration.RightMenuController;
 
 public final class Game {
 
@@ -248,15 +254,12 @@ public final class Game {
 	 */
 	private static final boolean USE_XML_BOTTOM_PANEL = true;
 
-	private static UiBottomMenuPreview bottomMenuPreview;
-
 	// Temporary migration switch.
 	//
 	// false = original Towns right-hand panel
 	// true = XML-driven right-hand panel
 	private static final boolean USE_XML_RIGHT_PANEL = true;
 
-	private static UiRightMenuPreview rightMenuPreview;
 	/**
 	 * True when the active game has legacy
 	 * campaign, mission or mod menu overrides.
@@ -267,58 +270,29 @@ public final class Game {
 	 */
 	private static boolean legacyRightMenuOverridesPresent;
 
-	/**
-	 * Whether the XML right panel is responsible
-	 * for this part of the gameplay UI.
-	 *
-	 * Remains true even when the player hides
-	 * the panel using the right-edge toggle.
-	 */
 	public static boolean isXmlRightPanelMode() {
 
 		return USE_XML_RIGHT_PANEL
 				&& !legacyRightMenuOverridesPresent
-				&& rightMenuPreview != null
-				&& gameplayMenus != null
-				&& gameplayMenus.hasMenu(
-						UiRightMenuPreview.ROOT_MENU)
+				&& RIGHT_MENU.isConfiguredFor(gameplayMenus)
 				&& getWorld() != null
 				&& getPanelMainMenu() != null
 				&& !getPanelMainMenu().isActive();
 	}
 
-	/**
-	 * Whether the XML framework owns the bottom
-	 * gameplay panel.
-	 *
-	 * Deliberately independent of window.isOpen().
-	 *
-	 * The new toolbar may be temporarily hidden
-	 * using the original bottom-panel toggle.
-	 * That must not cause the legacy toolbar
-	 * to reappear underneath it.
-	 */
 	public static boolean isXmlBottomPanelMode() {
 
 		return USE_XML_BOTTOM_PANEL
-				&& bottomMenuPreview != null
-				&& gameplayMenus != null
-				&& gameplayMenus.hasMenu(
-						UiBottomMenuPreview.ROOT_MENU)
+				&& BOTTOM_TOOLBAR.isConfiguredFor(gameplayMenus)
 				&& getWorld() != null
 				&& getPanelMainMenu() != null
 				&& !getPanelMainMenu().isActive();
 	}
 
-	/**
-	 * Used by legacy hover handling so an open
-	 * XML submenu does not cause the toolbar
-	 * to automatically close.
-	 */
 	public static boolean isXmlBottomPopupOpen() {
 
 		return isXmlBottomPanelMode()
-				&& bottomMenuPreview.popup().isOpen();
+				&& BOTTOM_TOOLBAR.isPopupOpen();
 	}
 
 	/**
@@ -327,7 +301,7 @@ public final class Game {
 	public static boolean isXmlRightPanelActive() {
 
 		return isXmlRightPanelMode()
-				&& rightMenuPreview.window().isOpen();
+				&& RIGHT_MENU.isOpen();
 	}
 
 	/**
@@ -340,15 +314,7 @@ public final class Game {
 			return;
 		}
 
-		if (rightMenuPreview.window().isOpen()) {
-
-			UI_SYSTEM.cancelInput();
-			rightMenuPreview.close();
-
-		} else {
-
-			rightMenuPreview.open();
-		}
+		RIGHT_MENU.toggle();
 	}
 
 	/**
@@ -384,40 +350,15 @@ public final class Game {
 		return UI_SYSTEM.input().textInputActive();
 	}
 
-	/**
-	 * Reserve space for the minimap above and
-	 * the bottom toolbar below the XML right panel.
-	 */
 	private static UiInsets xmlRightPanelInsets() {
 
-		int top = Math.max(
-				8,
-				minimapPanelY + MINIMAP_PANEL_HEIGHT + 12);
-
-		int bottom = BOTTOM_PANEL_HEIGHT + 24;
-
-		// Keep the panel usable in smaller windows.
-		int availableHeight = Math.max(
-				0, UtilsGL.getHeight());
-
-		bottom = Math.min(
-				bottom,
-				Math.max(0, availableHeight - 100));
-
-		top = Math.min(
-				top,
-				Math.max(0,
-						availableHeight - bottom - 100));
-
-		int toggleWidth = xaos.panels.UI.UIPanelScaler.ui(
-				tileOpenRightMenu.getTileWidth());
-
-		return new UiInsets(
-				top,
-				toggleWidth,
-				bottom,
-				8);
-
+		return LegacyGameplayUiLayout.rightPanelInsets(
+				minimapPanelY,
+				MINIMAP_PANEL_HEIGHT,
+				BOTTOM_PANEL_HEIGHT,
+				UtilsGL.getHeight(),
+				xaos.panels.UI.UIPanelScaler.ui(
+						tileOpenRightMenu.getTileWidth()));
 	}
 
 	// ------------------------------------------------------------
@@ -442,6 +383,18 @@ public final class Game {
 	public static UiSystem uiSystem() {
 		return UI_SYSTEM;
 	}
+
+	private static final RightMenuController RIGHT_MENU = RightMenuController.forGame(UI_SYSTEM);
+	private static final BottomToolbarController BOTTOM_TOOLBAR = new BottomToolbarController(
+			UI_SYSTEM,
+			(MenuItemDefinition item) -> Game.getCurrentState() == Game.STATE_CREATING_TASK
+					&& UiBottomTaskSelection.matchesOrContains(
+							item,
+							Game.getCurrentTask(),
+							gameplayMenus));
+	private static final GameplayUiController GAMEPLAY_UI = new GameplayUiController(
+			RIGHT_MENU,
+			BOTTOM_TOOLBAR);
 
 	/**
 	 * Creates the permanent UI runtime and registers
@@ -476,7 +429,7 @@ public final class Game {
 				List.copyOf(getModsLoaded()));
 		UiRuntimeMenuActions.bind(
 				gameplayMenus,
-				Game::refreshXmlRightPanel);
+				Game::refreshMenus);
 		legacyRightMenuOverridesPresent = false;
 
 		World activeWorld = getWorld();
@@ -520,24 +473,9 @@ public final class Game {
 		return gameplayMenus;
 	}
 
-	/**
-	 * Refresh the XML right-hand panel when its
-	 * active menu registry changes.
-	 *
-	 * Called from the game UI dispatcher.
-	 */
-	public static void refreshXmlRightPanel() {
+	public static void refreshMenus() {
 
-		if (rightMenuPreview != null
-				&& rightMenuPreview.menus() == gameplayMenus) {
-
-			rightMenuPreview.refreshCurrentMenu();
-		}
-		if (bottomMenuPreview != null
-				&& bottomMenuPreview.menus() == gameplayMenus) {
-
-			bottomMenuPreview.refresh();
-		}
+		GAMEPLAY_UI.refreshMenus(gameplayMenus);
 	}
 
 	public Game() {
@@ -2045,8 +1983,7 @@ public final class Game {
 		// Track transitions between the main menu
 		// and active game worlds.
 		UiScreenTransitionTracker uiScreenTransitions = new UiScreenTransitionTracker();
-		boolean wasRightMenuPreviewInGame = false;
-		boolean wasBottomMenuPreviewInGame = false;
+
 		// Establish the initial state without triggering
 		// input cancellation.
 		uiScreenTransitions.update(
@@ -2084,200 +2021,21 @@ public final class Game {
 
 				UI_SYSTEM.cancelInput();
 			}
-			// ------------------------------------------------------------
-			// Temporary XML right-menu preview
-			// ------------------------------------------------------------
-
-			if (USE_XML_RIGHT_PANEL) {
-
-				boolean inGameplay = getWorld() != null
-						&& !getPanelMainMenu().isActive()
-						&& !legacyRightMenuOverridesPresent
-						&& gameplayMenus != null
-						&& gameplayMenus.hasMenu(
-								UiRightMenuPreview.ROOT_MENU);
-
-				if (inGameplay) {
-
-					if (rightMenuPreview == null) {
-
-						UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
-								Messages::getString,
-								new UiLegacyGameplayDefinitionLookup());
-
-						// Create the panel first.
-						rightMenuPreview = new UiRightMenuPreview(
-								UI_SYSTEM,
-								gameplayMenus,
-								resolver,
-								TownsUiTextMetrics.INSTANCE,
-								Messages::getString);
-
-						// Install gameplay actions.
-
-						rightMenuPreview.setActionBinding(
-								new UiRegisteredGameplayActionBinding(
-										new UiLegacyGameplayActionBinding()));
-
-						// Install the icon resolver.
-						UiLegacyIconSprites legacyIcons = UiLegacyIconSprites.fromGraphicsIni();
-
-						rightMenuPreview.setIconResolver(
-								legacyIcons::resolve);
-						// Display original construction descriptions
-						// and prerequisites in the new UI.
-						rightMenuPreview.setTooltipResolver(
-								new UiLegacyGameplayTooltipResolver());
-
-						// Use the same UI click effect as original Towns.
-						rightMenuPreview.setClickFeedback(
-								() -> UtilsAL.play(
-										UtilsAL.SOURCE_FX_CLICK));
-
-						// Now it is safe to dock the panel.
-						rightMenuPreview.dockRight(
-								xmlRightPanelInsets());
-
-					} else if (rightMenuPreview.menus() != gameplayMenus) {
-
-						rightMenuPreview.setMenus(gameplayMenus);
-					}
-
-					// Update docking margins when the
-					// game window dimensions change.
-					UiInsets newInsets = xmlRightPanelInsets();
-
-					if (!rightMenuPreview.window()
-							.anchorInsets().equals(newInsets)) {
-
-						rightMenuPreview.window()
-								.setAnchorInsets(newInsets);
-					}
-
-					// Open only when entering gameplay.
-					if (!wasRightMenuPreviewInGame) {
-						rightMenuPreview.open();
-					}
-
-				} else if (wasRightMenuPreviewInGame
-						&& rightMenuPreview != null) {
-
-					rightMenuPreview.close();
-				}
-
-				wasRightMenuPreviewInGame = inGameplay;
-			}
 
 			// ------------------------------------------------------------
-			// Temporary XML bottom-toolbar visual preview
+			// Gameplay UI coordination
 			// ------------------------------------------------------------
 
-			if (USE_XML_BOTTOM_PANEL) {
-
-				boolean inGameplay = getWorld() != null
-						&& !getPanelMainMenu().isActive()
-						&& gameplayMenus != null
-						&& gameplayMenus.hasMenu(
-								UiBottomMenuPreview.ROOT_MENU);
-
-				if (inGameplay) {
-
-					if (bottomMenuPreview == null) {
-
-						UiGameplayMenuResolver bottomResolver = new UiGameplayMenuResolver(
-								Messages::getString,
-								new UiLegacyGameplayDefinitionLookup());
-
-						bottomMenuPreview = new UiBottomMenuPreview(
-								UI_SYSTEM,
-								gameplayMenus,
-								bottomResolver,
-								TownsUiTextMetrics.INSTANCE);
-
-						// Resolve the same graphics.ini assets
-						// used by the Classic right-hand panel.
-						UiLegacyIconSprites icons = UiLegacyIconSprites.fromGraphicsIni();
-
-						bottomMenuPreview.setIconResolver(
-								icons::resolve);
-
-						// Original Towns toolbar sits above the
-						// 32px bottom open/close tab.
-						bottomMenuPreview.window()
-								.setAnchorInsets(
-										new UiInsets(0, 0, 32, 0));
-
-						// Original Towns bottom-toolbar commands,
-						// with support for registered mod actions.
-						bottomMenuPreview.setActionBinding(
-								new UiRegisteredGameplayActionBinding(
-										new UiLegacyBottomActionBinding()));
-
-						bottomMenuPreview.setSelectedActionPredicate(
-								item -> Game.getCurrentState() == Game.STATE_CREATING_TASK
-										&& UiBottomTaskSelection.matchesOrContains(
-												item,
-												Game.getCurrentTask(),
-												gameplayMenus));
-
-						// Preserve the original Towns menu click sound.
-						bottomMenuPreview.setClickFeedback(
-								() -> UtilsAL.play(
-										UtilsAL.SOURCE_FX_CLICK));
-
-					} else if (bottomMenuPreview.menus() != gameplayMenus) {
-
-						bottomMenuPreview.setMenus(
-								gameplayMenus);
-					}
-
-					/*
-					 * The original bottom-panel state now
-					 * controls visibility of the XML toolbar.
-					 *
-					 * This preserves the existing hover-to-open
-					 * and click-to-lock behaviour.
-					 */
-					boolean shouldShowBottomToolbar = UIPanel.isBottomMenuPanelActive()
-							&& !MainPanel.bHideUION;
-
-					if (shouldShowBottomToolbar) {
-
-						if (!bottomMenuPreview.window().isOpen()) {
-							bottomMenuPreview.open();
-						}
-
-					} else if (bottomMenuPreview.window().isOpen()) {
-
-						bottomMenuPreview.close();
-					}
-
-					bottomMenuPreview.refreshActionAvailability();
-
-					// Keep the submenu above the toolbar and
-					// clear of the new right-hand gameplay panel.
-					int popupRightLimit = UI_SYSTEM.root().viewportSize().width() - 8;
-
-					if (Game.isXmlRightPanelActive()) {
-
-						popupRightLimit = Math.min(
-								popupRightLimit,
-								rightMenuPreview.window().bounds().x() - 8);
-					}
-
-					bottomMenuPreview.setPopupRightLimit(
-							popupRightLimit);
-
-					bottomMenuPreview.updatePopupPlacement();
-
-				} else if (wasBottomMenuPreviewInGame
-						&& bottomMenuPreview != null) {
-
-					bottomMenuPreview.close();
-				}
-
-				wasBottomMenuPreviewInGame = inGameplay;
-			}
+			GAMEPLAY_UI.update(
+					gameplayMenus,
+					getWorld() != null
+							&& !getPanelMainMenu().isActive(),
+					USE_XML_RIGHT_PANEL,
+					legacyRightMenuOverridesPresent,
+					USE_XML_BOTTOM_PANEL,
+					UIPanel.isBottomMenuPanelActive()
+							&& !MainPanel.bHideUION,
+					Game::xmlRightPanelInsets);
 
 			// --------------------------------------------------------
 			// Application input focus
@@ -2820,14 +2578,9 @@ public final class Game {
 			}
 		}
 
-		// Refresh gameplay action availability
-		// without rebuilding the XML menu.
-		//
-		// The helper checks that the world and
-		// replacement panel are both active.
 		if (isXmlRightPanelActive()) {
 
-			rightMenuPreview.refreshActionAvailability();
+			GAMEPLAY_UI.refreshRightActionAvailability();
 		}
 
 		// ------------------------------------------------------------
