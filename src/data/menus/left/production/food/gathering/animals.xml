@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.food.gathering.animals"
+      title="Animals">
+
+    <item id="game.left.production.food.gathering.animals.qmilkcow"
+          type="action" command="QUEUE" parameter="qmilkcow" />
+
+    <item id="game.left.production.food.gathering.animals.qmilkwildcow"
+          type="action" command="QUEUE" parameter="qmilkwildcow" />
+
+    <item id="game.left.production.food.gathering.animals.qmilkdoe"
+          type="action" command="QUEUE" parameter="qmilkdoe" />
+
+    <item id="game.left.production.food.gathering.animals.qmilksnoat"
+          type="action" command="QUEUE" parameter="qmilksnoat" />
+
+    <item id="game.left.production.food.gathering.animals.qmilkwildsnoat"
+          type="action" command="QUEUE" parameter="qmilkwildsnoat" />
+
+    <item id="game.left.production.food.gathering.animals.qmilkunifallow"
+          type="action" command="QUEUE" parameter="qmilkunifallow" />
+
+    <item id="game.left.production.food.gathering.animals.qmilkwildunifallow"
+          type="action" command="QUEUE" parameter="qmilkwildunifallow" />
+
+    <item id="game.left.production.food.gathering.animals.qgatherchickenegg"
+          type="action" command="QUEUE" parameter="qgatherchickenegg" />
+
+    <item id="game.left.production.food.gathering.animals.qgatherwildchickenegg"
+          type="action" command="QUEUE" parameter="qgatherwildchickenegg" />
+
+    <item id="game.left.production.food.gathering.animals.qgatherskootenegg"
+          type="action" command="QUEUE" parameter="qgatherskootenegg" />
+
+    <item id="game.left.production.food.gathering.animals.qgatherwildskootenegg"
+          type="action" command="QUEUE" parameter="qgatherwildskootenegg" />
+
+    <item id="game.left.production.food.gathering.animals.back"
+          type="back" title="Back" icon="ui_back" />
+
+</menu>

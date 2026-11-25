@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.food.gathering"
+      title="Gathering">
+
+    <item
+        id="game.left.production.food.gathering.trees"
+        type="submenu"
+        title="Trees and plants"
+        icon="ui_appleseed"
+        targetMenu="game.left.production.food.gathering.trees" />
+
+    <item
+        id="game.left.production.food.gathering.animals"
+        type="submenu"
+        title="Animals"
+        icon="ui_chickenfarm"
+        targetMenu="game.left.production.food.gathering.animals" />
+
+    <item id="game.left.production.food.gathering.qfishing"
+          type="action" command="QUEUE" parameter="qfishing" />
+
+    <item id="game.left.production.food.gathering.qflour"
+          type="action" command="QUEUE" parameter="qflour"
+          icon="flour" />
+
+    <item id="game.left.production.food.gathering.qsugar"
+          type="action" command="QUEUE" parameter="qsugar"
+          icon="sugar" />
+
+    <item id="game.left.production.food.gathering.qjunglesalad"
+          type="action" command="QUEUE" parameter="qjunglesalad" />
+
+    <item id="game.left.production.food.gathering.qgathersnowpile"
+          type="action" command="QUEUE" parameter="qgathersnowpile" />
+
+    <item id="game.left.production.food.gathering.qwaterbucket"
+          type="action" command="QUEUE" parameter="qwaterbucket" />
+
+    <item
+        id="game.left.production.food.gathering.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

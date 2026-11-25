@@ -3,7 +3,19 @@
 <menu id="game.left.production.food"
       title="Food">
 
-    <!-- Other Food submenus will follow. -->
+    <item
+        id="game.left.production.food.gathering"
+        type="submenu"
+        title="Gathering"
+        icon="ui_rfoodgathering"
+        targetMenu="game.left.production.food.gathering" />
+
+    <item
+        id="game.left.production.food.butchering"
+        type="submenu"
+        title="Butchering"
+        icon="ui_rfoodbutchering"
+        targetMenu="game.left.production.food.butchering" />
 
     <item
         id="game.left.production.food.baking"
@@ -11,6 +23,13 @@
         title="Baking"
         icon="ui_rbaking"
         targetMenu="game.left.production.food.baking" />
+
+    <item
+        id="game.left.production.food.cooking"
+        type="submenu"
+        title="Cooking"
+        icon="ui_rfoodcooking"
+        targetMenu="game.left.production.food.cooking" />
 
     <item
         id="game.left.production.food.back"

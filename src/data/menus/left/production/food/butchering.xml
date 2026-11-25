@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.food.butchering"
+      title="Butchering">
+
+    <item
+        id="game.left.production.food.butchering.qbutcherbadger"
+        type="action"
+        command="QUEUE"
+        parameter="qbutcherbadger" />
+
+    <item
+        id="game.left.production.food.butchering.qbutcherpoultry"
+        type="action"
+        command="QUEUE"
+        parameter="qbutcherpoultry" />
+
+    <item
+        id="game.left.production.food.butchering.qbutchercow"
+        type="action"
+        command="QUEUE"
+        parameter="qbutchercow" />
+
+    <item
+        id="game.left.production.food.butchering.qbutcherpig"
+        type="action"
+        command="QUEUE"
+        parameter="qbutcherpig" />
+
+    <item
+        id="game.left.production.food.butchering.qbutchersnoat"
+        type="action"
+        command="QUEUE"
+        parameter="qbutchersnoat" />
+
+    <item
+        id="game.left.production.food.butchering.qbutcherforbones"
+        type="action"
+        command="QUEUE"
+        parameter="qbutcherforbones" />
+
+    <item
+        id="game.left.production.food.butchering.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>
