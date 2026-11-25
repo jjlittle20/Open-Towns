@@ -101,6 +101,7 @@ import xaos.ui.debug.UiModErrorWindow;
 import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
 import xaos.ui.integration.UiBottomMenuPreview;
+import xaos.ui.integration.UiBottomTaskSelection;
 import xaos.ui.integration.UiGameplayMenuResolver;
 import xaos.ui.integration.UiLegacyBottomActionBinding;
 import xaos.ui.integration.UiLegacyGameplayActionBinding;
@@ -2211,6 +2212,12 @@ public final class Game {
 						bottomMenuPreview.setActionBinding(
 								new UiRegisteredGameplayActionBinding(
 										new UiLegacyBottomActionBinding()));
+
+						bottomMenuPreview.setSelectedActionPredicate(
+								item -> Game.getCurrentState() == Game.STATE_CREATING_TASK
+										&& UiBottomTaskSelection.matches(
+												item,
+												Game.getCurrentTask()));
 
 						// Preserve the original Towns menu click sound.
 						bottomMenuPreview.setClickFeedback(

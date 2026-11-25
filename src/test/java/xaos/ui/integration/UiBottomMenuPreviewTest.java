@@ -644,4 +644,52 @@ class UiBottomMenuPreviewTest {
                         .bounds().x());
     }
 
+    @Test
+    void selectedActionUpdatesWithoutRebuilding() {
+
+        UiBottomMenuPreview preview = preview(new UiSystem(), 3);
+
+        AtomicBoolean selecting = new AtomicBoolean(false);
+
+        preview.setActionBinding(
+                new UiGameplayActionBinding() {
+
+                    @Override
+                    public boolean isAvailable(
+                            MenuItemDefinition item) {
+                        return true;
+                    }
+
+                    @Override
+                    public void execute(
+                            MenuItemDefinition item) {
+                    }
+                });
+
+        preview.setSelectedActionPredicate(
+                item -> selecting.get()
+                        && item.getId().equals(
+                                "game.bottom.test.0"));
+
+        UiButton original = (UiButton) preview.buttonRow()
+                .children().get(0);
+
+        assertFalse(original.selected());
+
+        selecting.set(true);
+        preview.refreshActionAvailability();
+
+        assertTrue(original.selected());
+
+        assertSame(
+                original,
+                preview.buttonRow()
+                        .children().get(0));
+
+        selecting.set(false);
+        preview.refreshActionAvailability();
+
+        assertFalse(original.selected());
+    }
+
 }

@@ -1,6 +1,8 @@
 
 package xaos.ui.integration;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -29,6 +31,9 @@ import xaos.ui.rendering.UiTextMetrics;
 
 import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
 import xaos.ui.integration.UiGameplayMenuResolver.IconType;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * XML-driven bottom gameplay toolbar.
@@ -79,6 +84,10 @@ public final class UiBottomMenuPreview {
     private int popupRightLimitX;
 
     private final UiButtonAvailabilityTracker availabilityTracker = new UiButtonAvailabilityTracker();
+
+    private Predicate<MenuItemDefinition> selectedActionPredicate = item -> false;
+
+    private final Map<UiButton, MenuItemDefinition> visibleActionButtons = new IdentityHashMap<>();
 
     public UiBottomMenuPreview(
             UiSystem ui,
@@ -303,6 +312,39 @@ public final class UiBottomMenuPreview {
     }
 
     /**
+     * Supplies the game's current action selection.
+     *
+     * Selection is supplied externally so this
+     * reusable component does not depend on Game.
+     */
+    public void setSelectedActionPredicate(
+            Predicate<MenuItemDefinition> predicate) {
+
+        selectedActionPredicate = Objects.requireNonNull(
+                predicate, "predicate");
+
+        refreshSelectedActions();
+    }
+
+    /**
+     * Updates existing buttons without rebuilding
+     * the toolbar or changing its scroll position.
+     */
+    public void refreshSelectedActions() {
+
+        for (var entry : visibleActionButtons.entrySet()) {
+
+            UiButton button = entry.getKey();
+
+            boolean selected = button.enabled()
+                    && selectedActionPredicate.test(
+                            entry.getValue());
+
+            button.setSelected(selected);
+        }
+    }
+
+    /**
      * Optional sound or other click feedback.
      */
     public void setClickFeedback(Runnable feedback) {
@@ -320,6 +362,8 @@ public final class UiBottomMenuPreview {
 
         availabilityTracker.refresh();
         popup.refreshActionAvailability();
+
+        refreshSelectedActions();
     }
 
     /**
@@ -516,7 +560,7 @@ public final class UiBottomMenuPreview {
         // The previous visible buttons are about
         // to be replaced. Remove their old checks.
         availabilityTracker.clear();
-
+        visibleActionButtons.clear();
         MenuDefinition menu = menus.requireMenu(ROOT_MENU);
 
         var items = menu.getItems().stream()
@@ -529,8 +573,17 @@ public final class UiBottomMenuPreview {
         buttonRow.clear();
 
         for (MenuItemDefinition item : visible) {
-            buttonRow.add(createMenuButton(item));
+
+            UiButton button = createMenuButton(item);
+
+            buttonRow.add(button);
+
+            if ("action".equals(item.getType())) {
+                visibleActionButtons.put(button, item);
+            }
         }
+
+        refreshSelectedActions();
 
         leftArrow.setEnabled(pager.canScrollLeft());
         rightArrow.setEnabled(pager.canScrollRight());
