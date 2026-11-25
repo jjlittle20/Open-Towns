@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.food"
+      title="Food">
+
+    <!-- Other Food submenus will follow. -->
+
+    <item
+        id="game.left.production.food.baking"
+        type="submenu"
+        title="Baking"
+        icon="ui_rbaking"
+        targetMenu="game.left.production.food.baking" />
+
+    <item
+        id="game.left.production.food.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

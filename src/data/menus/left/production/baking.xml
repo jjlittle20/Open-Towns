@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.food.baking"
+      title="Baking">
+
+    <item
+        id="game.left.production.food.baking.qapplepie"
+        type="action"
+        command="QUEUE"
+        parameter="qapplepie" />
+
+    <item
+        id="game.left.production.food.baking.qbread"
+        type="action"
+        command="QUEUE"
+        parameter="qbread" />
+
+    <item
+        id="game.left.production.food.baking.qcake"
+        type="action"
+        command="QUEUE"
+        parameter="qcake" />
+
+    <item
+        id="game.left.production.food.baking.qbananabread"
+        type="action"
+        command="QUEUE"
+        parameter="qbananabread" />
+
+    <item
+        id="game.left.production.food.baking.qmeatpie"
+        type="action"
+        command="QUEUE"
+        parameter="qmeatpie" />
+
+    <item
+        id="game.left.production.food.baking.qpearpie"
+        type="action"
+        command="QUEUE"
+        parameter="qpearpie" />
+
+    <item
+        id="game.left.production.food.baking.qsnowcherrypie"
+        type="action"
+        command="QUEUE"
+        parameter="qsnowcherrypie" />
+
+    <item
+        id="game.left.production.food.baking.qbananapie"
+        type="action"
+        command="QUEUE"
+        parameter="qbananapie" />
+
+    <item
+        id="game.left.production.food.baking.qcookie"
+        type="action"
+        command="QUEUE"
+        parameter="qcookie" />
+
+    <item
+        id="game.left.production.food.baking.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

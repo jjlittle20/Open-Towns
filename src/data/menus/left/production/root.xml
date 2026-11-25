@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.root"
+      title="Production">
+
+    <!--
+        Migration in progress.
+
+        The remaining original production
+        categories will be added in later steps.
+    -->
+
+    <item
+        id="game.left.production.food"
+        type="submenu"
+        title="Food"
+        icon="ui_rfood"
+        targetMenu="game.left.production.food" />
+
+</menu>
