@@ -2202,6 +2202,23 @@ public final class Game {
 						bottomMenuPreview.open();
 					}
 					bottomMenuPreview.refreshActionAvailability();
+
+					// Keep the submenu above the toolbar and
+					// clear of the new right-hand gameplay panel.
+					int popupRightLimit = UI_SYSTEM.root().viewportSize().width() - 8;
+
+					if (Game.isXmlRightPanelActive()) {
+
+						popupRightLimit = Math.min(
+								popupRightLimit,
+								rightMenuPreview.window().bounds().x() - 8);
+					}
+
+					bottomMenuPreview.setPopupRightLimit(
+							popupRightLimit);
+
+					bottomMenuPreview.updatePopupPlacement();
+
 				} else if (wasBottomMenuPreviewInGame
 						&& bottomMenuPreview != null) {
 

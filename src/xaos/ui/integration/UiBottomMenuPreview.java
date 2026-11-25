@@ -72,6 +72,9 @@ public final class UiBottomMenuPreview {
 
     private Runnable clickFeedback = () -> {
     };
+    private final UiBottomSubmenuPopup popup;
+
+    private int popupRightLimitX;
 
     private final UiButtonAvailabilityTracker availabilityTracker = new UiButtonAvailabilityTracker();
 
@@ -168,7 +171,11 @@ public final class UiBottomMenuPreview {
         window.content().add(leftArrow);
         window.content().add(buttonRow);
         window.content().add(rightArrow);
-
+        popup = new UiBottomSubmenuPopup(
+                ui,
+                menus,
+                resolver,
+                metrics);
         rebuild();
 
         // Start hidden until the game explicitly
@@ -190,6 +197,30 @@ public final class UiBottomMenuPreview {
         return buttonRow;
     }
 
+    public UiBottomSubmenuPopup popup() {
+        return popup;
+    }
+
+    /**
+     * Optional right boundary used to avoid
+     * overlapping the gameplay right panel.
+     */
+    public void setPopupRightLimit(int rightLimitX) {
+        popupRightLimitX = Math.max(0, rightLimitX);
+    }
+
+    /**
+     * Repositions an open submenu after viewport
+     * or toolbar layout changes.
+     */
+    public void updatePopupPlacement() {
+
+        popup.updatePlacement(
+                window.bounds(),
+                ui.root().viewportSize(),
+                popupRightLimitX);
+    }
+
     public int firstVisibleIndex() {
         return pager.firstIndex();
     }
@@ -199,6 +230,9 @@ public final class UiBottomMenuPreview {
     }
 
     public void close() {
+
+        popup.hide();
+
         ui.cancelInput();
         ui.windows().close(window);
     }
@@ -218,6 +252,7 @@ public final class UiBottomMenuPreview {
         menus = newMenus;
         pager.reset();
         rebuild();
+        popup.setMenus(newMenus);
     }
 
     /**
@@ -229,7 +264,7 @@ public final class UiBottomMenuPreview {
 
         iconResolver = Objects.requireNonNull(
                 resolver, "resolver");
-
+        popup.setIconResolver(iconResolver);
         rebuild();
     }
 
@@ -244,7 +279,7 @@ public final class UiBottomMenuPreview {
 
         actionBinding = Objects.requireNonNull(
                 binding, "binding");
-
+        popup.setActionBinding(actionBinding);
         rebuild();
     }
 
@@ -255,6 +290,7 @@ public final class UiBottomMenuPreview {
 
         clickFeedback = Objects.requireNonNull(
                 feedback, "feedback");
+        popup.setClickFeedback(clickFeedback);
     }
 
     /**
@@ -264,6 +300,7 @@ public final class UiBottomMenuPreview {
     public void refreshActionAvailability() {
 
         availabilityTracker.refresh();
+        popup.refreshActionAvailability();
     }
 
     /**
@@ -271,7 +308,9 @@ public final class UiBottomMenuPreview {
      * the current menu registry.
      */
     public void refresh() {
+
         rebuild();
+        popup.refresh();
     }
 
     private UiButton createArrow(String fallback) {
@@ -363,13 +402,27 @@ public final class UiBottomMenuPreview {
 
         button.setTooltip(resolved.title());
 
-        // Submenus will use a separate popup above
-        // the toolbar in the next milestone.
         if ("submenu".equals(item.getType())) {
 
-            button.setEnabled(false);
+            String target = item.getTargetMenu();
+
             button.setTooltip(
                     resolved.title() + "\nOpen submenu");
+
+            if (target == null || !menus.hasMenu(target)) {
+
+                button.setEnabled(false);
+
+            } else {
+
+                button.setOnClick(() -> {
+
+                    clickFeedback.run();
+
+                    popup.showMenu(target);
+                    updatePopupPlacement();
+                });
+            }
 
             return button;
         }

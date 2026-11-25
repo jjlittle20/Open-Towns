@@ -73,6 +73,115 @@ class UiBottomMenuPreviewTest {
                 FONT);
     }
 
+    private static MenuItemDefinition popupItem(
+            String id,
+            String type,
+            String target,
+            String command,
+            String parameter) {
+
+        return new MenuItemDefinition(
+                id,
+                type,
+                null,
+                target,
+                command,
+                false,
+                true,
+                null,
+                null,
+                null,
+                null,
+                true,
+                id,
+                null,
+                parameter,
+                null);
+    }
+
+    private static MenuManager popupMenus() {
+
+        MenuManager manager = new MenuManager();
+
+        MenuDefinition root = new MenuDefinition(
+                "game.bottom.root",
+                null,
+                "Actions");
+
+        root.addItem(popupItem(
+                "game.bottom.stockpiles",
+                "submenu",
+                "game.bottom.stockpiles",
+                null,
+                null));
+
+        root.addItem(popupItem(
+                "game.bottom.zones",
+                "submenu",
+                "game.bottom.zones",
+                null,
+                null));
+
+        manager.registerMenu(root);
+
+        MenuDefinition stockpiles = new MenuDefinition(
+                "game.bottom.stockpiles",
+                null,
+                "Stockpiles");
+
+        stockpiles.addItem(popupItem(
+                "game.bottom.stockpiles.rawmaterials",
+                "action",
+                null,
+                "STOCKPILE",
+                "rawmaterials"));
+
+        stockpiles.addItem(popupItem(
+                "game.bottom.stockpiles.back",
+                "back",
+                null,
+                null,
+                null));
+
+        manager.registerMenu(stockpiles);
+
+        MenuDefinition zones = new MenuDefinition(
+                "game.bottom.zones",
+                null,
+                "Zones");
+
+        zones.addItem(popupItem(
+                "game.bottom.zones.zcarpentry",
+                "action",
+                null,
+                "CREATEZONE",
+                "zcarpentry"));
+
+        zones.addItem(popupItem(
+                "game.bottom.zones.back",
+                "back",
+                null,
+                null,
+                null));
+
+        manager.registerMenu(zones);
+
+        return manager;
+    }
+
+    private static UiBottomMenuPreview popupPreview(
+            UiSystem ui,
+            MenuManager menus) {
+
+        return new UiBottomMenuPreview(
+                ui,
+                menus,
+                new UiGameplayMenuResolver(
+                        key -> key,
+                        (command, parameter) -> null),
+                FONT);
+    }
+
     @Test
     void createsHiddenClassicBottomToolbar() {
 
@@ -333,6 +442,169 @@ class UiBottomMenuPreviewTest {
         originalButton.activate();
 
         assertEquals(1, executions.get());
+    }
+
+    @Test
+    void stockpilesOpenAboveToolbarAndExecute() {
+
+        UiSystem ui = new UiSystem();
+
+        UiBottomMenuPreview preview = popupPreview(ui, popupMenus());
+
+        AtomicReference<String> executed = new AtomicReference<>();
+
+        preview.setActionBinding(
+                new UiGameplayActionBinding() {
+
+                    @Override
+                    public boolean isAvailable(
+                            MenuItemDefinition item) {
+                        return true;
+                    }
+
+                    @Override
+                    public void execute(
+                            MenuItemDefinition item) {
+                        executed.set(item.getParameter());
+                    }
+                });
+
+        preview.open();
+
+        ui.updateLayout(new UiSize(1400, 900));
+
+        UiButton stockpiles = (UiButton) preview.buttonRow().children().get(0);
+
+        assertTrue(stockpiles.enabled());
+
+        stockpiles.activate();
+
+        preview.updatePopupPlacement();
+        ui.updateLayout(new UiSize(1400, 900));
+
+        UiBottomSubmenuPopup popup = preview.popup();
+
+        assertTrue(popup.isOpen());
+
+        assertEquals(
+                "game.bottom.stockpiles",
+                popup.currentMenuId());
+
+        assertFalse(
+                popup.window().titleBar().visible());
+
+        // The popup should be above the toolbar,
+        // separated by 16 logical UI units.
+        assertEquals(
+                preview.window().bounds().y(),
+                popup.window().bounds().y()
+                        + popup.window().bounds().height()
+                        + 16);
+
+        UiButton rawMaterials = (UiButton) popup.scroll().content().children().get(0);
+
+        assertTrue(rawMaterials.enabled());
+
+        rawMaterials.activate();
+
+        assertEquals(
+                "rawmaterials",
+                executed.get());
+
+        assertFalse(popup.isOpen());
+    }
+
+    @Test
+    void zonesPopupBackReturnsToToolbar() {
+
+        UiSystem ui = new UiSystem();
+
+        UiBottomMenuPreview preview = popupPreview(ui, popupMenus());
+
+        preview.open();
+        ui.updateLayout(new UiSize(1400, 900));
+
+        UiButton zones = (UiButton) preview.buttonRow().children().get(1);
+
+        zones.activate();
+
+        assertTrue(preview.popup().isOpen());
+
+        assertEquals(
+                "game.bottom.zones",
+                preview.popup().currentMenuId());
+
+        UiButton back = (UiButton) preview.popup().scroll()
+                .content().children().get(1);
+
+        back.activate();
+
+        assertFalse(preview.popup().isOpen());
+
+        // The main toolbar remains open.
+        assertTrue(preview.window().isOpen());
+    }
+
+    @Test
+    void popupRefreshesAfterModAddsMenuItem() {
+
+        UiSystem ui = new UiSystem();
+
+        MenuManager menus = popupMenus();
+
+        UiBottomMenuPreview preview = popupPreview(ui, menus);
+
+        preview.open();
+        ui.updateLayout(new UiSize(1400, 900));
+
+        ((UiButton) preview.buttonRow()
+                .children().get(0)).activate();
+
+        assertEquals(
+                2,
+                preview.popup().scroll()
+                        .content().children().size());
+
+        // Simulate a Java mod contributing an
+        // additional stockpile button.
+        menus.addRuntimeItem(
+                "game.bottom.stockpiles",
+                popupItem(
+                        "testmod:custom-stockpile",
+                        "action",
+                        null,
+                        "MOD_ACTION",
+                        "testmod:custom-stockpile"));
+
+        preview.refresh();
+
+        assertTrue(preview.popup().isOpen());
+
+        assertEquals(
+                3,
+                preview.popup().scroll()
+                        .content().children().size());
+    }
+
+    @Test
+    void closingToolbarAlsoClosesPopup() {
+
+        UiSystem ui = new UiSystem();
+
+        UiBottomMenuPreview preview = popupPreview(ui, popupMenus());
+
+        preview.open();
+        ui.updateLayout(new UiSize(1400, 900));
+
+        ((UiButton) preview.buttonRow()
+                .children().get(0)).activate();
+
+        assertTrue(preview.popup().isOpen());
+
+        preview.close();
+
+        assertFalse(preview.window().isOpen());
+        assertFalse(preview.popup().isOpen());
     }
 
 }
