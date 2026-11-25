@@ -87,7 +87,7 @@ public final class UiBottomMenuPreview {
 
     private Predicate<MenuItemDefinition> selectedActionPredicate = item -> false;
 
-    private final Map<UiButton, MenuItemDefinition> visibleActionButtons = new IdentityHashMap<>();
+    private final Map<UiButton, MenuItemDefinition> visibleSelectableButtons = new IdentityHashMap<>();
 
     public UiBottomMenuPreview(
             UiSystem ui,
@@ -332,7 +332,7 @@ public final class UiBottomMenuPreview {
      */
     public void refreshSelectedActions() {
 
-        for (var entry : visibleActionButtons.entrySet()) {
+        for (var entry : visibleSelectableButtons.entrySet()) {
 
             UiButton button = entry.getKey();
 
@@ -560,7 +560,7 @@ public final class UiBottomMenuPreview {
         // The previous visible buttons are about
         // to be replaced. Remove their old checks.
         availabilityTracker.clear();
-        visibleActionButtons.clear();
+        visibleSelectableButtons.clear();
         MenuDefinition menu = menus.requireMenu(ROOT_MENU);
 
         var items = menu.getItems().stream()
@@ -578,10 +578,16 @@ public final class UiBottomMenuPreview {
 
             buttonRow.add(button);
 
-            if ("action".equals(item.getType())) {
-                visibleActionButtons.put(button, item);
+            if ("action".equals(item.getType())
+                    || "submenu".equals(item.getType())) {
+
+                visibleSelectableButtons.put(
+                        button,
+                        item);
             }
         }
+
+        refreshSelectedActions();
 
         refreshSelectedActions();
 

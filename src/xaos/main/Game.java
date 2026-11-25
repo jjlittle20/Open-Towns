@@ -2215,9 +2215,10 @@ public final class Game {
 
 						bottomMenuPreview.setSelectedActionPredicate(
 								item -> Game.getCurrentState() == Game.STATE_CREATING_TASK
-										&& UiBottomTaskSelection.matches(
+										&& UiBottomTaskSelection.matchesOrContains(
 												item,
-												Game.getCurrentTask()));
+												Game.getCurrentTask(),
+												gameplayMenus));
 
 						// Preserve the original Towns menu click sound.
 						bottomMenuPreview.setClickFeedback(

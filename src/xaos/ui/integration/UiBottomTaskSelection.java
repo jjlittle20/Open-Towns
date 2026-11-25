@@ -1,10 +1,13 @@
 
 package xaos.ui.integration;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import xaos.panels.CommandPanel;
 import xaos.panels.menus.MenuItemDefinition;
+import xaos.panels.menus.MenuManager;
 import xaos.tasks.Task;
 
 /**
@@ -78,4 +81,71 @@ public final class UiBottomTaskSelection {
                         item.getParameter2(),
                         task.getParameter2());
     }
+
+    /**
+     * Matches an individual action or any action
+     * contained within a submenu.
+     *
+     * This allows Stockpiles and Zones to remain
+     * highlighted while their selected placement
+     * task is active.
+     */
+    public static boolean matchesOrContains(
+            MenuItemDefinition item,
+            Task task,
+            MenuManager menus) {
+
+        if (item == null || task == null) {
+            return false;
+        }
+
+        if ("action".equals(item.getType())) {
+            return matches(item, task);
+        }
+
+        if (!"submenu".equals(item.getType())
+                || menus == null) {
+            return false;
+        }
+
+        return menuContains(
+                item.getTargetMenu(),
+                task,
+                menus,
+                new HashSet<>());
+    }
+
+    private static boolean menuContains(
+            String menuId,
+            Task task,
+            MenuManager menus,
+            Set<String> visited) {
+
+        if (menuId == null
+                || !visited.add(menuId)
+                || !menus.hasMenu(menuId)) {
+
+            return false;
+        }
+
+        for (MenuItemDefinition child : menus.requireMenu(menuId).getItems()) {
+
+            if ("action".equals(child.getType())
+                    && matches(child, task)) {
+                return true;
+            }
+
+            if ("submenu".equals(child.getType())
+                    && menuContains(
+                            child.getTargetMenu(),
+                            task,
+                            menus,
+                            visited)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 }

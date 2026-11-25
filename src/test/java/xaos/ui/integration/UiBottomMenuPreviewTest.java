@@ -692,4 +692,43 @@ class UiBottomMenuPreviewTest {
         assertFalse(original.selected());
     }
 
+    @Test
+    void selectedSubmenuUpdatesWithoutRebuilding() {
+
+        UiBottomMenuPreview preview = popupPreview(
+                new UiSystem(),
+                popupMenus());
+
+        AtomicReference<String> selectedId = new AtomicReference<>(
+                "game.bottom.stockpiles");
+
+        preview.setSelectedActionPredicate(
+                item -> item.getId().equals(
+                        selectedId.get()));
+
+        UiButton stockpiles = (UiButton) preview.buttonRow().children().get(0);
+
+        UiButton zones = (UiButton) preview.buttonRow().children().get(1);
+
+        assertTrue(stockpiles.selected());
+        assertFalse(zones.selected());
+
+        selectedId.set("game.bottom.zones");
+
+        preview.refreshSelectedActions();
+
+        assertFalse(stockpiles.selected());
+        assertTrue(zones.selected());
+
+        // Selection changes must not reconstruct
+        // the toolbar or its buttons.
+        assertSame(
+                stockpiles,
+                preview.buttonRow().children().get(0));
+
+        assertSame(
+                zones,
+                preview.buttonRow().children().get(1));
+    }
+
 }
