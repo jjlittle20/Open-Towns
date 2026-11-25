@@ -1462,12 +1462,24 @@ public class UIPanelInputHandler {
 		}
 
 		// BOTTOM
+
+		// BOTTOM
 		if (iPanel == MOUSE_BOTTOM_OPENCLOSE) {
-			setBottomMenuPanelLocked(!isBottomMenuPanelLocked());
-			// setProductionPanelActive (!isProductionPanelActive ());
+
+			boolean locked = !isBottomMenuPanelLocked();
+
+			setBottomMenuPanelLocked(locked);
+
+			// Clicking the closed tab must make
+			// the toolbar visible immediately.
+			if (locked) {
+				setBottomMenuPanelActive(true);
+			}
+
 			UtilsAL.play(UtilsAL.SOURCE_FX_CLICK);
 			return;
 		}
+
 		if (isBottomMenuPanelActive()) {
 			if (iPanel == MOUSE_BOTTOM_LEFT_SCROLL) {
 				if (bottomPanelItemIndex > 0) {
@@ -2174,7 +2186,7 @@ public class UIPanelInputHandler {
 				}
 				return MOUSE_BOTTOM_PANEL;
 			}
-			if (isMouseOnAnIcon(x, y, tileOpenCloseBottomMenuPoint, tileOpenBottomMenuON, tileOpenBottomMenuONAlpha)) {
+			if (isMouseOnBottomToggle(x, y)) {
 				if (doEdgeMenusStuff) {
 					// Cerramos los menús no locked
 					closeNonLockedMenus(false, true, true);
@@ -2206,40 +2218,52 @@ public class UIPanelInputHandler {
 				}
 			}
 
+			// The bottom toolbar is currently active.
 			if (doEdgeMenusStuff) {
-				if (delayTime > (Game.FPS_INGAME / 8) * 6) {
-					if (!isBottomMenuPanelLocked() && !isMouseOnAnIcon(x, y, tileOpenCloseBottomMenuPoint,
-							tileOpenBottomMenu, tileOpenBottomMenuAlpha)) {
+
+				boolean overXmlToolbar = Game.isXmlBottomPanelMode()
+						&& isMouseOnBottomPanel(x, y);
+
+				boolean overXmlPopup = Game.isXmlBottomPopupOpen();
+
+				if (overXmlToolbar || overXmlPopup) {
+
+					// Keep the toolbar open while
+					// interacting with its contents.
+					delayTime = 0;
+
+				} else if (delayTime > (Game.FPS_INGAME / 8) * 6) {
+
+					if (!isBottomMenuPanelLocked()
+							&& !isMouseOnBottomToggle(x, y)) {
+
 						delayTime = 0;
 						setBottomMenuPanelActive(false);
 					}
 				}
 			}
+
 		} else {
-			if (doEdgeMenusStuff) {
 
-				boolean overBottomToggle = isMouseOnAnIcon(
-						x, y,
-						tileOpenCloseBottomMenuPoint,
-						tileOpenBottomMenu,
-						tileOpenBottomMenuAlpha);
+			// The bottom toolbar is currently hidden.
+			// Hovering over its tab should reveal it.
+			// Clicking must also recognise the tab.
+			if (isMouseOnBottomToggle(x, y)) {
 
-				boolean overXmlBottomToolbar = Game.isXmlBottomPanelMode()
-						&& isMouseOnBottomPanel(x, y);
+				if (doEdgeMenusStuff) {
 
-				boolean overXmlBottomPopup = Game.isXmlBottomPopupOpen();
+					setBottomMenuPanelActive(true);
 
-				if (!isBottomMenuPanelLocked()
-						&& !overBottomToggle
-						&& !overXmlBottomToolbar
-						&& !overXmlBottomPopup) {
+					closeNonLockedMenus(
+							false, true, true);
 
 					delayTime = 0;
-					setBottomMenuPanelActive(false);
 				}
 
+				return MOUSE_BOTTOM_OPENCLOSE;
 			}
 		}
+
 		// MENU (right)
 
 		// The XML panel's toggle remains clickable
