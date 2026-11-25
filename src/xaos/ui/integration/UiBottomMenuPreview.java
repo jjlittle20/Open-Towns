@@ -16,8 +16,10 @@ import xaos.ui.components.UiWindowAppearance;
 import xaos.ui.core.UiButtonAvailabilityTracker;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiSystem;
+import xaos.ui.layout.UiAbsoluteLayout;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiLinearLayout;
+import xaos.ui.layout.UiPoint;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiToolbarPager;
 import xaos.ui.layout.UiToolbarRowLayout;
@@ -50,7 +52,7 @@ public final class UiBottomMenuPreview {
     private static final int SCROLL_WIDTH = 32;
 
     private static final int CONTENT_WIDTH = 960;
-    private static final int TOOLBAR_WIDTH = CONTENT_WIDTH + SCROLL_WIDTH * 2;
+    private static final int TOOLBAR_WIDTH = CONTENT_WIDTH;
 
     private final UiSystem ui;
     private final UiWindow window;
@@ -123,8 +125,7 @@ public final class UiBottomMenuPreview {
         window.content().setSpacing(0);
 
         window.content().setLayoutStrategy(
-                UiLinearLayout.HORIZONTAL);
-
+                UiAbsoluteLayout.INSTANCE);
         // --------------------------------------------------
         // Left scroll arrow
         // --------------------------------------------------
@@ -167,6 +168,24 @@ public final class UiBottomMenuPreview {
                 rebuild();
             }
         });
+
+        /*
+         * Classic Towns has a 960px toolbar.
+         *
+         * The 32px scroll arrows occupy its
+         * left and right edges, while the ten
+         * menu buttons use the full 960px row.
+         */
+        leftArrow.setPosition(
+                new UiPoint(0, 0));
+
+        buttonRow.setPosition(
+                new UiPoint(0, 0));
+
+        rightArrow.setPosition(
+                new UiPoint(
+                        TOOLBAR_WIDTH - SCROLL_WIDTH,
+                        0));
 
         window.content().add(leftArrow);
         window.content().add(buttonRow);

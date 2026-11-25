@@ -2136,7 +2136,8 @@ public class UIPanelInputHandler {
 		}
 		// BOTTOM
 		if (isBottomMenuPanelActive()) {
-			if (isMouseOnBottomLeftScroll(x, y)) {
+			if (!Game.isXmlBottomPanelMode()
+					&& isMouseOnBottomLeftScroll(x, y)) {
 				if (doEdgeMenusStuff) {
 					// Cerramos los menús no locked
 					closeNonLockedMenus(false, true, true);
@@ -2144,7 +2145,8 @@ public class UIPanelInputHandler {
 				}
 				return MOUSE_BOTTOM_LEFT_SCROLL;
 			}
-			if (isMouseOnBottomRightScroll(x, y)) {
+			if (!Game.isXmlBottomPanelMode()
+					&& isMouseOnBottomRightScroll(x, y)) {
 				if (doEdgeMenusStuff) {
 					// Cerramos los menús no locked
 					closeNonLockedMenus(false, true, true);
@@ -2152,7 +2154,8 @@ public class UIPanelInputHandler {
 				}
 				return MOUSE_BOTTOM_RIGHT_SCROLL;
 			}
-			if (isMouseOnBottomItems(x, y) != -1) {
+			if (!Game.isXmlBottomPanelMode()
+					&& isMouseOnBottomItems(x, y) != -1) {
 				if (doEdgeMenusStuff) {
 					// Cerramos los menús no locked
 					closeNonLockedMenus(false, true, true);
@@ -2160,8 +2163,10 @@ public class UIPanelInputHandler {
 				}
 				return MOUSE_BOTTOM_ITEMS;
 			}
-			if (isMouseOnBottomPanel(x, y)) { // Este check tiene que ir detrás de los items, ya que los items están
-												// encima
+			if (!Game.isXmlBottomPanelMode()
+					&& isMouseOnBottomPanel(x, y)) { // Este check tiene que ir detrás de los items, ya que los items
+														// están
+														// encima
 				if (doEdgeMenusStuff) {
 					// Cerramos los menús no locked
 					closeNonLockedMenus(false, true, true);
@@ -2178,8 +2183,11 @@ public class UIPanelInputHandler {
 				return MOUSE_BOTTOM_OPENCLOSE;
 			}
 
-			if (bottomSubPanelMenu != null) {
+			if (!Game.isXmlBottomPanelMode()
+					&& bottomSubPanelMenu != null) {
+
 				// BOTTOM SUBPANEL
+
 				if (isMouseOnBottomSubItems(x, y) != -1) {
 					if (doEdgeMenusStuff) {
 						// Cerramos los menús no locked
@@ -2209,14 +2217,27 @@ public class UIPanelInputHandler {
 			}
 		} else {
 			if (doEdgeMenusStuff) {
-				if (isMouseOnAnIcon(x, y, tileOpenCloseBottomMenuPoint, tileOpenBottomMenu, tileOpenBottomMenuAlpha)) {
-					setBottomMenuPanelActive(true);
 
-					// Cerramos los menús no locked
-					closeNonLockedMenus(false, true, true);
+				boolean overBottomToggle = isMouseOnAnIcon(
+						x, y,
+						tileOpenCloseBottomMenuPoint,
+						tileOpenBottomMenu,
+						tileOpenBottomMenuAlpha);
+
+				boolean overXmlBottomToolbar = Game.isXmlBottomPanelMode()
+						&& isMouseOnBottomPanel(x, y);
+
+				boolean overXmlBottomPopup = Game.isXmlBottomPopupOpen();
+
+				if (!isBottomMenuPanelLocked()
+						&& !overBottomToggle
+						&& !overXmlBottomToolbar
+						&& !overXmlBottomPopup) {
+
 					delayTime = 0;
-					return MOUSE_BOTTOM_OPENCLOSE;
+					setBottomMenuPanelActive(false);
 				}
+
 			}
 		}
 		// MENU (right)

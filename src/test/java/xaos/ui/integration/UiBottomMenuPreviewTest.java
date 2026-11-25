@@ -16,6 +16,7 @@ import xaos.panels.menus.MenuManager;
 import xaos.ui.components.UiButton;
 import xaos.ui.components.UiButtonAppearance;
 import xaos.ui.core.UiSystem;
+import xaos.ui.layout.UiRect;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiWindowAnchor;
 import xaos.ui.rendering.UiTextMetrics;
@@ -205,7 +206,7 @@ class UiBottomMenuPreviewTest {
                 preview.window().resizable());
 
         assertEquals(
-                new UiSize(1024, 64),
+                new UiSize(960, 64),
                 preview.window().userSize().orElseThrow());
 
         assertEquals(
@@ -284,7 +285,7 @@ class UiBottomMenuPreviewTest {
                 new UiSize(1400, 900));
 
         assertEquals(
-                188,
+                220,
                 preview.window().bounds().x());
 
         assertEquals(
@@ -292,7 +293,7 @@ class UiBottomMenuPreviewTest {
                 preview.window().bounds().y());
 
         assertEquals(
-                1024,
+                960,
                 preview.window().bounds().width());
 
         assertEquals(
@@ -605,6 +606,42 @@ class UiBottomMenuPreviewTest {
 
         assertFalse(preview.window().isOpen());
         assertFalse(preview.popup().isOpen());
+    }
+
+    @Test
+    void scrollArrowsOccupyClassicToolbarEdges() {
+
+        UiSystem ui = new UiSystem();
+
+        UiBottomMenuPreview preview = preview(ui, 12);
+
+        preview.open();
+
+        ui.updateLayout(new UiSize(1400, 900));
+
+        UiButton left = (UiButton) preview
+                .window().content()
+                .children().get(0);
+
+        UiButton right = (UiButton) preview
+                .window().content()
+                .children().get(2);
+
+        assertEquals(
+                new UiRect(220, 804, 32, 64),
+                left.bounds());
+
+        assertEquals(
+                new UiRect(1148, 804, 32, 64),
+                right.bounds());
+
+        // The first menu item uses the same
+        // leading spacing as original Towns.
+        assertEquals(
+                249,
+                preview.buttonRow()
+                        .children().get(0)
+                        .bounds().x());
     }
 
 }

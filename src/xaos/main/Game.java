@@ -287,6 +287,40 @@ public final class Game {
 	}
 
 	/**
+	 * Whether the XML framework owns the bottom
+	 * gameplay panel.
+	 *
+	 * Deliberately independent of window.isOpen().
+	 *
+	 * The new toolbar may be temporarily hidden
+	 * using the original bottom-panel toggle.
+	 * That must not cause the legacy toolbar
+	 * to reappear underneath it.
+	 */
+	public static boolean isXmlBottomPanelMode() {
+
+		return USE_XML_BOTTOM_PANEL
+				&& bottomMenuPreview != null
+				&& gameplayMenus != null
+				&& gameplayMenus.hasMenu(
+						UiBottomMenuPreview.ROOT_MENU)
+				&& getWorld() != null
+				&& getPanelMainMenu() != null
+				&& !getPanelMainMenu().isActive();
+	}
+
+	/**
+	 * Used by legacy hover handling so an open
+	 * XML submenu does not cause the toolbar
+	 * to automatically close.
+	 */
+	public static boolean isXmlBottomPopupOpen() {
+
+		return isXmlBottomPanelMode()
+				&& bottomMenuPreview.popup().isOpen();
+	}
+
+	/**
 	 * Whether the XML panel is currently visible.
 	 */
 	public static boolean isXmlRightPanelActive() {
@@ -2166,19 +2200,11 @@ public final class Game {
 						bottomMenuPreview.setIconResolver(
 								icons::resolve);
 
-						/*
-						 * Temporary comparison positioning.
-						 *
-						 * Normal bottom inset: 32
-						 * Preview bottom inset: 128
-						 *
-						 * This places the XML toolbar above
-						 * the legacy one, with a gap between
-						 * them.
-						 */
+						// Original Towns toolbar sits above the
+						// 32px bottom open/close tab.
 						bottomMenuPreview.window()
 								.setAnchorInsets(
-										new UiInsets(0, 0, 128, 0));
+										new UiInsets(0, 0, 32, 0));
 
 						// Original Towns bottom-toolbar commands,
 						// with support for registered mod actions.
@@ -2197,10 +2223,27 @@ public final class Game {
 								gameplayMenus);
 					}
 
-					// Open on gameplay entry, not every frame.
-					if (!wasBottomMenuPreviewInGame) {
-						bottomMenuPreview.open();
+					/*
+					 * The original bottom-panel state now
+					 * controls visibility of the XML toolbar.
+					 *
+					 * This preserves the existing hover-to-open
+					 * and click-to-lock behaviour.
+					 */
+					boolean shouldShowBottomToolbar = UIPanel.isBottomMenuPanelActive()
+							&& !MainPanel.bHideUION;
+
+					if (shouldShowBottomToolbar) {
+
+						if (!bottomMenuPreview.window().isOpen()) {
+							bottomMenuPreview.open();
+						}
+
+					} else if (bottomMenuPreview.window().isOpen()) {
+
+						bottomMenuPreview.close();
 					}
+
 					bottomMenuPreview.refreshActionAvailability();
 
 					// Keep the submenu above the toolbar and
