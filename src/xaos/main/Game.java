@@ -22,6 +22,7 @@ import xaos.platform.lwjgl3.opengl.Display;
 import xaos.platform.lwjgl3.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 
+import xaos.ui.integration.LegacyGameplayUiBridge;
 import xaos.ui.integration.RightMenuController;
 import xaos.Towns;
 import xaos.TownsProperties;
@@ -272,49 +273,27 @@ public final class Game {
 
 	public static boolean isXmlRightPanelMode() {
 
-		return USE_XML_RIGHT_PANEL
-				&& !legacyRightMenuOverridesPresent
-				&& RIGHT_MENU.isConfiguredFor(gameplayMenus)
-				&& getWorld() != null
-				&& getPanelMainMenu() != null
-				&& !getPanelMainMenu().isActive();
+		return UI_BRIDGE.isXmlRightPanelMode();
 	}
 
 	public static boolean isXmlBottomPanelMode() {
 
-		return USE_XML_BOTTOM_PANEL
-				&& BOTTOM_TOOLBAR.isConfiguredFor(gameplayMenus)
-				&& getWorld() != null
-				&& getPanelMainMenu() != null
-				&& !getPanelMainMenu().isActive();
+		return UI_BRIDGE.isXmlBottomPanelMode();
 	}
 
 	public static boolean isXmlBottomPopupOpen() {
 
-		return isXmlBottomPanelMode()
-				&& BOTTOM_TOOLBAR.isPopupOpen();
+		return UI_BRIDGE.isXmlBottomPopupOpen();
 	}
 
-	/**
-	 * Whether the XML panel is currently visible.
-	 */
 	public static boolean isXmlRightPanelActive() {
 
-		return isXmlRightPanelMode()
-				&& RIGHT_MENU.isOpen();
+		return UI_BRIDGE.isXmlRightPanelActive();
 	}
 
-	/**
-	 * Open or close the XML gameplay panel using
-	 * the original Towns right-edge toggle.
-	 */
 	public static void toggleXmlRightPanel() {
 
-		if (!isXmlRightPanelMode()) {
-			return;
-		}
-
-		RIGHT_MENU.toggle();
+		UI_BRIDGE.toggleXmlRightPanel();
 	}
 
 	/**
@@ -395,6 +374,17 @@ public final class Game {
 	private static final GameplayUiController GAMEPLAY_UI = new GameplayUiController(
 			RIGHT_MENU,
 			BOTTOM_TOOLBAR);
+
+	private static final LegacyGameplayUiBridge UI_BRIDGE = new LegacyGameplayUiBridge(
+			RIGHT_MENU,
+			BOTTOM_TOOLBAR,
+			USE_XML_RIGHT_PANEL,
+			USE_XML_BOTTOM_PANEL,
+			() -> legacyRightMenuOverridesPresent,
+			() -> getWorld() != null
+					&& getPanelMainMenu() != null
+					&& !getPanelMainMenu().isActive(),
+			() -> gameplayMenus);
 
 	/**
 	 * Creates the permanent UI runtime and registers
