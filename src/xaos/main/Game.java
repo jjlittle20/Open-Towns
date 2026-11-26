@@ -2108,13 +2108,23 @@ public final class Game {
 					gameplayMenus,
 					getWorld() != null
 							&& !getPanelMainMenu().isActive(),
+
+					// Right panel
 					USE_XML_RIGHT_PANEL,
 					legacyRightMenuOverridesPresent,
-					USE_XML_LEFT_PANEL && !MainPanel.bHideUION,
+
+					// Bottom toolbar
 					USE_XML_BOTTOM_PANEL,
 					UIPanel.isBottomMenuPanelActive()
 							&& !MainPanel.bHideUION,
-					Game::xmlRightPanelInsets, Game::xmlLeftPanelInsets);
+
+					// Left production panel
+					USE_XML_LEFT_PANEL
+							&& !MainPanel.bHideUION,
+
+					// Docking margins
+					Game::xmlRightPanelInsets,
+					Game::xmlLeftPanelInsets);
 
 			// --------------------------------------------------------
 			// Application input focus

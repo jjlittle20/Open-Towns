@@ -19,6 +19,7 @@ import xaos.ui.components.UiWindow;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiSystem;
 import xaos.ui.layout.UiAbsoluteLayout;
+import xaos.ui.layout.UiGridLayout;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiLinearLayout;
 import xaos.ui.layout.UiPoint;
@@ -45,15 +46,15 @@ public final class UiLeftProductionPreview {
     private static final int ICON_SIZE = 52;
 
     private static final int PRODUCTION_CELL_WIDTH = 128;
-    private static final int PRODUCTION_CELL_HEIGHT = 64;
+    private static final int PRODUCTION_CELL_HEIGHT = 84;
 
     private final UiSystem ui;
     private final UiProductionMenuModel model;
     private final UiTextMetrics metrics;
 
     private final UiWindow window;
-    private final UiLabel heading;
     private final UiScrollContainer scroll;
+    private final UiContainer itemGrid;
 
     private Function<IconReference, UiSprite> iconResolver = reference -> null;
 
@@ -85,11 +86,21 @@ public final class UiLeftProductionPreview {
         window.content().setPadding(UiInsets.all(6));
         window.content().setSpacing(8);
 
-        heading = new UiLabel("", metrics);
-        window.content().add(heading);
-
         scroll = new UiScrollContainer();
-        scroll.content().setSpacing(6);
+
+        scroll.content().setSpacing(8);
+
+        // Same two-column grid layout as the right menu.
+        itemGrid = new UiContainer();
+
+        itemGrid.setLayoutStrategy(
+                new UiGridLayout(2, true));
+
+        itemGrid.setHorizontalSizePolicy(
+                UiSizePolicy.FILL);
+
+        itemGrid.setPadding(UiInsets.NONE);
+        itemGrid.setSpacing(8);
 
         window.content().add(scroll);
 
@@ -195,7 +206,20 @@ public final class UiLeftProductionPreview {
             UiLabel label = countLabels.get(id);
 
             if (label != null) {
-                label.setText(formatCounts(counts));
+
+                String text = formatCounts(counts);
+
+                label.setText(text);
+
+                // Keep the queue values centred beneath
+                // the production controls.
+                int x = Math.max(
+                        0,
+                        (PRODUCTION_CELL_WIDTH
+                                - metrics.measure(text).width()) / 2);
+
+                label.setPosition(
+                        new UiPoint(x, 66));
             }
 
             // In-world count displayed over the item icon.
@@ -253,11 +277,16 @@ public final class UiLeftProductionPreview {
     }
 
     private void rebuild() {
+
         worldCountLabels.clear();
         countLabels.clear();
+
+        itemGrid.clear();
         scroll.content().clear();
         scroll.scrollTo(0);
 
+        // The window still retains a logical title,
+        // but the gameplay UI does not display it.
         String title = model.currentMenu().getTitle();
 
         if (title == null || title.isBlank()) {
@@ -265,101 +294,126 @@ public final class UiLeftProductionPreview {
         }
 
         window.setTitle(title);
-        heading.setText(title);
 
-        boolean hasBackItem = false;
+        // Put the icon grid first in the scroll area.
+        scroll.content().add(itemGrid);
+
+        UiButton explicitBack = null;
 
         for (var entry : model.entries()) {
 
             MenuItemDefinition item = entry.definition();
-
             String type = item.getType();
 
-            if ("back".equals(type)) {
-                hasBackItem = true;
+            // Keep Back separate from the two-column grid.
+            if ("back".equalsIgnoreCase(type)) {
+
+                if (model.canGoBack()) {
+                    explicitBack = createButton(entry);
+                }
+
+                continue;
             }
 
-            UiContainer row = new UiContainer();
-
-            row.setLayoutStrategy(
-                    UiLinearLayout.HORIZONTAL);
-
-            row.setHorizontalSizePolicy(
-                    UiSizePolicy.FILL);
-
-            row.setSpacing(8);
+            if ("spacer".equalsIgnoreCase(type)) {
+                continue;
+            }
 
             UiButton button = createButton(entry);
 
             if (isProductionAction(item)) {
 
-                row.add(createProductionCell(entry, button));
+                itemGrid.add(
+                        createProductionCell(entry, button));
 
             } else {
 
-                row.add(button);
+                itemGrid.add(
+                        createSimpleMenuCell(button));
             }
-
-            UiContainer description = new UiContainer();
-
-            description.setLayoutStrategy(
-                    UiLinearLayout.VERTICAL);
-
-            description.setSpacing(4);
-
-            description.setHorizontalSizePolicy(
-                    UiSizePolicy.FILL);
-
-            String label = entry.presentation().title();
-
-            description.add(
-                    new UiLabel(label, metrics));
-
-            if (entry.counts() != null) {
-
-                UiLabel counts = new UiLabel(
-                        formatCounts(entry.counts()),
-                        metrics);
-
-                description.add(counts);
-
-                countLabels.put(
-                        item.getId(),
-                        counts);
-            }
-
-            row.add(description);
-
-            scroll.content().add(row);
-
         }
 
-        // Mods may omit an explicit Back item.
-        // Keep nested menus navigable.
-        if (model.canGoBack() && !hasBackItem) {
+        // Back is always underneath the grid,
+        // including when a mod omits its XML entry.
+        if (model.canGoBack()) {
 
-            UiButton back = new UiButton("<", metrics);
+            UiButton back = explicitBack;
 
-            back.setAppearance(
-                    UiButtonAppearance.MENU_ACTION);
+            if (back == null) {
 
-            back.setMinimumSize(
-                    new UiSize(BUTTON_SIZE, BUTTON_SIZE));
+                back = new UiButton("<", metrics);
 
-            back.setPreferredSize(
-                    new UiSize(BUTTON_SIZE, BUTTON_SIZE));
+                back.setAppearance(
+                        UiButtonAppearance.MENU_ACTION);
 
-            back.setTooltip("Back");
+                back.setMinimumSize(
+                        new UiSize(BUTTON_SIZE, BUTTON_SIZE));
 
-            back.setOnClick(() -> {
-                clickFeedback.run();
-                model.back();
-                rebuild();
-            });
+                back.setPreferredSize(
+                        new UiSize(BUTTON_SIZE, BUTTON_SIZE));
 
-            scroll.content().add(back);
-        } // Initialise in-world overlays after rebuilding.
+                back.setPadding(UiInsets.NONE);
+                back.setTooltip("Back");
+
+                back.setOnClick(() -> {
+                    clickFeedback.run();
+                    model.back();
+                    rebuild();
+                });
+            }
+
+            UiContainer backRow = new UiContainer();
+
+            backRow.setLayoutStrategy(
+                    new UiGridLayout(1, true));
+
+            backRow.setHorizontalSizePolicy(
+                    UiSizePolicy.FILL);
+
+            backRow.setPadding(UiInsets.NONE);
+            backRow.add(back);
+
+            scroll.content().add(backRow);
+        }
+
         refreshCounts();
+    }
+
+    /**
+     * Displays an ordinary menu button in the same
+     * cell width as a production item.
+     *
+     * This keeps submenu icons aligned with
+     * production icons.
+     */
+    private UiContainer createSimpleMenuCell(
+            UiButton button) {
+
+        UiContainer cell = new UiContainer();
+
+        cell.setLayoutStrategy(
+                UiAbsoluteLayout.INSTANCE);
+
+        cell.setPadding(UiInsets.NONE);
+
+        cell.setMinimumSize(
+                new UiSize(
+                        PRODUCTION_CELL_WIDTH,
+                        PRODUCTION_CELL_HEIGHT));
+
+        cell.setPreferredSize(
+                new UiSize(
+                        PRODUCTION_CELL_WIDTH,
+                        PRODUCTION_CELL_HEIGHT));
+
+        // Centre the 64px icon horizontally in
+        // its 128px grid cell.
+        button.setPosition(
+                new UiPoint(32, 0));
+
+        cell.add(button);
+
+        return cell;
     }
 
     private UiButton createButton(
@@ -452,8 +506,8 @@ public final class UiLeftProductionPreview {
     private static String formatCounts(
             UiProductionQueueCounts counts) {
 
-        return "Regular: " + counts.regular()
-                + "  Automated: " + counts.automated();
+        return "R: " + counts.regular()
+                + "   A: " + counts.automated();
     }
 
     // Package-private access for isolated tests.
@@ -555,6 +609,23 @@ public final class UiLeftProductionPreview {
                 UiProductionQueueAdapter.Action.DECREASE_AUTOMATED,
                 96,
                 32);
+
+        // Compact queue counts beneath the item controls.
+        if (entry.counts() != null) {
+
+            UiLabel counts = new UiLabel(
+                    formatCounts(entry.counts()),
+                    metrics);
+
+            counts.setPosition(
+                    new UiPoint(0, 66));
+
+            cell.add(counts);
+
+            countLabels.put(
+                    item.getId(),
+                    counts);
+        }
 
         return cell;
     }

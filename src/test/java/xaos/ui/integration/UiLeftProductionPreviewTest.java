@@ -15,6 +15,7 @@ import xaos.ui.components.UiButton;
 import xaos.ui.components.UiLabel;
 import xaos.ui.core.UiContainer;
 import xaos.ui.core.UiSystem;
+import xaos.ui.layout.UiGridLayout;
 import xaos.ui.layout.UiInsets;
 import xaos.ui.layout.UiSize;
 import xaos.ui.layout.UiWindowAnchor;
@@ -239,7 +240,7 @@ class UiLeftProductionPreviewTest {
         assertNotNull(originalCountLabel);
 
         assertEquals(
-                "Regular: 3  Automated: 2",
+                "R: 3   A: 2",
                 originalCountLabel.text());
 
         // World count appears separately over the icon.
@@ -267,7 +268,7 @@ class UiLeftProductionPreviewTest {
                 preview.countLabel(actionId));
 
         assertEquals(
-                "Regular: 11  Automated: 2",
+                "R: 11   A: 2",
                 originalCountLabel.text());
 
         // The in-world overlay must also be reused.
@@ -304,4 +305,57 @@ class UiLeftProductionPreviewTest {
                 preview.scroll().content()
                         .children().size());
     }
+
+    @Test
+    void usesTwoColumnGridWithoutHeading() {
+
+        UiSystem ui = new UiSystem();
+
+        UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
+
+        // Add a second root entry to test both columns.
+        MenuManager manager = menus();
+
+        manager.requireMenu(
+                "game.left.production.root")
+                .addItem(item(
+                        "game.left.production.more",
+                        "submenu",
+                        "game.left.production.food",
+                        null,
+                        null,
+                        "More"));
+
+        preview.setMenus(manager);
+
+        // The window content should contain only
+        // the scroll area, not a heading label.
+        assertEquals(
+                1,
+                preview.window().content()
+                        .children().size());
+
+        UiContainer grid = (UiContainer) preview
+                .scroll().content()
+                .children().get(0);
+
+        assertInstanceOf(
+                UiGridLayout.class,
+                grid.layoutStrategy());
+
+        UiGridLayout layout = (UiGridLayout) grid.layoutStrategy();
+
+        assertEquals(2, layout.columns());
+        assertEquals(2, grid.children().size());
+
+        preview.open();
+        ui.updateLayout(new UiSize(1280, 720));
+
+        var first = grid.children().get(0).bounds();
+        var second = grid.children().get(1).bounds();
+
+        assertEquals(first.y(), second.y());
+        assertTrue(second.x() > first.x());
+    }
+
 }

@@ -58,7 +58,8 @@ public final class LeftProductionController {
             preview.refreshCounts();
         }
 
-        // Ownership follows the actual window visibility.
+        // Modern production retains ownership while in gameplay,
+        // regardless of whether its window is open or closed.
         UIPanelState.setModernProductionPanelActive(
                 true);
     }
