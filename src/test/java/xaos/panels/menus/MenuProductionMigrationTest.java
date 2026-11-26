@@ -345,4 +345,164 @@ class MenuProductionMigrationTest {
                         meat.getItems().size() - 1).getType());
     }
 
+    @Test
+    void militaryMenusHaveValidHierarchy()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertDoesNotThrow(
+                () -> manager.validateMenuTree(
+                        "game.left.production.root"));
+
+        MenuDefinition root = manager.requireMenu(
+                "game.left.production.root");
+
+        assertEquals(
+                List.of(
+                        "game.left.production.food",
+                        "game.left.production.militaries"),
+                root.getItems().stream()
+                        .map(MenuItemDefinition::getId)
+                        .toList());
+
+        MenuDefinition military = manager.requireMenu(
+                "game.left.production.militaries");
+
+        MenuDefinition armor = manager.resolveSubmenu(
+                military.getItems().get(0));
+
+        assertEquals(
+                "game.left.production.militaries.armor",
+                armor.getId());
+
+        assertEquals(
+                List.of(
+                        "game.left.production.militaries.armor.wooden",
+                        "game.left.production.militaries.armor.cloth",
+                        "game.left.production.militaries.armor.bone",
+                        "game.left.production.militaries.armor.iron",
+                        "game.left.production.militaries.armor.spiderbane",
+                        "game.left.production.militaries.armor.back"),
+                armor.getItems().stream()
+                        .map(MenuItemDefinition::getId)
+                        .toList());
+
+        assertEquals(
+                "game.left.production.militaries.armor.wooden",
+                manager.resolveSubmenu(
+                        armor.getItems().get(0)).getId());
+
+        assertEquals(
+                "game.left.production.militaries.armor.cloth",
+                manager.resolveSubmenu(
+                        armor.getItems().get(1)).getId());
+    }
+
+    @Test
+    void woodenAndClothArmorMatchOriginalActions()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertEquals(
+                List.of(
+                        "qwoodenhelmet",
+                        "qwoodenarmor",
+                        "qwoodenpants",
+                        "qwoodenboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.wooden"));
+
+        assertEquals(
+                List.of(
+                        "qclotharmor",
+                        "qleatherarmor",
+                        "qleatherspideritearmor",
+                        "qleathergoblinitearmor",
+                        "qleathersnickeritearmor",
+                        "qleatherzombitearmor",
+                        "qleatherogreitearmor"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.cloth"));
+    }
+
+    @Test
+    void boneIronAndSpideriteArmorMatchOriginalActions()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertEquals(
+                List.of(
+                        "qbonehelmet",
+                        "qbonearmor",
+                        "qbonepants",
+                        "qboneboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.bone"));
+
+        assertEquals(
+                List.of(
+                        "qironhelmet",
+                        "qsamuraihelmet",
+                        "qironarmor",
+                        "qironpants",
+                        "qironboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.iron"));
+
+        assertEquals(
+                List.of(
+                        "qspideritehelmet",
+                        "qspideritearmor",
+                        "qspideritepants",
+                        "qspideriteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.spiderbane"));
+    }
+
+    @Test
+    void newArmorSubmenusResolveCorrectly()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        MenuDefinition armor = manager.requireMenu(
+                "game.left.production.militaries.armor");
+
+        assertDoesNotThrow(
+                () -> manager.validateMenuTree(
+                        "game.left.production.root"));
+
+        for (String id : List.of(
+                "bone",
+                "iron",
+                "spiderbane")) {
+
+            String target = "game.left.production.militaries.armor." + id;
+
+            MenuItemDefinition link = armor.getItems()
+                    .stream()
+                    .filter(item -> target.equals(
+                            item.getTargetMenu()))
+                    .findFirst()
+                    .orElseThrow();
+
+            MenuDefinition submenu = manager.resolveSubmenu(link);
+
+            assertEquals(target, submenu.getId());
+
+            assertEquals(
+                    "back",
+                    submenu.getItems().get(
+                            submenu.getItems().size() - 1)
+                            .getType());
+        }
+    }
 }

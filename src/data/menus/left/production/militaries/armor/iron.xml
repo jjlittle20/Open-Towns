@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.iron"
+      title="Iron set">
+
+    <item
+        id="game.left.production.militaries.armor.iron.qironhelmet"
+        type="action"
+        command="QUEUE"
+        parameter="qironhelmet" />
+
+    <item
+        id="game.left.production.militaries.armor.iron.qsamuraihelmet"
+        type="action"
+        command="QUEUE"
+        parameter="qsamuraihelmet" />
+
+    <item
+        id="game.left.production.militaries.armor.iron.qironarmor"
+        type="action"
+        command="QUEUE"
+        parameter="qironarmor" />
+
+    <item
+        id="game.left.production.militaries.armor.iron.qironpants"
+        type="action"
+        command="QUEUE"
+        parameter="qironpants" />
+
+    <item
+        id="game.left.production.militaries.armor.iron.qironboots"
+        type="action"
+        command="QUEUE"
+        parameter="qironboots" />
+
+    <item
+        id="game.left.production.militaries.armor.iron.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

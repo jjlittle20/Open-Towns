@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor"
+      title="Armors">
+
+    <item
+        id="game.left.production.militaries.armor.wooden"
+        type="submenu"
+        title="Wooden set"
+        icon="ui_rarmor_wooden"
+        targetMenu="game.left.production.militaries.armor.wooden" />
+
+    <item
+        id="game.left.production.militaries.armor.cloth"
+        type="submenu"
+        title="Cloth set"
+        icon="ui_rarmor_cloth"
+        targetMenu="game.left.production.militaries.armor.cloth" />
+
+    <item
+        id="game.left.production.militaries.armor.bone"
+        type="submenu"
+        title="Bone set"
+        icon="ui_rarmor_bone"
+        targetMenu="game.left.production.militaries.armor.bone" />
+
+    <item
+        id="game.left.production.militaries.armor.iron"
+        type="submenu"
+        title="Iron set"
+        icon="ui_rarmor_iron"
+        targetMenu="game.left.production.militaries.armor.iron" />
+
+    <item
+        id="game.left.production.militaries.armor.spiderbane"
+        type="submenu"
+        title="Spiderite set"
+        icon="ui_rarmor_spiderite"
+        targetMenu="game.left.production.militaries.armor.spiderbane" />
+
+    <!-- Remaining armour sets will follow. -->
+
+    <item
+        id="game.left.production.militaries.armor.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>

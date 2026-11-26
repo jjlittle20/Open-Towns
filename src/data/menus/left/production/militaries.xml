@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu id="game.left.production.militaries"
+      title="Militaries">
+
+    <item
+        id="game.left.production.militaries.armor"
+        type="submenu"
+        title="Armors"
+        icon="ui_rarmor"
+        targetMenu="game.left.production.militaries.armor" />
+
+    <!-- Weapons will be migrated later. -->
+
+    <item
+        id="game.left.production.militaries.back"
+        type="back"
+        title="Back"
+        icon="ui_back" />
+
+</menu>
