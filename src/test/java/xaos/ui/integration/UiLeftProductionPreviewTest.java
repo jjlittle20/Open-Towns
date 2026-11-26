@@ -100,27 +100,40 @@ class UiLeftProductionPreviewTest {
                 .scroll().content()
                 .children().get(0);
 
-        var firstChild = row.children().get(0);
+        UiButton button = findButton(row);
 
-        // Original layout: button directly in the row.
-        if (firstChild instanceof UiButton button) {
-            return button;
+        if (button == null) {
+            throw new AssertionError(
+                    "Could not find production button");
         }
 
-        // New layout: button and world count share an overlay.
-        if (firstChild instanceof xaos.ui.core.UiContainer overlay) {
+        return button;
+    }
 
-            for (var child : overlay.children()) {
+    /**
+     * Finds the first button inside a nested
+     * production UI container.
+     */
+    private static UiButton findButton(
+            UiContainer container) {
 
-                if (child instanceof UiButton button) {
-                    return button;
+        for (var child : container.children()) {
+
+            if (child instanceof UiButton button) {
+                return button;
+            }
+
+            if (child instanceof UiContainer nested) {
+
+                UiButton found = findButton(nested);
+
+                if (found != null) {
+                    return found;
                 }
             }
         }
 
-        throw new AssertionError(
-                "Could not find production button in row");
-
+        return null;
     }
 
     @Test

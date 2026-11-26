@@ -41,8 +41,11 @@ import xaos.ui.integration.UiGameplayMenuResolver.IconReference;
  */
 public final class UiLeftProductionPreview {
 
-    private static final int BUTTON_SIZE = 52;
-    private static final int ICON_SIZE = 44;
+    private static final int BUTTON_SIZE = 64;
+    private static final int ICON_SIZE = 52;
+
+    private static final int PRODUCTION_CELL_WIDTH = 128;
+    private static final int PRODUCTION_CELL_HEIGHT = 64;
 
     private final UiSystem ui;
     private final UiProductionMenuModel model;
@@ -102,7 +105,7 @@ public final class UiLeftProductionPreview {
             UiProductionMenuModel.Entry entry,
             UiButton icon) {
 
-        final int iconSize = 52;
+        final int iconSize = BUTTON_SIZE;
 
         UiContainer overlay = new UiContainer();
 
@@ -212,7 +215,7 @@ public final class UiLeftProductionPreview {
 
                     UiSize textSize = metrics.measure(value);
 
-                    int iconSize = 52;
+                    final int iconSize = BUTTON_SIZE;
 
                     // Centre the text horizontally.
                     int x = (iconSize - textSize.width()) / 2;
@@ -288,9 +291,12 @@ public final class UiLeftProductionPreview {
 
             UiButton button = createButton(entry);
 
-            if (isProductionAction(entry.definition())) {
-                row.add(createWorldCountIcon(entry, button));
+            if (isProductionAction(item)) {
+
+                row.add(createProductionCell(entry, button));
+
             } else {
+
                 row.add(button);
             }
 
@@ -323,10 +329,9 @@ public final class UiLeftProductionPreview {
             }
 
             row.add(description);
-            if (isProductionAction(entry.definition())) {
-                row.add(createQueueControls(entry.definition()));
-            }
+
             scroll.content().add(row);
+
         }
 
         // Mods may omit an explicit Back item.
@@ -353,7 +358,8 @@ public final class UiLeftProductionPreview {
             });
 
             scroll.content().add(back);
-        }
+        } // Initialise in-world overlays after rebuilding.
+        refreshCounts();
     }
 
     private UiButton createButton(
@@ -467,41 +473,114 @@ public final class UiLeftProductionPreview {
                 && !item.getParameter().isBlank();
     }
 
-    private UiContainer createQueueControls(MenuItemDefinition item) {
+    /**
+     * Creates one compact production item.
+     *
+     * Layout:
+     *
+     * Regular +/- | Item icon | Automated +/-
+     *
+     * The icon includes its in-world count overlay.
+     */
+    private UiContainer createProductionCell(
+            UiProductionMenuModel.Entry entry,
+            UiButton icon) {
 
-        UiContainer controls = new UiContainer();
-        controls.setLayoutStrategy(UiLinearLayout.VERTICAL);
-        controls.setSpacing(0);
+        MenuItemDefinition item = entry.definition();
 
-        UiContainer regular = new UiContainer();
-        regular.setLayoutStrategy(UiLinearLayout.HORIZONTAL);
+        UiContainer cell = new UiContainer();
 
-        regular.setSpacing(0);
+        cell.setLayoutStrategy(
+                UiAbsoluteLayout.INSTANCE);
 
-        regular.add(createQueueButton(
-                "+", "Add regular production",
-                item, UiProductionQueueAdapter.Action.ADD_REGULAR));
+        cell.setPadding(UiInsets.NONE);
 
-        regular.add(createQueueButton(
-                "-", "Remove regular production",
-                item, UiProductionQueueAdapter.Action.REMOVE_REGULAR));
+        cell.setMinimumSize(
+                new UiSize(
+                        PRODUCTION_CELL_WIDTH,
+                        PRODUCTION_CELL_HEIGHT));
 
-        UiContainer automated = new UiContainer();
-        automated.setLayoutStrategy(UiLinearLayout.HORIZONTAL);
-        automated.setSpacing(0);
+        cell.setPreferredSize(
+                new UiSize(
+                        PRODUCTION_CELL_WIDTH,
+                        PRODUCTION_CELL_HEIGHT));
 
-        automated.add(createQueueButton(
-                "+", "Increase automated target",
-                item, UiProductionQueueAdapter.Action.INCREASE_AUTOMATED));
+        // --------------------------------------------------
+        // Central production icon and in-world count
+        // --------------------------------------------------
 
-        automated.add(createQueueButton(
-                "-", "Decrease automated target",
-                item, UiProductionQueueAdapter.Action.DECREASE_AUTOMATED));
+        UiContainer iconOverlay = createWorldCountIcon(entry, icon);
 
-        controls.add(regular);
-        controls.add(automated);
+        iconOverlay.setPosition(
+                new UiPoint(32, 0));
 
-        return controls;
+        cell.add(iconOverlay);
+
+        // --------------------------------------------------
+        // Regular queue controls — left side
+        // --------------------------------------------------
+
+        addProductionControl(
+                cell,
+                item,
+                "Add regular production",
+                UiProductionQueueAdapter.Action.ADD_REGULAR,
+                0,
+                0);
+
+        addProductionControl(
+                cell,
+                item,
+                "Remove regular production",
+                UiProductionQueueAdapter.Action.REMOVE_REGULAR,
+                0,
+                32);
+
+        // --------------------------------------------------
+        // Automated queue controls — right side
+        // --------------------------------------------------
+
+        addProductionControl(
+                cell,
+                item,
+                "Increase automated target",
+                UiProductionQueueAdapter.Action.INCREASE_AUTOMATED,
+                96,
+                0);
+
+        addProductionControl(
+                cell,
+                item,
+                "Decrease automated target",
+                UiProductionQueueAdapter.Action.DECREASE_AUTOMATED,
+                96,
+                32);
+
+        return cell;
+    }
+
+    /**
+     * Adds one production control at an exact
+     * position within the item cell.
+     */
+    private void addProductionControl(
+            UiContainer cell,
+            MenuItemDefinition item,
+            String tooltip,
+            UiProductionQueueAdapter.Action action,
+            int x,
+            int y) {
+
+        UiButton button = createQueueButton(
+                "",
+                tooltip,
+                item,
+                action);
+
+        button.setPosition(
+                new UiPoint(x, y));
+
+        cell.add(button);
     }
 
     private UiButton createQueueButton(
