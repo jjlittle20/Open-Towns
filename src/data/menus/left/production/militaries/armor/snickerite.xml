@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.snickerite" title="Snickerite set" esES="Set de snickerite">
+    <item id="game.left.production.militaries.armor.snickerite.qsnickeritehelmet" type="action" command="QUEUE" parameter="qsnickeritehelmet" />
+    <item id="game.left.production.militaries.armor.snickerite.qsnickeritearmor" type="action" command="QUEUE" parameter="qsnickeritearmor" />
+    <item id="game.left.production.militaries.armor.snickerite.qsnickeritepants" type="action" command="QUEUE" parameter="qsnickeritepants" />
+    <item id="game.left.production.militaries.armor.snickerite.qsnickeriteboots" type="action" command="QUEUE" parameter="qsnickeriteboots" />
+    <item id="game.left.production.militaries.armor.snickerite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

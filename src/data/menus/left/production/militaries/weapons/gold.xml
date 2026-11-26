@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.gold" title="Gold" esES="Oro">
+    <item id="game.left.production.militaries.weapons.gold.qgoldenaxe" type="action" command="QUEUE" parameter="qgoldenaxe" />
+    <item id="game.left.production.militaries.weapons.gold.qgoldenbow" type="action" command="QUEUE" parameter="qgoldenbow" />
+    <item id="game.left.production.militaries.weapons.gold.qgoldenhammer" type="action" command="QUEUE" parameter="qgoldenhammer" />
+    <item id="game.left.production.militaries.weapons.gold.qgoldenitemace" type="action" command="QUEUE" parameter="qgoldenitemace" />
+    <item id="game.left.production.militaries.weapons.gold.qgoldenspear" type="action" command="QUEUE" parameter="qgoldenspear" />
+    <item id="game.left.production.militaries.weapons.gold.qgoldenstaff" type="action" command="QUEUE" parameter="qgoldenstaff" />
+    <item id="game.left.production.militaries.weapons.gold.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

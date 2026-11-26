@@ -361,7 +361,12 @@ class MenuProductionMigrationTest {
         assertEquals(
                 List.of(
                         "game.left.production.food",
-                        "game.left.production.militaries"),
+                        "game.left.production.militaries",
+                        "game.left.production.utils",
+                        "game.left.production.containers",
+                        "game.left.production.materials",
+                        "game.left.production.burner",
+                        "game.left.production.vanity"),
                 root.getItems().stream()
                         .map(MenuItemDefinition::getId)
                         .toList());
@@ -382,7 +387,16 @@ class MenuProductionMigrationTest {
                         "game.left.production.militaries.armor.cloth",
                         "game.left.production.militaries.armor.bone",
                         "game.left.production.militaries.armor.iron",
-                        "game.left.production.militaries.armor.spiderbane",
+                        "game.left.production.militaries.armor.spiderite",
+                        "game.left.production.militaries.armor.goblinite",
+                        "game.left.production.militaries.armor.hobgoblinite",
+                        "game.left.production.militaries.armor.direite",
+                        "game.left.production.militaries.armor.snickerite",
+                        "game.left.production.militaries.armor.zombite",
+                        "game.left.production.militaries.armor.ghoulite",
+                        "game.left.production.militaries.armor.ogreite",
+                        "game.left.production.militaries.armor.silver",
+                        "game.left.production.militaries.armor.golden",
                         "game.left.production.militaries.armor.back"),
                 armor.getItems().stream()
                         .map(MenuItemDefinition::getId)
@@ -464,7 +478,7 @@ class MenuProductionMigrationTest {
                         "qspideriteboots"),
                 productionActions(
                         manager,
-                        "game.left.production.militaries.armor.spiderbane"));
+                        "game.left.production.militaries.armor.spiderite"));
     }
 
     @Test
@@ -483,7 +497,7 @@ class MenuProductionMigrationTest {
         for (String id : List.of(
                 "bone",
                 "iron",
-                "spiderbane")) {
+                "spiderite")) {
 
             String target = "game.left.production.militaries.armor." + id;
 
@@ -504,5 +518,200 @@ class MenuProductionMigrationTest {
                             submenu.getItems().size() - 1)
                             .getType());
         }
+    }
+
+    @Test
+    void gobliniteHobgoblinAndDireiteMatchOriginalActions()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertEquals(
+                List.of(
+                        "qgoblinitehelmet",
+                        "qgoblinitearmor",
+                        "qgoblinitepants",
+                        "qgobliniteboots",
+                        "qspeedboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.goblinite"));
+
+        assertEquals(
+                List.of(
+                        "qhobgoblinitehelmet",
+                        "qhobgoblinitearmor",
+                        "qhobgoblinitepants",
+                        "qhobgobliniteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.hobgoblinite"));
+
+        assertEquals(
+                List.of(
+                        "qdireitehelmet",
+                        "qdireitearmor",
+                        "qdireitepants",
+                        "qdireiteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.direite"));
+    }
+
+    @Test
+    void newMilitaryArmorSubmenusResolveCorrectly()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertDoesNotThrow(
+                () -> manager.validateMenuTree(
+                        "game.left.production.root"));
+
+        MenuDefinition armor = manager.requireMenu(
+                "game.left.production.militaries.armor");
+
+        for (String name : List.of(
+                "goblinite",
+                "hobgoblinite",
+                "direite")) {
+
+            String id = "game.left.production.militaries.armor."
+                    + name;
+
+            MenuItemDefinition link = armor.getItems()
+                    .stream()
+                    .filter(item -> id.equals(
+                            item.getTargetMenu()))
+                    .findFirst()
+                    .orElseThrow();
+
+            MenuDefinition submenu = manager.resolveSubmenu(link);
+
+            assertEquals(id, submenu.getId());
+
+            assertEquals(
+                    "back",
+                    submenu.getItems().get(
+                            submenu.getItems().size() - 1)
+                            .getType());
+        }
+    }
+
+    @Test
+    void snickeriteZombiteAndGhouliteMatchOriginalActions()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertEquals(
+                List.of(
+                        "qsnickeritehelmet",
+                        "qsnickeritearmor",
+                        "qsnickeritepants",
+                        "qsnickeriteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.snickerite"));
+
+        assertEquals(
+                List.of(
+                        "qzombitehelmet",
+                        "qzombitearmor",
+                        "qzombitepants",
+                        "qzombiteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.zombite"));
+
+        assertEquals(
+                List.of(
+                        "qghoulitehelmet",
+                        "qghoulitearmor",
+                        "qghoulitepants",
+                        "qghouliteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.ghoulite"));
+    }
+
+    @Test
+    void snickeriteZombiteAndGhouliteSubmenusResolve()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertDoesNotThrow(
+                () -> manager.validateMenuTree(
+                        "game.left.production.root"));
+
+        MenuDefinition armor = manager.requireMenu(
+                "game.left.production.militaries.armor");
+
+        for (String name : List.of(
+                "snickerite",
+                "zombite",
+                "ghoulite")) {
+
+            String id = "game.left.production.militaries.armor."
+                    + name;
+
+            MenuItemDefinition link = armor.getItems()
+                    .stream()
+                    .filter(item -> id.equals(item.getTargetMenu()))
+                    .findFirst()
+                    .orElseThrow();
+
+            MenuDefinition submenu = manager.resolveSubmenu(link);
+
+            assertEquals(id, submenu.getId());
+
+            assertEquals(
+                    "back",
+                    submenu.getItems()
+                            .get(submenu.getItems().size() - 1)
+                            .getType());
+        }
+    }
+
+    @Test
+    void remainingArmorSetsMatchOriginalActions()
+            throws Exception {
+
+        MenuManager manager = loadMenus();
+
+        assertDoesNotThrow(
+                () -> manager.validateMenuTree(
+                        "game.left.production.root"));
+
+        assertEquals(
+                List.of(
+                        "qogreitehelmet",
+                        "qogreitearmor",
+                        "qogreitepants",
+                        "qogreiteboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.ogreite"));
+
+        assertEquals(
+                List.of(
+                        "qsilverhelmet",
+                        "qsilverarmor",
+                        "qsilverpants",
+                        "qsilverboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.silver"));
+
+        assertEquals(
+                List.of(
+                        "qgoldenhelmet",
+                        "qgoldenarmor",
+                        "qgoldenpants",
+                        "qgoldenboots"),
+                productionActions(
+                        manager,
+                        "game.left.production.militaries.armor.golden"));
     }
 }

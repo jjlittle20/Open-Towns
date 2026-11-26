@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.materials" title="Materials" esES="Materiales">
+    <item id="game.left.production.materials.qchopplantedtree" type="action" command="QUEUE" parameter="qchopplantedtree" />
+    <item id="game.left.production.materials.qchopplantedtree2" type="action" command="QUEUE" parameter="qchopplantedtree2" />
+    <item id="game.left.production.materials.qchopplantedjungletree" type="action" command="QUEUE" parameter="qchopplantedjungletree" />
+    <item id="game.left.production.materials.qchopplantedsnowtree" type="action" command="QUEUE" parameter="qchopplantedsnowtree" />
+    <item id="game.left.production.materials.qchopplantedpalmtree" type="action" command="QUEUE" parameter="qchopplantedpalmtree" />
+    <item id="game.left.production.materials.qharvestbamboo" type="action" command="QUEUE" parameter="qharvestbamboo" />
+    <item id="game.left.production.materials.qglass" type="action" command="QUEUE" parameter="qglass" />
+    <item id="game.left.production.materials.qtrimsheep" type="action" command="QUEUE" parameter="qtrimsheep" />
+    <item id="game.left.production.materials.qtrimwildsheep" type="action" command="QUEUE" parameter="qtrimwildsheep" />
+    <item id="game.left.production.materials.qtrimsnoat" type="action" command="QUEUE" parameter="qtrimsnoat" />
+    <item id="game.left.production.materials.qtrimwildsnoat" type="action" command="QUEUE" parameter="qtrimwildsnoat" />
+    <item id="game.left.production.materials.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

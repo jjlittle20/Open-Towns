@@ -1,46 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.food.gathering"
-      title="Gathering">
-
-    <item
-        id="game.left.production.food.gathering.trees"
-        type="submenu"
-        title="Trees and plants"
-        icon="ui_appleseed"
-        targetMenu="game.left.production.food.gathering.trees" />
-
-    <item
-        id="game.left.production.food.gathering.animals"
-        type="submenu"
-        title="Animals"
-        icon="ui_chickenfarm"
-        targetMenu="game.left.production.food.gathering.animals" />
-
-    <item id="game.left.production.food.gathering.qfishing"
-          type="action" command="QUEUE" parameter="qfishing" />
-
-    <item id="game.left.production.food.gathering.qflour"
-          type="action" command="QUEUE" parameter="qflour"
-          icon="flour" />
-
-    <item id="game.left.production.food.gathering.qsugar"
-          type="action" command="QUEUE" parameter="qsugar"
-          icon="sugar" />
-
-    <item id="game.left.production.food.gathering.qjunglesalad"
-          type="action" command="QUEUE" parameter="qjunglesalad" />
-
-    <item id="game.left.production.food.gathering.qgathersnowpile"
-          type="action" command="QUEUE" parameter="qgathersnowpile" />
-
-    <item id="game.left.production.food.gathering.qwaterbucket"
-          type="action" command="QUEUE" parameter="qwaterbucket" />
-
-    <item
-        id="game.left.production.food.gathering.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.food.gathering" title="Gathering" esES="Recolectar">
+    <item id="game.left.production.food.gathering.trees" type="submenu" title="Trees and plants" targetMenu="game.left.production.food.gathering.trees" icon="ui_appleseed" esES="Árboles y plantas" />
+    <item id="game.left.production.food.gathering.animals" type="submenu" title="Animals" targetMenu="game.left.production.food.gathering.animals" icon="ui_chickenfarm" esES="Animales" />
+    <item id="game.left.production.food.gathering.qfishing" type="action" command="QUEUE" parameter="qfishing" />
+    <item id="game.left.production.food.gathering.qflour" type="action" command="QUEUE" icon="flour" parameter="qflour" />
+    <item id="game.left.production.food.gathering.qsugar" type="action" command="QUEUE" icon="sugar" parameter="qsugar" />
+    <item id="game.left.production.food.gathering.qjunglesalad" type="action" command="QUEUE" parameter="qjunglesalad" />
+    <item id="game.left.production.food.gathering.qgathersnowpile" type="action" command="QUEUE" parameter="qgathersnowpile" />
+    <item id="game.left.production.food.gathering.qwaterbucket" type="action" command="QUEUE" parameter="qwaterbucket" />
+    <item id="game.left.production.food.gathering.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

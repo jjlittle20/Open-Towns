@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.burner" title="Burner" esES="Quemador">
+    <item id="game.left.production.burner.qdestroymud" type="action" command="QUEUE" parameter="qdestroymud" />
+    <item id="game.left.production.burner.qdestroywood" type="action" command="QUEUE" parameter="qdestroywood" />
+    <item id="game.left.production.burner.qdestroybones" type="action" command="QUEUE" parameter="qdestroybones" />
+    <item id="game.left.production.burner.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

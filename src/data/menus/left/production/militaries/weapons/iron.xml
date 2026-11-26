@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.iron" title="Iron" esES="Hierro">
+    <item id="game.left.production.militaries.weapons.iron.qironaxe" type="action" command="QUEUE" parameter="qironaxe" />
+    <item id="game.left.production.militaries.weapons.iron.qironmace" type="action" command="QUEUE" parameter="qironmace" />
+    <item id="game.left.production.militaries.weapons.iron.qironlongsword" type="action" command="QUEUE" parameter="qironlongsword" />
+    <item id="game.left.production.militaries.weapons.iron.qironshortsword" type="action" command="QUEUE" parameter="qironshortsword" />
+    <item id="game.left.production.militaries.weapons.iron.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

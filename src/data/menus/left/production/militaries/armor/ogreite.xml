@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.ogreite" title="Ogreite set" esES="Set de ogreite">
+    <item id="game.left.production.militaries.armor.ogreite.qogreitehelmet" type="action" command="QUEUE" parameter="qogreitehelmet" />
+    <item id="game.left.production.militaries.armor.ogreite.qogreitearmor" type="action" command="QUEUE" parameter="qogreitearmor" />
+    <item id="game.left.production.militaries.armor.ogreite.qogreitepants" type="action" command="QUEUE" parameter="qogreitepants" />
+    <item id="game.left.production.militaries.armor.ogreite.qogreiteboots" type="action" command="QUEUE" parameter="qogreiteboots" />
+    <item id="game.left.production.militaries.armor.ogreite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

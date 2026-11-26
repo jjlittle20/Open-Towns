@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.golden" title="Golden set" esES="Set de oro">
+    <item id="game.left.production.militaries.armor.golden.qgoldenhelmet" type="action" command="QUEUE" parameter="qgoldenhelmet" />
+    <item id="game.left.production.militaries.armor.golden.qgoldenarmor" type="action" command="QUEUE" parameter="qgoldenarmor" />
+    <item id="game.left.production.militaries.armor.golden.qgoldenpants" type="action" command="QUEUE" parameter="qgoldenpants" />
+    <item id="game.left.production.militaries.armor.golden.qgoldenboots" type="action" command="QUEUE" parameter="qgoldenboots" />
+    <item id="game.left.production.militaries.armor.golden.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

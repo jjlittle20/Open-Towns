@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.containers" title="Containers" esES="Contenedores">
+    <item id="game.left.production.containers.qrmbarrel" type="action" command="QUEUE" parameter="qrmbarrel" />
+    <item id="game.left.production.containers.qrawfoodbarrel" type="action" command="QUEUE" parameter="qrawfoodbarrel" />
+    <item id="game.left.production.containers.qprepfoodbarrel" type="action" command="QUEUE" parameter="qprepfoodbarrel" />
+    <item id="game.left.production.containers.qutilschest" type="action" command="QUEUE" parameter="qutilschest" />
+    <item id="game.left.production.containers.qdecorativechest" type="action" command="QUEUE" parameter="qdecorativechest" />
+    <item id="game.left.production.containers.qitechest" type="action" command="QUEUE" parameter="qitechest" />
+    <item id="game.left.production.containers.qarmorcabinet" type="action" command="QUEUE" parameter="qarmorcabinet" />
+    <item id="game.left.production.containers.qweaponcabinet" type="action" command="QUEUE" parameter="qweaponcabinet" />
+    <item id="game.left.production.containers.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

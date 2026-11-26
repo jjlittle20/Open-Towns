@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.bone" title="Bone" esES="Hueso">
+    <item id="game.left.production.militaries.weapons.bone.qboneclub" type="action" command="QUEUE" parameter="qboneclub" />
+    <item id="game.left.production.militaries.weapons.bone.qboneaxe" type="action" command="QUEUE" parameter="qboneaxe" />
+    <item id="game.left.production.militaries.weapons.bone.qbonesword" type="action" command="QUEUE" parameter="qbonesword" />
+    <item id="game.left.production.militaries.weapons.bone.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

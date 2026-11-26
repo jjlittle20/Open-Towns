@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.direite" title="Direite set" esES="Set de direite">
+    <item id="game.left.production.militaries.armor.direite.qdireitehelmet" type="action" command="QUEUE" parameter="qdireitehelmet" />
+    <item id="game.left.production.militaries.armor.direite.qdireitearmor" type="action" command="QUEUE" parameter="qdireitearmor" />
+    <item id="game.left.production.militaries.armor.direite.qdireitepants" type="action" command="QUEUE" parameter="qdireitepants" />
+    <item id="game.left.production.militaries.armor.direite.qdireiteboots" type="action" command="QUEUE" parameter="qdireiteboots" />
+    <item id="game.left.production.militaries.armor.direite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

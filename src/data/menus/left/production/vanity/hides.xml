@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.vanity.hides" title="Hides and materials" esES="Pieles y materiales">
+    <item id="game.left.production.vanity.hides.qanimalhide" type="action" command="QUEUE" parameter="qanimalhide" />
+    <item id="game.left.production.vanity.hides.qbadgerhide" type="action" command="QUEUE" parameter="qbadgerhide" />
+    <item id="game.left.production.vanity.hides.qunifallowhide" type="action" command="QUEUE" parameter="qunifallowhide" />
+    <item id="game.left.production.vanity.hides.qskootenfeather" type="action" command="QUEUE" parameter="qskootenfeather" />
+    <item id="game.left.production.vanity.hides.qtrimsheep" type="action" command="QUEUE" parameter="qtrimsheep" />
+    <item id="game.left.production.vanity.hides.qtrimwildsheep" type="action" command="QUEUE" parameter="qtrimwildsheep" />
+    <item id="game.left.production.vanity.hides.qtrimsnoat" type="action" command="QUEUE" parameter="qtrimsnoat" />
+    <item id="game.left.production.vanity.hides.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

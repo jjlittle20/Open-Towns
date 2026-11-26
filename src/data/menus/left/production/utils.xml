@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.utils" title="Utilities" esES="Útiles">
+    <item id="game.left.production.utils.qtongs" type="action" command="QUEUE" parameter="qtongs" />
+    <item id="game.left.production.utils.qbonecarver" type="action" command="QUEUE" parameter="qbonecarver" />
+    <item id="game.left.production.utils.qtorch" type="action" command="QUEUE" parameter="qtorch" />
+    <item id="game.left.production.utils.qwoodenbucket" type="action" command="QUEUE" parameter="qwoodenbucket" />
+    <item id="game.left.production.utils.qwaterbucket" type="action" command="QUEUE" parameter="qwaterbucket" />
+    <item id="game.left.production.utils.qemptybottle" type="action" command="QUEUE" parameter="qemptybottle" />
+    <item id="game.left.production.utils.qpoisonbottle" type="action" command="QUEUE" parameter="qpoisonbottle" />
+    <item id="game.left.production.utils.qrenewfire" type="action" command="QUEUE" parameter="qrenewfire" />
+    <item id="game.left.production.utils.qrenewburnt" type="action" command="QUEUE" parameter="qrenewburnt" />
+    <item id="game.left.production.utils.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.wooden" title="Wood" esES="Madera">
+    <item id="game.left.production.militaries.weapons.wooden.qwoodenbow" type="action" command="QUEUE" parameter="qwoodenbow" />
+    <item id="game.left.production.militaries.weapons.wooden.qwoodenlongsword" type="action" command="QUEUE" parameter="qwoodenlongsword" />
+    <item id="game.left.production.militaries.weapons.wooden.qwoodenshortsword" type="action" command="QUEUE" parameter="qwoodenshortsword" />
+    <item id="game.left.production.militaries.weapons.wooden.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

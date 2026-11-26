@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.vanity" title="Vanity" esES="Vanidad">
+    <item id="game.left.production.vanity.hides" type="submenu" title="Hides and materials" targetMenu="game.left.production.vanity.hides" icon="ui_rhides" esES="Pieles y materiales" />
+    <item id="game.left.production.vanity.clothes" type="submenu" title="Vanity items" targetMenu="game.left.production.vanity.clothes" icon="ui_rclothes" esES="Objetos de vanidad" />
+    <item id="game.left.production.vanity.colors" type="submenu" title="Colors" targetMenu="game.left.production.vanity.colors" icon="ui_rcolors" esES="Colores" />
+    <item id="game.left.production.vanity.flowers" type="submenu" title="Flowers" targetMenu="game.left.production.vanity.flowers" icon="ui_flower" esES="Flores" />
+    <item id="game.left.production.vanity.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

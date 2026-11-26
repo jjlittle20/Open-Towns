@@ -1,54 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.militaries.armor.cloth"
-      title="Cloth set">
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qclotharmor"
-        type="action"
-        command="QUEUE"
-        parameter="qclotharmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qleatherarmor"
-        type="action"
-        command="QUEUE"
-        parameter="qleatherarmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qleatherspideritearmor"
-        type="action"
-        command="QUEUE"
-        parameter="qleatherspideritearmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qleathergoblinitearmor"
-        type="action"
-        command="QUEUE"
-        parameter="qleathergoblinitearmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qleathersnickeritearmor"
-        type="action"
-        command="QUEUE"
-        parameter="qleathersnickeritearmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qleatherzombitearmor"
-        type="action"
-        command="QUEUE"
-        parameter="qleatherzombitearmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.qleatherogreitearmor"
-        type="action"
-        command="QUEUE"
-        parameter="qleatherogreitearmor" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.militaries.armor.cloth" title="Cloth set" esES="Set de tela">
+    <item id="game.left.production.militaries.armor.cloth.qclotharmor" type="action" command="QUEUE" parameter="qclotharmor" />
+    <item id="game.left.production.militaries.armor.cloth.qleatherarmor" type="action" command="QUEUE" parameter="qleatherarmor" />
+    <item id="game.left.production.militaries.armor.cloth.qleatherspideritearmor" type="action" command="QUEUE" parameter="qleatherspideritearmor" />
+    <item id="game.left.production.militaries.armor.cloth.qleathergoblinitearmor" type="action" command="QUEUE" parameter="qleathergoblinitearmor" />
+    <item id="game.left.production.militaries.armor.cloth.qleathersnickeritearmor" type="action" command="QUEUE" parameter="qleathersnickeritearmor" />
+    <item id="game.left.production.militaries.armor.cloth.qleatherzombitearmor" type="action" command="QUEUE" parameter="qleatherzombitearmor" />
+    <item id="game.left.production.militaries.armor.cloth.qleatherogreitearmor" type="action" command="QUEUE" parameter="qleatherogreitearmor" />
+    <item id="game.left.production.militaries.armor.cloth.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

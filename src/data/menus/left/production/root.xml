@@ -1,22 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.root"
-      title="Production">
-
-    <item
-        id="game.left.production.food"
-        type="submenu"
-        title="Food"
-        icon="ui_rfood"
-        targetMenu="game.left.production.food" />
-
-    <item
-        id="game.left.production.militaries"
-        type="submenu"
-        title="Militaries"
-        icon="ui_rmilitary"
-        targetMenu="game.left.production.militaries" />
-
-    <!-- Remaining categories will follow. -->
-
+<menu id="game.left.production.root" title="Production">
+    <item id="game.left.production.food" type="submenu" title="Food" targetMenu="game.left.production.food" icon="ui_rfood" esES="Comida" />
+    <item id="game.left.production.militaries" type="submenu" title="Militaries" targetMenu="game.left.production.militaries" icon="ui_rmilitary" esES="Militares" />
+    <item id="game.left.production.utils" type="submenu" title="Utilities" targetMenu="game.left.production.utils" icon="ui_rutils" esES="Útiles" />
+    <item id="game.left.production.containers" type="submenu" title="Containers" targetMenu="game.left.production.containers" icon="ui_rcontainers" esES="Contenedores" />
+    <item id="game.left.production.materials" type="submenu" title="Materials" targetMenu="game.left.production.materials" icon="ui_rmaterials" esES="Materiales" />
+    <item id="game.left.production.burner" type="submenu" title="Burner" targetMenu="game.left.production.burner" icon="ui_burner" esES="Quemador" />
+    <item id="game.left.production.vanity" type="submenu" title="Vanity" targetMenu="game.left.production.vanity" icon="ui_rvanity" esES="Vanidad" />
 </menu>

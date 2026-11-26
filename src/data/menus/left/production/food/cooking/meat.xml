@@ -1,48 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.food.cooking.meat"
-      title="Meat">
-
-    <item
-        id="game.left.production.food.cooking.meat.qcookedbadgermeat"
-        type="action"
-        command="QUEUE"
-        parameter="qcookedbadgermeat" />
-
-    <item
-        id="game.left.production.food.cooking.meat.qcookedpoultry"
-        type="action"
-        command="QUEUE"
-        parameter="qcookedpoultry" />
-
-    <item
-        id="game.left.production.food.cooking.meat.qcookedpork"
-        type="action"
-        command="QUEUE"
-        parameter="qcookedpork" />
-
-    <item
-        id="game.left.production.food.cooking.meat.qcookedsteak"
-        type="action"
-        command="QUEUE"
-        parameter="qcookedsteak" />
-
-    <item
-        id="game.left.production.food.cooking.meat.qroast"
-        type="action"
-        command="QUEUE"
-        parameter="qroast" />
-
-    <item
-        id="game.left.production.food.cooking.meat.qcookedfish"
-        type="action"
-        command="QUEUE"
-        parameter="qcookedfish" />
-
-    <item
-        id="game.left.production.food.cooking.meat.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.food.cooking.meat" title="Meat" esES="Carne">
+    <item id="game.left.production.food.cooking.meat.qcookedbadgermeat" type="action" command="QUEUE" parameter="qcookedbadgermeat" />
+    <item id="game.left.production.food.cooking.meat.qcookedpoultry" type="action" command="QUEUE" parameter="qcookedpoultry" />
+    <item id="game.left.production.food.cooking.meat.qcookedpork" type="action" command="QUEUE" parameter="qcookedpork" />
+    <item id="game.left.production.food.cooking.meat.qcookedsteak" type="action" command="QUEUE" parameter="qcookedsteak" />
+    <item id="game.left.production.food.cooking.meat.qroast" type="action" command="QUEUE" parameter="qroast" />
+    <item id="game.left.production.food.cooking.meat.qcookedfish" type="action" command="QUEUE" parameter="qcookedfish" />
+    <item id="game.left.production.food.cooking.meat.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

@@ -1,48 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<menu id="game.left.production.militaries.armor"
-      title="Armors">
-
-    <item
-        id="game.left.production.militaries.armor.wooden"
-        type="submenu"
-        title="Wooden set"
-        icon="ui_rarmor_wooden"
-        targetMenu="game.left.production.militaries.armor.wooden" />
-
-    <item
-        id="game.left.production.militaries.armor.cloth"
-        type="submenu"
-        title="Cloth set"
-        icon="ui_rarmor_cloth"
-        targetMenu="game.left.production.militaries.armor.cloth" />
-
-    <item
-        id="game.left.production.militaries.armor.bone"
-        type="submenu"
-        title="Bone set"
-        icon="ui_rarmor_bone"
-        targetMenu="game.left.production.militaries.armor.bone" />
-
-    <item
-        id="game.left.production.militaries.armor.iron"
-        type="submenu"
-        title="Iron set"
-        icon="ui_rarmor_iron"
-        targetMenu="game.left.production.militaries.armor.iron" />
-
-    <item
-        id="game.left.production.militaries.armor.spiderbane"
-        type="submenu"
-        title="Spiderite set"
-        icon="ui_rarmor_spiderite"
-        targetMenu="game.left.production.militaries.armor.spiderbane" />
-
-    <!-- Remaining armour sets will follow. -->
-
-    <item
-        id="game.left.production.militaries.armor.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.militaries.armor" title="Armors" esES="Armaduras">
+    <item id="game.left.production.militaries.armor.wooden" type="submenu" title="Wooden set" targetMenu="game.left.production.militaries.armor.wooden" icon="ui_rarmor_wooden" esES="Set de madera" />
+    <item id="game.left.production.militaries.armor.cloth" type="submenu" title="Cloth set" targetMenu="game.left.production.militaries.armor.cloth" icon="ui_rarmor_cloth" esES="Set de tela" />
+    <item id="game.left.production.militaries.armor.bone" type="submenu" title="Bone set" targetMenu="game.left.production.militaries.armor.bone" icon="ui_rarmor_bone" esES="Set de hueso" />
+    <item id="game.left.production.militaries.armor.iron" type="submenu" title="Iron set" targetMenu="game.left.production.militaries.armor.iron" icon="ui_rarmor_iron" esES="Set de hierro" />
+    <item id="game.left.production.militaries.armor.spiderite" type="submenu" title="Spiderite set" targetMenu="game.left.production.militaries.armor.spiderite" icon="ui_rarmor_spiderite" esES="Set de spiderite" />
+    <item id="game.left.production.militaries.armor.goblinite" type="submenu" title="Goblinite set" targetMenu="game.left.production.militaries.armor.goblinite" icon="ui_rarmor_goblinite" esES="Set de goblinite" />
+    <item id="game.left.production.militaries.armor.hobgoblinite" type="submenu" title="Hobgoblin set" targetMenu="game.left.production.militaries.armor.hobgoblinite" icon="ui_rarmor_hobgoblinite" esES="Set de hobgoblin" />
+    <item id="game.left.production.militaries.armor.direite" type="submenu" title="Direite set" targetMenu="game.left.production.militaries.armor.direite" icon="ui_rarmor_direite" esES="Set de direite" />
+    <item id="game.left.production.militaries.armor.snickerite" type="submenu" title="Snickerite set" targetMenu="game.left.production.militaries.armor.snickerite" icon="ui_rarmor_snickerite" esES="Set de snickerite" />
+    <item id="game.left.production.militaries.armor.zombite" type="submenu" title="Zombite set" targetMenu="game.left.production.militaries.armor.zombite" icon="ui_rarmor_zombite" esES="Set de zombite" />
+    <item id="game.left.production.militaries.armor.ghoulite" type="submenu" title="Ghoulite set" targetMenu="game.left.production.militaries.armor.ghoulite" icon="ui_rarmor_ghoulite" esES="Set de ghoulite" />
+    <item id="game.left.production.militaries.armor.ogreite" type="submenu" title="Ogreite set" targetMenu="game.left.production.militaries.armor.ogreite" icon="ui_rarmor_ogreite" esES="Set de ogreite" />
+    <item id="game.left.production.militaries.armor.silver" type="submenu" title="Silver set" targetMenu="game.left.production.militaries.armor.silver" icon="ui_rarmor_silver" esES="Set de plata" />
+    <item id="game.left.production.militaries.armor.golden" type="submenu" title="Golden set" targetMenu="game.left.production.militaries.armor.golden" icon="ui_rarmor_golden" esES="Set de oro" />
+    <item id="game.left.production.militaries.armor.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

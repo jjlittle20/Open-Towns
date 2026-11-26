@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.spiderite" title="Spiderite set" esES="Set de spiderite">
+    <item id="game.left.production.militaries.armor.spiderite.qspideritehelmet" type="action" command="QUEUE" parameter="qspideritehelmet" />
+    <item id="game.left.production.militaries.armor.spiderite.qspideritearmor" type="action" command="QUEUE" parameter="qspideritearmor" />
+    <item id="game.left.production.militaries.armor.spiderite.qspideritepants" type="action" command="QUEUE" parameter="qspideritepants" />
+    <item id="game.left.production.militaries.armor.spiderite.qspideriteboots" type="action" command="QUEUE" parameter="qspideriteboots" />
+    <item id="game.left.production.militaries.armor.spiderite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

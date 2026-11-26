@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.vanity.colors" title="Colors" esES="Colores">
+    <item id="game.left.production.vanity.colors.qbluecolor" type="action" command="QUEUE" parameter="qbluecolor" />
+    <item id="game.left.production.vanity.colors.qredcolor" type="action" command="QUEUE" parameter="qredcolor" />
+    <item id="game.left.production.vanity.colors.qyellowcolor" type="action" command="QUEUE" parameter="qyellowcolor" />
+    <item id="game.left.production.vanity.colors.qgreencolor" type="action" command="QUEUE" parameter="qgreencolor" />
+    <item id="game.left.production.vanity.colors.qpurplecolor" type="action" command="QUEUE" parameter="qpurplecolor" />
+    <item id="game.left.production.vanity.colors.qorangecolor" type="action" command="QUEUE" parameter="qorangecolor" />
+    <item id="game.left.production.vanity.colors.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

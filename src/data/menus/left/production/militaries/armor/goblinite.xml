@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.goblinite" title="Goblinite set" esES="Set de goblinite">
+    <item id="game.left.production.militaries.armor.goblinite.qgoblinitehelmet" type="action" command="QUEUE" parameter="qgoblinitehelmet" />
+    <item id="game.left.production.militaries.armor.goblinite.qgoblinitearmor" type="action" command="QUEUE" parameter="qgoblinitearmor" />
+    <item id="game.left.production.militaries.armor.goblinite.qgoblinitepants" type="action" command="QUEUE" parameter="qgoblinitepants" />
+    <item id="game.left.production.militaries.armor.goblinite.qgobliniteboots" type="action" command="QUEUE" parameter="qgobliniteboots" />
+    <item id="game.left.production.militaries.armor.goblinite.qspeedboots" type="action" command="QUEUE" parameter="qspeedboots" />
+    <item id="game.left.production.militaries.armor.goblinite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,36 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.militaries.armor.wooden"
-      title="Wooden set">
-
-    <item
-        id="game.left.production.militaries.armor.wooden.qwoodenhelmet"
-        type="action"
-        command="QUEUE"
-        parameter="qwoodenhelmet" />
-
-    <item
-        id="game.left.production.militaries.armor.wooden.qwoodenarmor"
-        type="action"
-        command="QUEUE"
-        parameter="qwoodenarmor" />
-
-    <item
-        id="game.left.production.militaries.armor.wooden.qwoodenpants"
-        type="action"
-        command="QUEUE"
-        parameter="qwoodenpants" />
-
-    <item
-        id="game.left.production.militaries.armor.wooden.qwoodenboots"
-        type="action"
-        command="QUEUE"
-        parameter="qwoodenboots" />
-
-    <item
-        id="game.left.production.militaries.armor.wooden.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.militaries.armor.wooden" title="Wooden set" esES="Set de madera">
+    <item id="game.left.production.militaries.armor.wooden.qwoodenhelmet" type="action" command="QUEUE" parameter="qwoodenhelmet" />
+    <item id="game.left.production.militaries.armor.wooden.qwoodenarmor" type="action" command="QUEUE" parameter="qwoodenarmor" />
+    <item id="game.left.production.militaries.armor.wooden.qwoodenpants" type="action" command="QUEUE" parameter="qwoodenpants" />
+    <item id="game.left.production.militaries.armor.wooden.qwoodenboots" type="action" command="QUEUE" parameter="qwoodenboots" />
+    <item id="game.left.production.militaries.armor.wooden.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

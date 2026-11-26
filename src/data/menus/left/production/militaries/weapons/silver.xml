@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.silver" title="Silver" esES="Plata">
+    <item id="game.left.production.militaries.weapons.silver.qsilverbow" type="action" command="QUEUE" parameter="qsilverbow" />
+    <item id="game.left.production.militaries.weapons.silver.qsilveritebentsword" type="action" command="QUEUE" parameter="qsilveritebentsword" />
+    <item id="game.left.production.militaries.weapons.silver.qsilverlongsword" type="action" command="QUEUE" parameter="qsilverlongsword" />
+    <item id="game.left.production.militaries.weapons.silver.qsilvershortsword" type="action" command="QUEUE" parameter="qsilvershortsword" />
+    <item id="game.left.production.militaries.weapons.silver.qsilverspear" type="action" command="QUEUE" parameter="qsilverspear" />
+    <item id="game.left.production.militaries.weapons.silver.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

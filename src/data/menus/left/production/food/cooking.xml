@@ -1,55 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.food.cooking"
-      title="Cooking">
-
-    <item
-        id="game.left.production.food.cooking.meat"
-        type="submenu"
-        title="Meat"
-        icon="ui_meat"
-        targetMenu="game.left.production.food.cooking.meat" />
-
-    <item
-        id="game.left.production.food.cooking.qomelette"
-        type="action"
-        command="QUEUE"
-        parameter="qomelette" />
-
-    <item
-        id="game.left.production.food.cooking.qbakedbanana"
-        type="action"
-        command="QUEUE"
-        parameter="qbakedbanana" />
-
-    <item
-        id="game.left.production.food.cooking.qhamandeggs"
-        type="action"
-        command="QUEUE"
-        parameter="qhamandeggs" />
-
-    <item
-        id="game.left.production.food.cooking.qsoup"
-        type="action"
-        command="QUEUE"
-        parameter="qsoup" />
-
-    <item
-        id="game.left.production.food.cooking.qcactussoup"
-        type="action"
-        command="QUEUE"
-        parameter="qcactussoup" />
-
-    <item
-        id="game.left.production.food.cooking.qmountainstew"
-        type="action"
-        command="QUEUE"
-        parameter="qmountainstew" />
-
-    <item
-        id="game.left.production.food.cooking.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.food.cooking" title="Cooking" esES="Cocinar">
+    <item id="game.left.production.food.cooking.meat" type="submenu" title="Meat" targetMenu="game.left.production.food.cooking.meat" icon="ui_meat" esES="Carne" />
+    <item id="game.left.production.food.cooking.qomelette" type="action" command="QUEUE" parameter="qomelette" />
+    <item id="game.left.production.food.cooking.qbakedbanana" type="action" command="QUEUE" parameter="qbakedbanana" />
+    <item id="game.left.production.food.cooking.qhamandeggs" type="action" command="QUEUE" parameter="qhamandeggs" />
+    <item id="game.left.production.food.cooking.qsoup" type="action" command="QUEUE" parameter="qsoup" />
+    <item id="game.left.production.food.cooking.qcactussoup" type="action" command="QUEUE" parameter="qcactussoup" />
+    <item id="game.left.production.food.cooking.qmountainstew" type="action" command="QUEUE" parameter="qmountainstew" />
+    <item id="game.left.production.food.cooking.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

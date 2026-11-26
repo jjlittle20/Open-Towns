@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.stone" title="Stone" esES="Piedra">
+    <item id="game.left.production.militaries.weapons.stone.qstonehammer" type="action" command="QUEUE" parameter="qstonehammer" />
+    <item id="game.left.production.militaries.weapons.stone.qstonemace" type="action" command="QUEUE" parameter="qstonemace" />
+    <item id="game.left.production.militaries.weapons.stone.qstonespear" type="action" command="QUEUE" parameter="qstonespear" />
+    <item id="game.left.production.militaries.weapons.stone.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

@@ -1,40 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.food"
-      title="Food">
-
-    <item
-        id="game.left.production.food.gathering"
-        type="submenu"
-        title="Gathering"
-        icon="ui_rfoodgathering"
-        targetMenu="game.left.production.food.gathering" />
-
-    <item
-        id="game.left.production.food.butchering"
-        type="submenu"
-        title="Butchering"
-        icon="ui_rfoodbutchering"
-        targetMenu="game.left.production.food.butchering" />
-
-    <item
-        id="game.left.production.food.baking"
-        type="submenu"
-        title="Baking"
-        icon="ui_rbaking"
-        targetMenu="game.left.production.food.baking" />
-
-    <item
-        id="game.left.production.food.cooking"
-        type="submenu"
-        title="Cooking"
-        icon="ui_rfoodcooking"
-        targetMenu="game.left.production.food.cooking" />
-
-    <item
-        id="game.left.production.food.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.food" title="Food" esES="Comida">
+    <item id="game.left.production.food.gathering" type="submenu" title="Gathering" targetMenu="game.left.production.food.gathering" icon="ui_rfoodgathering" esES="Recolectar" />
+    <item id="game.left.production.food.butchering" type="submenu" title="Butchering" targetMenu="game.left.production.food.butchering" icon="ui_rfoodbutchering" esES="Descuartizar" />
+    <item id="game.left.production.food.baking" type="submenu" title="Baking" targetMenu="game.left.production.food.baking" icon="ui_rbaking" esES="Cocción" />
+    <item id="game.left.production.food.cooking" type="submenu" title="Cooking" targetMenu="game.left.production.food.cooking" icon="ui_rfoodcooking" esES="Cocinar" />
+    <item id="game.left.production.food.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.vanity.clothes" title="Vanity items" esES="Objetos de vanidad">
+    <item id="game.left.production.vanity.clothes.qbluehat" type="action" command="QUEUE" parameter="qbluehat" />
+    <item id="game.left.production.vanity.clothes.qredhat" type="action" command="QUEUE" parameter="qredhat" />
+    <item id="game.left.production.vanity.clothes.qyellowhat" type="action" command="QUEUE" parameter="qyellowhat" />
+    <item id="game.left.production.vanity.clothes.qgreenhat" type="action" command="QUEUE" parameter="qgreenhat" />
+    <item id="game.left.production.vanity.clothes.qbadgerhat" type="action" command="QUEUE" parameter="qbadgerhat" />
+    <item id="game.left.production.vanity.clothes.qbunnyhat" type="action" command="QUEUE" parameter="qbunnyhat" />
+    <item id="game.left.production.vanity.clothes.qstrawhat" type="action" command="QUEUE" parameter="qstrawhat" />
+    <item id="game.left.production.vanity.clothes.qwoodenmask" type="action" command="QUEUE" parameter="qwoodenmask" />
+    <item id="game.left.production.vanity.clothes.qmayanmask" type="action" command="QUEUE" parameter="qmayanmask" />
+    <item id="game.left.production.vanity.clothes.qfeatherhat" type="action" command="QUEUE" parameter="qfeatherhat" />
+    <item id="game.left.production.vanity.clothes.qwhiteheadkerchief" type="action" command="QUEUE" parameter="qwhiteheadkerchief" />
+    <item id="game.left.production.vanity.clothes.qredheadkerchief" type="action" command="QUEUE" parameter="qredheadkerchief" />
+    <item id="game.left.production.vanity.clothes.qblueheadkerchief" type="action" command="QUEUE" parameter="qblueheadkerchief" />
+    <item id="game.left.production.vanity.clothes.qorangeheadkerchief" type="action" command="QUEUE" parameter="qorangeheadkerchief" />
+    <item id="game.left.production.vanity.clothes.qgreenheadkerchief" type="action" command="QUEUE" parameter="qgreenheadkerchief" />
+    <item id="game.left.production.vanity.clothes.qyellowheadkerchief" type="action" command="QUEUE" parameter="qyellowheadkerchief" />
+    <item id="game.left.production.vanity.clothes.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

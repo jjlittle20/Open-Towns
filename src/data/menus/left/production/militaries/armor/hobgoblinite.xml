@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.hobgoblinite" title="Hobgoblin set" esES="Set de hobgoblin">
+    <item id="game.left.production.militaries.armor.hobgoblinite.qhobgoblinitehelmet" type="action" command="QUEUE" parameter="qhobgoblinitehelmet" />
+    <item id="game.left.production.militaries.armor.hobgoblinite.qhobgoblinitearmor" type="action" command="QUEUE" parameter="qhobgoblinitearmor" />
+    <item id="game.left.production.militaries.armor.hobgoblinite.qhobgoblinitepants" type="action" command="QUEUE" parameter="qhobgoblinitepants" />
+    <item id="game.left.production.militaries.armor.hobgoblinite.qhobgobliniteboots" type="action" command="QUEUE" parameter="qhobgobliniteboots" />
+    <item id="game.left.production.militaries.armor.hobgoblinite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

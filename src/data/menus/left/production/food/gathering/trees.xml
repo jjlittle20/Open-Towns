@@ -1,39 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<menu id="game.left.production.food.gathering.trees"
-      title="Trees and plants">
-
-    <item id="game.left.production.food.gathering.trees.qharvestwheat"
-          type="action" command="QUEUE" parameter="qharvestwheat" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestsugarcane"
-          type="action" command="QUEUE" parameter="qharvestsugarcane" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestpapple"
-          type="action" command="QUEUE" parameter="qharvestpapple" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestpbanana"
-          type="action" command="QUEUE" parameter="qharvestpbanana" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestppear"
-          type="action" command="QUEUE" parameter="qharvestppear" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestpblueradish"
-          type="action" command="QUEUE" parameter="qharvestpblueradish" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestpsnowcherry"
-          type="action" command="QUEUE" parameter="qharvestpsnowcherry" />
-
-    <item id="game.left.production.food.gathering.trees.qpickpmushroom"
-          type="action" command="QUEUE" parameter="qpickpmushroom" />
-
-    <item id="game.left.production.food.gathering.trees.qpickpcavemushroom"
-          type="action" command="QUEUE" parameter="qpickpcavemushroom" />
-
-    <item id="game.left.production.food.gathering.trees.qharvestpcactus"
-          type="action" command="QUEUE" parameter="qharvestpcactus" />
-
-    <item id="game.left.production.food.gathering.trees.back"
-          type="back" title="Back" icon="ui_back" />
-
+<menu id="game.left.production.food.gathering.trees" title="Trees and plants" esES="Árboles y plantas">
+    <item id="game.left.production.food.gathering.trees.qharvestwheat" type="action" command="QUEUE" parameter="qharvestwheat" />
+    <item id="game.left.production.food.gathering.trees.qharvestsugarcane" type="action" command="QUEUE" parameter="qharvestsugarcane" />
+    <item id="game.left.production.food.gathering.trees.qharvestpapple" type="action" command="QUEUE" parameter="qharvestpapple" />
+    <item id="game.left.production.food.gathering.trees.qharvestpbanana" type="action" command="QUEUE" parameter="qharvestpbanana" />
+    <item id="game.left.production.food.gathering.trees.qharvestppear" type="action" command="QUEUE" parameter="qharvestppear" />
+    <item id="game.left.production.food.gathering.trees.qharvestpblueradish" type="action" command="QUEUE" parameter="qharvestpblueradish" />
+    <item id="game.left.production.food.gathering.trees.qharvestpsnowcherry" type="action" command="QUEUE" parameter="qharvestpsnowcherry" />
+    <item id="game.left.production.food.gathering.trees.qpickpmushroom" type="action" command="QUEUE" parameter="qpickpmushroom" />
+    <item id="game.left.production.food.gathering.trees.qpickpcavemushroom" type="action" command="QUEUE" parameter="qpickpcavemushroom" />
+    <item id="game.left.production.food.gathering.trees.qharvestpcactus" type="action" command="QUEUE" parameter="qharvestpcactus" />
+    <item id="game.left.production.food.gathering.trees.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

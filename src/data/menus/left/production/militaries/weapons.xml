@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons" title="Weapons" esES="Armas">
+    <item id="game.left.production.militaries.weapons.wooden" type="submenu" title="Wood" targetMenu="game.left.production.militaries.weapons.wooden" icon="ui_rweapon_wooden" esES="Madera" />
+    <item id="game.left.production.militaries.weapons.iron" type="submenu" title="Iron" targetMenu="game.left.production.militaries.weapons.iron" icon="ui_rweapon_iron" esES="Hierro" />
+    <item id="game.left.production.militaries.weapons.stone" type="submenu" title="Stone" targetMenu="game.left.production.militaries.weapons.stone" icon="ui_rweapon_stone" esES="Piedra" />
+    <item id="game.left.production.militaries.weapons.bone" type="submenu" title="Bone" targetMenu="game.left.production.militaries.weapons.bone" icon="ui_rweapon_bone" esES="Hueso" />
+    <item id="game.left.production.militaries.weapons.silver" type="submenu" title="Silver" targetMenu="game.left.production.militaries.weapons.silver" icon="ui_rweapon_silver" esES="Plata" />
+    <item id="game.left.production.militaries.weapons.gold" type="submenu" title="Gold" targetMenu="game.left.production.militaries.weapons.gold" icon="ui_rweapon_golden" esES="Oro" />
+    <item id="game.left.production.militaries.weapons.other" type="submenu" title="Other" targetMenu="game.left.production.militaries.weapons.other" icon="ui_rweapon_other" esES="Otras" />
+    <item id="game.left.production.militaries.weapons.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

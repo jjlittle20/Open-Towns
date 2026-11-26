@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.weapons.other" title="Other" esES="Otras">
+    <item id="game.left.production.militaries.weapons.other.qbentsword" type="action" command="QUEUE" parameter="qbentsword" />
+    <item id="game.left.production.militaries.weapons.other.qbamboostick" type="action" command="QUEUE" parameter="qbamboostick" />
+    <item id="game.left.production.militaries.weapons.other.qwoodensnakesword" type="action" command="QUEUE" parameter="qwoodensnakesword" />
+    <item id="game.left.production.militaries.weapons.other.qdireiteaxe" type="action" command="QUEUE" parameter="qdireiteaxe" />
+    <item id="game.left.production.militaries.weapons.other.qgoblinitespear" type="action" command="QUEUE" parameter="qgoblinitespear" />
+    <item id="game.left.production.militaries.weapons.other.qghouliteblade" type="action" command="QUEUE" parameter="qghouliteblade" />
+    <item id="game.left.production.militaries.weapons.other.qhobgoblinitebentsword" type="action" command="QUEUE" parameter="qhobgoblinitebentsword" />
+    <item id="game.left.production.militaries.weapons.other.qogreitemace" type="action" command="QUEUE" parameter="qogreitemace" />
+    <item id="game.left.production.militaries.weapons.other.qsnickeriteblade" type="action" command="QUEUE" parameter="qsnickeriteblade" />
+    <item id="game.left.production.militaries.weapons.other.qspiderbow" type="action" command="QUEUE" parameter="qspiderbow" />
+    <item id="game.left.production.militaries.weapons.other.qspideritesword" type="action" command="QUEUE" parameter="qspideritesword" />
+    <item id="game.left.production.militaries.weapons.other.qzombitemace" type="action" command="QUEUE" parameter="qzombitemace" />
+    <item id="game.left.production.militaries.weapons.other.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

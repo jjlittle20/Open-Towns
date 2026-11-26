@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.vanity.flowers" title="Flowers" esES="Flores">
+    <item id="game.left.production.vanity.flowers.qgatherplantedblueflower" type="action" command="QUEUE" parameter="qgatherplantedblueflower" />
+    <item id="game.left.production.vanity.flowers.qgatherplantedredflower" type="action" command="QUEUE" parameter="qgatherplantedredflower" />
+    <item id="game.left.production.vanity.flowers.qgatherplantedyellowflower" type="action" command="QUEUE" parameter="qgatherplantedyellowflower" />
+    <item id="game.left.production.vanity.flowers.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>

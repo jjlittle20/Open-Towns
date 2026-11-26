@@ -1,35 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<menu id="game.left.production.militaries.armor.bone"
-      title="Bone set">
-
-    <item
-        id="game.left.production.militaries.armor.bone.qbonehelmet"
-        type="action"
-        command="QUEUE"
-        parameter="qbonehelmet" />
-
-    <item
-        id="game.left.production.militaries.armor.bone.qbonearmor"
-        type="action"
-        command="QUEUE"
-        parameter="qbonearmor" />
-
-    <item
-        id="game.left.production.militaries.armor.bone.qbonepants"
-        type="action"
-        command="QUEUE"
-        parameter="qbonepants" />
-
-    <item
-        id="game.left.production.militaries.armor.bone.qboneboots"
-        type="action"
-        command="QUEUE"
-        parameter="qboneboots" />
-
-    <item
-        id="game.left.production.militaries.armor.bone.back"
-        type="back"
-        title="Back"
-        icon="ui_back" />
-
+<menu id="game.left.production.militaries.armor.bone" title="Bone set" esES="Set de hueso">
+    <item id="game.left.production.militaries.armor.bone.qbonehelmet" type="action" command="QUEUE" parameter="qbonehelmet" />
+    <item id="game.left.production.militaries.armor.bone.qbonearmor" type="action" command="QUEUE" parameter="qbonearmor" />
+    <item id="game.left.production.militaries.armor.bone.qbonepants" type="action" command="QUEUE" parameter="qbonepants" />
+    <item id="game.left.production.militaries.armor.bone.qboneboots" type="action" command="QUEUE" parameter="qboneboots" />
+    <item id="game.left.production.militaries.armor.bone.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
 </menu>

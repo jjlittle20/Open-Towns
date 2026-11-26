@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu id="game.left.production.militaries.armor.zombite" title="Zombite set" esES="Set de zombite">
+    <item id="game.left.production.militaries.armor.zombite.qzombitehelmet" type="action" command="QUEUE" parameter="qzombitehelmet" />
+    <item id="game.left.production.militaries.armor.zombite.qzombitearmor" type="action" command="QUEUE" parameter="qzombitearmor" />
+    <item id="game.left.production.militaries.armor.zombite.qzombitepants" type="action" command="QUEUE" parameter="qzombitepants" />
+    <item id="game.left.production.militaries.armor.zombite.qzombiteboots" type="action" command="QUEUE" parameter="qzombiteboots" />
+    <item id="game.left.production.militaries.armor.zombite.back" type="back" title="Back" icon="ui_back" esES="Atrás" />
+</menu>
