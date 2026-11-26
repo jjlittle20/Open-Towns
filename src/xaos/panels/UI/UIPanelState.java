@@ -17,317 +17,319 @@ import java.awt.Point;
 import java.util.ArrayList;
 
 public class UIPanelState {
-    private UIPanelState() {}
-    public static int PIXELS_TO_BORDER = 16;
-    public static final int CLOSE_PIXELS = 20;
-    public static final int MAX_BLINK_TURNS = Game.FPS_INGAME;
+	private UIPanelState() {
+	}
 
-    public static Tile BACK_TILE = new Tile("ui_back"); //$NON-NLS-1$
-    public static Tile BLACK_TILE = new Tile("ui_black"); //$NON-NLS-1$
-    public static Tile BIG_RED_CROSS_TILE = new Tile("iconredcross"); //$NON-NLS-1$
-    public static Tile ENABLE_ALL_TILE = new Tile("iconenableall"); //$NON-NLS-1$
-    public static Tile DISABLE_ALL_TILE = new Tile("icondisableall"); //$NON-NLS-1$
+	public static int PIXELS_TO_BORDER = 16;
+	public static final int CLOSE_PIXELS = 20;
+	public static final int MAX_BLINK_TURNS = Game.FPS_INGAME;
 
-    public final static int MOUSE_NONE = 0;
-    public final static int MOUSE_BOTTOM_PANEL = 1;
-    public final static int MOUSE_BOTTOM_LEFT_SCROLL = 2;
-    public final static int MOUSE_BOTTOM_RIGHT_SCROLL = 3;
-    public final static int MOUSE_BOTTOM_ITEMS = 4;
-    public final static int MOUSE_BOTTOM_SUBPANEL = 5;
-    public final static int MOUSE_BOTTOM_SUBITEMS = 6;
-    public final static int MOUSE_BOTTOM_OPENCLOSE = 7;
-    public final static int MOUSE_MINIMAP = 10;
-    public final static int MOUSE_MESSAGES_PANEL = 20;
-    public final static int MOUSE_MESSAGES_ICON_COMBAT = 21;
-    public final static int MOUSE_MESSAGES_ICON_SYSTEM = 22;
-    public final static int MOUSE_MESSAGES_ICON_ANNOUNCEMENT = 23;
-    public final static int MOUSE_MESSAGES_ICON_HEROES = 24;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_CLOSE = 25;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_ANNOUNCEMENT = 26;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_COMBAT = 27;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_HEROES = 28;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_SYSTEM = 29;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_UP = 30;
-    public final static int MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_DOWN = 31;
-    public final static int MOUSE_MENU_PANEL = 35;
-    public final static int MOUSE_MENU_PANEL_ITEMS = 36;
-    public final static int MOUSE_MENU_OPENCLOSE = 37;
-    public final static int MOUSE_ICON_LEVEL_UP = 40;
-    public final static int MOUSE_ICON_LEVEL_DOWN = 41;
-    public final static int MOUSE_ICON_CITIZEN_NEXT = 42;
-    public final static int MOUSE_ICON_CITIZEN_PREVIOUS = 43;
-    public final static int MOUSE_ICON_SOLDIER_NEXT = 44;
-    public final static int MOUSE_ICON_SOLDIER_PREVIOUS = 45;
-    public final static int MOUSE_ICON_LEVEL = 46;
-    public final static int MOUSE_ICON_HERO_NEXT = 47;
-    public final static int MOUSE_ICON_HERO_PREVIOUS = 48;
-    // public final static int MOUSE_INFO_CURRENT_LEVEL = 50;
-    public final static int MOUSE_INFO_NUM_CITIZENS = 51;
-    public final static int MOUSE_INFO_NUM_SOLDIERS = 52;
-    public final static int MOUSE_INFO_NUM_HEROES = 53;
-    public final static int MOUSE_INFO_CARAVAN = 54;
-    public final static int MOUSE_INFOPANEL = 60;
-    public final static int MOUSE_DATEPANEL = 61;
-    public final static int MOUSE_PRODUCTION_PANEL = 65;
-    public final static int MOUSE_PRODUCTION_PANEL_ITEMS = 66;
-    // public final static int MOUSE_PRODUCTION_PANEL_ICON = 67;
-    public final static int MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_REGULAR = 68;
-    public final static int MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_REGULAR = 69;
-    public final static int MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_AUTOMATED = 70;
-    public final static int MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_AUTOMATED = 71;
-    public final static int MOUSE_PRODUCTION_OPENCLOSE = 72;
-    public final static int MOUSE_ICON_PRIORITIES = 77;
-    public final static int MOUSE_ICON_PAUSE_RESUME = 78;
-    public final static int MOUSE_ICON_SETTINGS = 79;
-    public final static int MOUSE_ICON_GRID = 80;
-    public final static int MOUSE_PRIORITIES_PANEL = 81;
-    public final static int MOUSE_PRIORITIES_PANEL_ITEMS = 82;
-    public final static int MOUSE_PRIORITIES_PANEL_ITEMS_UP = 83;
-    public final static int MOUSE_PRIORITIES_PANEL_ITEMS_DOWN = 84;
-    public final static int MOUSE_ICON_INCREASE_SPEED = 85;
-    public final static int MOUSE_ICON_LOWER_SPEED = 86;
-    public final static int MOUSE_ICON_MINIBLOCKS = 87;
-    public final static int MOUSE_ICON_FLATMOUSE = 88;
-    public final static int MOUSE_ICON_3DMOUSE = 89;
-    public final static int MOUSE_TRADE_PANEL = 90;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_CARAVAN = 91;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_DOWN_CARAVAN = 92;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_UP_CARAVAN = 93;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN = 94;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_DOWN_CARAVAN = 95;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_UP_CARAVAN = 96;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_CONFIRM = 97;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TOWN = 98;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_DOWN_TOWN = 99;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_UP_TOWN = 100;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN = 101;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_DOWN_TOWN = 102;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_UP_TOWN = 103;
-    public final static int MOUSE_TRADE_PANEL_BUTTONS_CLOSE = 104;
-    public final static int MOUSE_TRADE_PANEL_ICON_BUY = 105;
-    public final static int MOUSE_TRADE_PANEL_ICON_SELL = 106;
+	public static Tile BACK_TILE = new Tile("ui_back"); //$NON-NLS-1$
+	public static Tile BLACK_TILE = new Tile("ui_black"); //$NON-NLS-1$
+	public static Tile BIG_RED_CROSS_TILE = new Tile("iconredcross"); //$NON-NLS-1$
+	public static Tile ENABLE_ALL_TILE = new Tile("iconenableall"); //$NON-NLS-1$
+	public static Tile DISABLE_ALL_TILE = new Tile("icondisableall"); //$NON-NLS-1$
 
-    public final static int MOUSE_EVENTS_ICON = 107;
-    // public final static int MOUSE_GODS_ICON = 108;
-    public final static int MOUSE_TUTORIAL_ICON = 109;
+	public final static int MOUSE_NONE = 0;
+	public final static int MOUSE_BOTTOM_PANEL = 1;
+	public final static int MOUSE_BOTTOM_LEFT_SCROLL = 2;
+	public final static int MOUSE_BOTTOM_RIGHT_SCROLL = 3;
+	public final static int MOUSE_BOTTOM_ITEMS = 4;
+	public final static int MOUSE_BOTTOM_SUBPANEL = 5;
+	public final static int MOUSE_BOTTOM_SUBITEMS = 6;
+	public final static int MOUSE_BOTTOM_OPENCLOSE = 7;
+	public final static int MOUSE_MINIMAP = 10;
+	public final static int MOUSE_MESSAGES_PANEL = 20;
+	public final static int MOUSE_MESSAGES_ICON_COMBAT = 21;
+	public final static int MOUSE_MESSAGES_ICON_SYSTEM = 22;
+	public final static int MOUSE_MESSAGES_ICON_ANNOUNCEMENT = 23;
+	public final static int MOUSE_MESSAGES_ICON_HEROES = 24;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_CLOSE = 25;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_ANNOUNCEMENT = 26;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_COMBAT = 27;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_HEROES = 28;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_SYSTEM = 29;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_UP = 30;
+	public final static int MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_DOWN = 31;
+	public final static int MOUSE_MENU_PANEL = 35;
+	public final static int MOUSE_MENU_PANEL_ITEMS = 36;
+	public final static int MOUSE_MENU_OPENCLOSE = 37;
+	public final static int MOUSE_ICON_LEVEL_UP = 40;
+	public final static int MOUSE_ICON_LEVEL_DOWN = 41;
+	public final static int MOUSE_ICON_CITIZEN_NEXT = 42;
+	public final static int MOUSE_ICON_CITIZEN_PREVIOUS = 43;
+	public final static int MOUSE_ICON_SOLDIER_NEXT = 44;
+	public final static int MOUSE_ICON_SOLDIER_PREVIOUS = 45;
+	public final static int MOUSE_ICON_LEVEL = 46;
+	public final static int MOUSE_ICON_HERO_NEXT = 47;
+	public final static int MOUSE_ICON_HERO_PREVIOUS = 48;
+	// public final static int MOUSE_INFO_CURRENT_LEVEL = 50;
+	public final static int MOUSE_INFO_NUM_CITIZENS = 51;
+	public final static int MOUSE_INFO_NUM_SOLDIERS = 52;
+	public final static int MOUSE_INFO_NUM_HEROES = 53;
+	public final static int MOUSE_INFO_CARAVAN = 54;
+	public final static int MOUSE_INFOPANEL = 60;
+	public final static int MOUSE_DATEPANEL = 61;
+	public final static int MOUSE_PRODUCTION_PANEL = 65;
+	public final static int MOUSE_PRODUCTION_PANEL_ITEMS = 66;
+	// public final static int MOUSE_PRODUCTION_PANEL_ICON = 67;
+	public final static int MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_REGULAR = 68;
+	public final static int MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_REGULAR = 69;
+	public final static int MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_AUTOMATED = 70;
+	public final static int MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_AUTOMATED = 71;
+	public final static int MOUSE_PRODUCTION_OPENCLOSE = 72;
+	public final static int MOUSE_ICON_PRIORITIES = 77;
+	public final static int MOUSE_ICON_PAUSE_RESUME = 78;
+	public final static int MOUSE_ICON_SETTINGS = 79;
+	public final static int MOUSE_ICON_GRID = 80;
+	public final static int MOUSE_PRIORITIES_PANEL = 81;
+	public final static int MOUSE_PRIORITIES_PANEL_ITEMS = 82;
+	public final static int MOUSE_PRIORITIES_PANEL_ITEMS_UP = 83;
+	public final static int MOUSE_PRIORITIES_PANEL_ITEMS_DOWN = 84;
+	public final static int MOUSE_ICON_INCREASE_SPEED = 85;
+	public final static int MOUSE_ICON_LOWER_SPEED = 86;
+	public final static int MOUSE_ICON_MINIBLOCKS = 87;
+	public final static int MOUSE_ICON_FLATMOUSE = 88;
+	public final static int MOUSE_ICON_3DMOUSE = 89;
+	public final static int MOUSE_TRADE_PANEL = 90;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_CARAVAN = 91;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_DOWN_CARAVAN = 92;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_UP_CARAVAN = 93;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN = 94;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_DOWN_CARAVAN = 95;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_UP_CARAVAN = 96;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_CONFIRM = 97;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TOWN = 98;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_DOWN_TOWN = 99;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_UP_TOWN = 100;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN = 101;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_DOWN_TOWN = 102;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_UP_TOWN = 103;
+	public final static int MOUSE_TRADE_PANEL_BUTTONS_CLOSE = 104;
+	public final static int MOUSE_TRADE_PANEL_ICON_BUY = 105;
+	public final static int MOUSE_TRADE_PANEL_ICON_SELL = 106;
 
-    public final static int MOUSE_ICON_MATS = 120;
-    public final static int MOUSE_MATS_PANEL = 121;
-    public final static int MOUSE_MATS_PANEL_BUTTONS_CLOSE = 122;
-    public final static int MOUSE_MATS_PANEL_BUTTONS_GROUPS = 123;
-    public final static int MOUSE_MATS_PANEL_BUTTONS_ITEMS = 124;
-    public final static int MOUSE_MATS_PANEL_BUTTONS_SCROLL_UP = 125;
-    public final static int MOUSE_MATS_PANEL_BUTTONS_SCROLL_DOWN = 126;
+	public final static int MOUSE_EVENTS_ICON = 107;
+	// public final static int MOUSE_GODS_ICON = 108;
+	public final static int MOUSE_TUTORIAL_ICON = 109;
 
-    public final static int MOUSE_LIVINGS_PANEL = 140;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_CLOSE = 141;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS = 142;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_UP = 143;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_DOWN = 144;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_HEAD = 145;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_BODY = 146;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_LEGS = 147;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_FEET = 148;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_WEAPON = 149;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_AUTOEQUIP = 150;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER = 151;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_CIVILIAN = 152;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_GUARD = 153;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_PATROL = 154;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_BOSS = 155;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_ADD = 156;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_REMOVE = 157;
-    public final static int MOUSE_LIVINGS_PANEL_SGROUP_NOGROUP = 158;
-    public final static int MOUSE_LIVINGS_PANEL_SGROUP_GROUP = 159;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_RENAME = 160;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_GUARD = 161;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_PATROL = 162;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_BOSS = 163;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_AUTOEQUIP = 164;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_DISBAND = 165;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_PROFESSIONS = 166;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_JOBS_GROUPS_ADDREMOVE = 167;
-    public final static int MOUSE_LIVINGS_PANEL_CGROUP_NOGROUP = 168;
-    public final static int MOUSE_LIVINGS_PANEL_CGROUP_GROUP = 169;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_RENAME = 170;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_AUTOEQUIP = 171;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_DISBAND = 172;
-    public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_CHANGE_JOBS = 173;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_UP = 174;
-    public final static int MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_DOWN = 175;
+	public final static int MOUSE_ICON_MATS = 120;
+	public final static int MOUSE_MATS_PANEL = 121;
+	public final static int MOUSE_MATS_PANEL_BUTTONS_CLOSE = 122;
+	public final static int MOUSE_MATS_PANEL_BUTTONS_GROUPS = 123;
+	public final static int MOUSE_MATS_PANEL_BUTTONS_ITEMS = 124;
+	public final static int MOUSE_MATS_PANEL_BUTTONS_SCROLL_UP = 125;
+	public final static int MOUSE_MATS_PANEL_BUTTONS_SCROLL_DOWN = 126;
 
-    public final static int MOUSE_TYPING_PANEL = 180;
-    public final static int MOUSE_TYPING_PANEL_CLOSE = 181;
-    public final static int MOUSE_TYPING_PANEL_CONFIRM = 182;
+	public final static int MOUSE_LIVINGS_PANEL = 140;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_CLOSE = 141;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS = 142;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_UP = 143;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_DOWN = 144;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_HEAD = 145;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_BODY = 146;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_LEGS = 147;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_FEET = 148;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_WEAPON = 149;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_AUTOEQUIP = 150;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER = 151;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_CIVILIAN = 152;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_GUARD = 153;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_PATROL = 154;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_BOSS = 155;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_ADD = 156;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_REMOVE = 157;
+	public final static int MOUSE_LIVINGS_PANEL_SGROUP_NOGROUP = 158;
+	public final static int MOUSE_LIVINGS_PANEL_SGROUP_GROUP = 159;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_RENAME = 160;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_GUARD = 161;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_PATROL = 162;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_BOSS = 163;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_AUTOEQUIP = 164;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_DISBAND = 165;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_PROFESSIONS = 166;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_JOBS_GROUPS_ADDREMOVE = 167;
+	public final static int MOUSE_LIVINGS_PANEL_CGROUP_NOGROUP = 168;
+	public final static int MOUSE_LIVINGS_PANEL_CGROUP_GROUP = 169;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_RENAME = 170;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_AUTOEQUIP = 171;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_DISBAND = 172;
+	public final static int MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_CHANGE_JOBS = 173;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_UP = 174;
+	public final static int MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_DOWN = 175;
 
-    public final static int MOUSE_PILE_PANEL = 185;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_CLOSE = 186;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_ITEMS = 187;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_SCROLL_UP = 188;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_SCROLL_DOWN = 189;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_COPY = 190;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK = 191;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_ALL = 192;
-    public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_UNLOCK_ALL = 193;
+	public final static int MOUSE_TYPING_PANEL = 180;
+	public final static int MOUSE_TYPING_PANEL_CLOSE = 181;
+	public final static int MOUSE_TYPING_PANEL_CONFIRM = 182;
 
-    public final static int MOUSE_PROFESSIONS_PANEL = 195;
-    public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_CLOSE = 196;
-    public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_ITEMS = 197;
-    public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_UP = 198;
-    public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_DOWN = 199;
+	public final static int MOUSE_PILE_PANEL = 185;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_CLOSE = 186;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_ITEMS = 187;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_SCROLL_UP = 188;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_SCROLL_DOWN = 189;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_COPY = 190;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK = 191;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_ALL = 192;
+	public final static int MOUSE_PILE_PANEL_BUTTONS_CONFIG_UNLOCK_ALL = 193;
 
-    public final static int MOUSE_IMAGES_PANEL = 200;
-    public final static int MOUSE_IMAGES_PANEL_CLOSE = 201;
-    public final static int MOUSE_IMAGES_PANEL_PREVIOUS = 202;
-    public final static int MOUSE_IMAGES_PANEL_NEXT = 203;
-    public final static int MOUSE_IMAGES_PANEL_NEXT_MISSION = 204;
+	public final static int MOUSE_PROFESSIONS_PANEL = 195;
+	public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_CLOSE = 196;
+	public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_ITEMS = 197;
+	public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_UP = 198;
+	public final static int MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_DOWN = 199;
 
-    public static Point MOUSE_PRODUCTION_PANEL_ITEMS_POINT = new Point(MOUSE_PRODUCTION_PANEL_ITEMS, -1);
-    public static Point MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_REGULAR_POINT = new Point(
-            MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_REGULAR, -1);
-    public static Point MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_REGULAR_POINT = new Point(
-            MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_REGULAR, -1);
-    public static Point MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_AUTOMATED_POINT = new Point(
-            MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_AUTOMATED, -1);
-    public static Point MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_AUTOMATED_POINT = new Point(
-            MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_AUTOMATED, -1);
+	public final static int MOUSE_IMAGES_PANEL = 200;
+	public final static int MOUSE_IMAGES_PANEL_CLOSE = 201;
+	public final static int MOUSE_IMAGES_PANEL_PREVIOUS = 202;
+	public final static int MOUSE_IMAGES_PANEL_NEXT = 203;
+	public final static int MOUSE_IMAGES_PANEL_NEXT_MISSION = 204;
 
-    public static Point MOUSE_PRIORITIES_PANEL_ITEMS_POINT = new Point(MOUSE_PRIORITIES_PANEL_ITEMS, -1);
-    public static Point MOUSE_PRIORITIES_PANEL_ITEMS_UP_POINT = new Point(MOUSE_PRIORITIES_PANEL_ITEMS_UP, -1);
-    public static Point MOUSE_PRIORITIES_PANEL_ITEMS_DOWN_POINT = new Point(MOUSE_PRIORITIES_PANEL_ITEMS_DOWN, -1);
+	public static Point MOUSE_PRODUCTION_PANEL_ITEMS_POINT = new Point(MOUSE_PRODUCTION_PANEL_ITEMS, -1);
+	public static Point MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_REGULAR_POINT = new Point(
+			MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_REGULAR, -1);
+	public static Point MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_REGULAR_POINT = new Point(
+			MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_REGULAR, -1);
+	public static Point MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_AUTOMATED_POINT = new Point(
+			MOUSE_PRODUCTION_PANEL_ITEMS_PLUS_AUTOMATED, -1);
+	public static Point MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_AUTOMATED_POINT = new Point(
+			MOUSE_PRODUCTION_PANEL_ITEMS_MINUS_AUTOMATED, -1);
 
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_CARAVAN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_CARAVAN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_CARAVAN_UP_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_UP_CARAVAN,
-            -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_CARAVAN_DOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_DOWN_CARAVAN,
-            -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN_POINT = new Point(
-            MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN_UP_POINT = new Point(
-            MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_UP_CARAVAN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN_DOWN_POINT = new Point(
-            MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_DOWN_CARAVAN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_CONFIRM_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_CONFIRM, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_TOWN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TOWN_UP_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_UP_TOWN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TOWN_DOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_DOWN_TOWN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN,
-            -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN_UP_POINT = new Point(
-            MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_UP_TOWN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN_DOWN_POINT = new Point(
-            MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_DOWN_TOWN, -1);
-    public static Point MOUSE_TRADE_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_CLOSE, -1);
-    public static Point MOUSE_TRADE_PANEL_ICON_BUY_POINT = new Point(MOUSE_TRADE_PANEL_ICON_BUY, -1);
-    public static Point MOUSE_TRADE_PANEL_ICON_SELL_POINT = new Point(MOUSE_TRADE_PANEL_ICON_SELL, -1);
+	public static Point MOUSE_PRIORITIES_PANEL_ITEMS_POINT = new Point(MOUSE_PRIORITIES_PANEL_ITEMS, -1);
+	public static Point MOUSE_PRIORITIES_PANEL_ITEMS_UP_POINT = new Point(MOUSE_PRIORITIES_PANEL_ITEMS_UP, -1);
+	public static Point MOUSE_PRIORITIES_PANEL_ITEMS_DOWN_POINT = new Point(MOUSE_PRIORITIES_PANEL_ITEMS_DOWN, -1);
 
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_CLOSE, -1);
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_ANNOUNCEMENT_POINT = new Point(
-            MOUSE_MESSAGES_PANEL_BUTTONS_ANNOUNCEMENT, -1);
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_COMBAT_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_COMBAT, -1);
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_HEROES_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_HEROES, -1);
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_SYSTEM_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_SYSTEM, -1);
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_UP,
-            -1);
-    public static Point MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(
-            MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_DOWN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_CARAVAN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_CARAVAN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_CARAVAN_UP_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_UP_CARAVAN,
+			-1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_CARAVAN_DOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_DOWN_CARAVAN,
+			-1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN_POINT = new Point(
+			MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN_UP_POINT = new Point(
+			MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_UP_CARAVAN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_CARAVAN_DOWN_POINT = new Point(
+			MOUSE_TRADE_PANEL_BUTTONS_TO_BUY_DOWN_CARAVAN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_CONFIRM_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_CONFIRM, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_TOWN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TOWN_UP_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_UP_TOWN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TOWN_DOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_DOWN_TOWN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN,
+			-1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN_UP_POINT = new Point(
+			MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_UP_TOWN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_TOWN_DOWN_POINT = new Point(
+			MOUSE_TRADE_PANEL_BUTTONS_TO_SELL_DOWN_TOWN, -1);
+	public static Point MOUSE_TRADE_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_TRADE_PANEL_BUTTONS_CLOSE, -1);
+	public static Point MOUSE_TRADE_PANEL_ICON_BUY_POINT = new Point(MOUSE_TRADE_PANEL_ICON_BUY, -1);
+	public static Point MOUSE_TRADE_PANEL_ICON_SELL_POINT = new Point(MOUSE_TRADE_PANEL_ICON_SELL, -1);
 
-    public static Point MOUSE_MATS_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_CLOSE, -1);
-    public static Point MOUSE_MATS_PANEL_BUTTONS_GROUPS_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_GROUPS, -1);
-    public static Point MOUSE_MATS_PANEL_BUTTONS_ITEMS_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_ITEMS, -1);
-    public static Point MOUSE_MATS_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_SCROLL_UP, -1);
-    public static Point MOUSE_MATS_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_SCROLL_DOWN,
-            -1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_CLOSE, -1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_ANNOUNCEMENT_POINT = new Point(
+			MOUSE_MESSAGES_PANEL_BUTTONS_ANNOUNCEMENT, -1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_COMBAT_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_COMBAT, -1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_HEROES_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_HEROES, -1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_SYSTEM_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_SYSTEM, -1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_UP,
+			-1);
+	public static Point MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(
+			MOUSE_MESSAGES_PANEL_BUTTONS_SCROLL_DOWN, -1);
 
-    public static Point MOUSE_PILE_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_CLOSE, -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_ITEMS_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_ITEMS, -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_SCROLL_UP, -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_SCROLL_DOWN,
-            -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_COPY_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_CONFIG_COPY,
-            -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK,
-            -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_ALL_POINT = new Point(
-            MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_ALL, -1);
-    public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_UNLOCK_ALL_POINT = new Point(
-            MOUSE_PILE_PANEL_BUTTONS_CONFIG_UNLOCK_ALL, -1);
+	public static Point MOUSE_MATS_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_CLOSE, -1);
+	public static Point MOUSE_MATS_PANEL_BUTTONS_GROUPS_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_GROUPS, -1);
+	public static Point MOUSE_MATS_PANEL_BUTTONS_ITEMS_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_ITEMS, -1);
+	public static Point MOUSE_MATS_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_SCROLL_UP, -1);
+	public static Point MOUSE_MATS_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(MOUSE_MATS_PANEL_BUTTONS_SCROLL_DOWN,
+			-1);
 
-    public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_PROFESSIONS_PANEL_BUTTONS_CLOSE,
-            -1);
-    public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_ITEMS_POINT = new Point(MOUSE_PROFESSIONS_PANEL_BUTTONS_ITEMS,
-            -1);
-    public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(
-            MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_UP, -1);
-    public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(
-            MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_DOWN, -1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_CLOSE, -1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_ITEMS_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_ITEMS, -1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_SCROLL_UP, -1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_SCROLL_DOWN,
+			-1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_COPY_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_CONFIG_COPY,
+			-1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_POINT = new Point(MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK,
+			-1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_ALL_POINT = new Point(
+			MOUSE_PILE_PANEL_BUTTONS_CONFIG_LOCK_ALL, -1);
+	public static Point MOUSE_PILE_PANEL_BUTTONS_CONFIG_UNLOCK_ALL_POINT = new Point(
+			MOUSE_PILE_PANEL_BUTTONS_CONFIG_UNLOCK_ALL, -1);
 
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_CLOSE, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_UP,
-            -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_DOWN, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_HEAD_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_HEAD,
-            -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_BODY_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_BODY,
-            -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_LEGS_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_LEGS,
-            -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_FEET_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_FEET,
-            -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_WEAPON_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_WEAPON, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_AUTOEQUIP_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_AUTOEQUIP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_PROFESSIONS_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_PROFESSIONS, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_JOBS_GROUPS_ADDREMOVE_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_JOBS_GROUPS_ADDREMOVE, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_CIVILIAN_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_CIVILIAN, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_GUARD_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_GUARD, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_PATROL_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_PATROL, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_BOSS_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_BOSS, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_ADD_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_ADD, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_REMOVE_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_REMOVE, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SGROUP_NOGROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_SGROUP_NOGROUP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SGROUP_GROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_SGROUP_GROUP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_RENAME_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_RENAME, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_GUARD_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_GUARD, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_PATROL_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_PATROL, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_BOSS_POINT = new Point(MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_BOSS,
-            -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_AUTOEQUIP_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_AUTOEQUIP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_DISBAND_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_DISBAND, -1);
-    public static Point MOUSE_LIVINGS_PANEL_CGROUP_NOGROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_CGROUP_NOGROUP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_CGROUP_GROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_CGROUP_GROUP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_RENAME_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_RENAME, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_AUTOEQUIP_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_AUTOEQUIP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_DISBAND_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_DISBAND, -1);
-    public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_CHANGE_JOBS_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_CHANGE_JOBS, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_UP_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_UP, -1);
-    public static Point MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_DOWN_POINT = new Point(
-            MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_DOWN, -1);
+	public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_PROFESSIONS_PANEL_BUTTONS_CLOSE,
+			-1);
+	public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_ITEMS_POINT = new Point(MOUSE_PROFESSIONS_PANEL_BUTTONS_ITEMS,
+			-1);
+	public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(
+			MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_UP, -1);
+	public static Point MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(
+			MOUSE_PROFESSIONS_PANEL_BUTTONS_SCROLL_DOWN, -1);
 
-            	/*
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_CLOSE_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_CLOSE, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_UP_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_UP,
+			-1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_DOWN_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_SCROLL_DOWN, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_HEAD_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_HEAD,
+			-1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_BODY_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_BODY,
+			-1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_LEGS_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_LEGS,
+			-1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_FEET_POINT = new Point(MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_FEET,
+			-1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_WEAPON_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_WEAPON, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_AUTOEQUIP_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_AUTOEQUIP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_PROFESSIONS_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_PROFESSIONS, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_JOBS_GROUPS_ADDREMOVE_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_JOBS_GROUPS_ADDREMOVE, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_CIVILIAN_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_CIVILIAN, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_GUARD_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_GUARD, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_PATROL_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_PATROL, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_BOSS_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_CONVERT_SOLDIER_BOSS, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_ADD_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_ADD, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_REMOVE_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_ROWS_SGROUP_REMOVE, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SGROUP_NOGROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_SGROUP_NOGROUP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SGROUP_GROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_SGROUP_GROUP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_RENAME_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_RENAME, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_GUARD_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_GUARD, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_PATROL_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_PATROL, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_BOSS_POINT = new Point(MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_BOSS,
+			-1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_AUTOEQUIP_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_AUTOEQUIP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_DISBAND_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_SGROUP_DISBAND, -1);
+	public static Point MOUSE_LIVINGS_PANEL_CGROUP_NOGROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_CGROUP_NOGROUP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_CGROUP_GROUP_POINT = new Point(MOUSE_LIVINGS_PANEL_CGROUP_GROUP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_RENAME_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_RENAME, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_AUTOEQUIP_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_AUTOEQUIP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_DISBAND_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_DISBAND, -1);
+	public static Point MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_CHANGE_JOBS_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_SINGLE_CGROUP_CHANGE_JOBS, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_UP_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_UP, -1);
+	public static Point MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_DOWN_POINT = new Point(
+			MOUSE_LIVINGS_PANEL_BUTTONS_RESTRICT_DOWN, -1);
+
+	/*
 	 * BOTTOM PANEL
 	 */
 	public final static int BOTTOM_PANEL_SCROLL_WIDTH = 32;
@@ -480,8 +482,8 @@ public class UIPanelState {
 
 	// BOTTOM subpanel
 	public static ArrayList<Point> bottomSubPanelItemsPosition; // Array de BOTTOM_SUBPANEL_NUM_ITEMS_X x
-																	// BOTTOM_SUBPANEL_NUM_ITEMS_Y posiciones con las
-																	// coordenadas de los subitems
+																// BOTTOM_SUBPANEL_NUM_ITEMS_Y posiciones con las
+																// coordenadas de los subitems
 	public static Point bottomSubPanelPoint = new Point(0, 0);
 	public static Tile tileBottomSubItem;
 	public static Tile[] tileBottomSubPanel;
@@ -501,6 +503,7 @@ public class UIPanelState {
 	public static Point productionPanelPoint = new Point(0, 0);
 	public static boolean productionPanelActive = false;
 	public static boolean productionPanelLocked = false;
+	private static boolean modernProductionPanelActive = false;
 
 	public static SmartMenu productionPanelMenu;
 	public static ArrayList<Point> productionPanelItemsPosition = new ArrayList<Point>();
@@ -900,7 +903,7 @@ public class UIPanelState {
 	public static boolean checkBlinkRight = false;
 	public static boolean checkBlinkProduction = false;
 
-		public static boolean isMessagesPanelActive() {
+	public static boolean isMessagesPanelActive() {
 		return messagesPanelActive != -1;
 	}
 
@@ -916,9 +919,11 @@ public class UIPanelState {
 	}
 
 	public static void setProductionPanelActive(boolean panelActive) {
-		
-
-
+		// Never allow the legacy production panel to reopen
+		// while the modern UI owns production.
+		if (panelActive && isModernProductionPanelActive()) {
+			return;
+		}
 		productionPanelActive = panelActive;
 
 		ImagesPanel.resize(renderWidth, renderHeight);
@@ -926,6 +931,35 @@ public class UIPanelState {
 
 	public static boolean isProductionPanelActive() {
 		return productionPanelActive;
+	}
+
+	/**
+	 * Whether the modern UI has taken ownership of
+	 * the production panel.
+	 */
+	public static boolean isModernProductionPanelActive() {
+		return modernProductionPanelActive;
+	}
+
+	/**
+	 * Switch between legacy and modern production UI.
+	 *
+	 * When the modern panel takes ownership, ensure
+	 * the legacy panel is closed and unlocked.
+	 */
+	public static void setModernProductionPanelActive(
+			boolean active) {
+
+		if (modernProductionPanelActive == active) {
+			return;
+		}
+
+		modernProductionPanelActive = active;
+
+		if (active) {
+			setProductionPanelLocked(false);
+			setProductionPanelActive(false);
+		}
 	}
 
 	public static void setProductionPanelLocked(boolean productionPanelLocked) {
@@ -957,7 +991,8 @@ public class UIPanelState {
 
 				Game.updateTutorialFlow(TutorialTrigger.TYPE_INT_ICONHIT, TutorialTrigger.ICON_INT_TRADE, null);
 			} else {
-				UIPanelState.tradePanelActive = tradePanelActive; // Se pone primero pq sino el Game.resume no funcionará
+				UIPanelState.tradePanelActive = tradePanelActive; // Se pone primero pq sino el Game.resume no
+																	// funcionará
 
 				// Se desactiva el panel, quitamos la pausa si al activar el panel el juego no
 				// estaba pausado

@@ -233,4 +233,52 @@ class ClassicTownsThemeTest {
                                 sprite.source());
         }
 
+        @Test
+        void productionButtonsUseOriginalArtwork() {
+
+                UiTheme theme = new ClassicTownsTheme();
+
+                UiButton add = new UiButton(
+                                "",
+                                text -> new UiSize(0, 16));
+
+                add.setAppearance(
+                                UiButtonAppearance.PRODUCTION_ADD);
+
+                add.layout(new UiRect(10, 20, 32, 32));
+
+                RecordingRenderer addRenderer = new RecordingRenderer();
+
+                theme.paintButton(add, addRenderer);
+
+                assertEquals(1, addRenderer.sprites.size());
+
+                assertEquals(
+                                "towns-legacy:ui.png",
+                                addRenderer.sprites.get(0).atlasId());
+
+                assertEquals(
+                                new UiRect(896, 352, 32, 32),
+                                addRenderer.sprites.get(0).source());
+
+                UiButton remove = new UiButton(
+                                "",
+                                text -> new UiSize(0, 16));
+
+                remove.setAppearance(
+                                UiButtonAppearance.PRODUCTION_REMOVE);
+
+                remove.layout(new UiRect(10, 20, 32, 32));
+
+                RecordingRenderer removeRenderer = new RecordingRenderer();
+
+                theme.paintButton(remove, removeRenderer);
+
+                assertEquals(1, removeRenderer.sprites.size());
+
+                assertEquals(
+                                new UiRect(832, 352, 32, 32),
+                                removeRenderer.sprites.get(0).source());
+        }
+
 }

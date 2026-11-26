@@ -47,6 +47,27 @@ public final class ClassicTownsTheme implements UiTheme {
             LEGACY_UI_ATLAS,
             new UiRect(0, 256, 64, 64));
 
+    /**
+     * Original Towns production controls.
+     *
+     * graphics.ini:
+     *
+     * production_panel_plus_icon:
+     * ui.png, TILE_X=14, TILE_Y=11, 32x32
+     *
+     * production_panel_minus_icon:
+     * ui.png, TILE_X=13, TILE_Y=11, 32x32
+     *
+     * Atlas grid cells are 64x32.
+     */
+    private static final UiSprite PRODUCTION_PLUS = new UiSprite(
+            LEGACY_UI_ATLAS,
+            new UiRect(896, 352, 32, 32));
+
+    private static final UiSprite PRODUCTION_MINUS = new UiSprite(
+            LEGACY_UI_ATLAS,
+            new UiRect(832, 352, 32, 32));
+
     private static final UiNineSlice WINDOW_BACKGROUND = new UiNineSlice(
             ui2(7, 2, 64, 64),
             ui2(5, 2, 64, 32),
@@ -149,6 +170,31 @@ public final class ClassicTownsTheme implements UiTheme {
     public void paintButton(
             UiButton button,
             UiRenderer renderer) {
+
+        // Original production plus/minus controls.
+        if (button.appearance() == UiButtonAppearance.PRODUCTION_ADD
+                || button.appearance() == UiButtonAppearance.PRODUCTION_REMOVE) {
+
+            UiRect bounds = button.bounds();
+
+            if (!button.visible()
+                    || bounds.width() <= 0
+                    || bounds.height() <= 0) {
+                return;
+            }
+
+            UiSprite sprite = button.appearance() == UiButtonAppearance.PRODUCTION_ADD
+                    ? PRODUCTION_PLUS
+                    : PRODUCTION_MINUS;
+
+            // Preserve the artwork's original colours.
+            renderer.drawSprite(
+                    sprite,
+                    bounds,
+                    UiColor.WHITE);
+
+            return;
+        }
 
         if (button.appearance() != UiButtonAppearance.STANDARD) {
 

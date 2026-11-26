@@ -1251,6 +1251,18 @@ public class UIPanelInputHandler {
 		/*
 		 * PRODUCTION PANEL
 		 */
+
+		if (isModernProductionPanelActive()
+				&& iPanel == MOUSE_PRODUCTION_OPENCLOSE) {
+
+			if (mouseButton == 0) {
+				Game.toggleModernProductionPanel();
+				UtilsAL.play(UtilsAL.SOURCE_FX_CLICK);
+			}
+
+			return;
+		}
+
 		if (iPanel == MOUSE_PRODUCTION_OPENCLOSE) {
 			setProductionPanelLocked(!isProductionPanelLocked());
 			// setProductionPanelActive (!isProductionPanelActive ());
@@ -2100,49 +2112,67 @@ public class UIPanelInputHandler {
 		/*
 		 * PRODUCTION PANEL
 		 */
-		if (isProductionPanelActive()) {
-			if (isMouseOnProductionOpenClose(x, y, tileOpenProductionPanelON)) {
-				if (doEdgeMenusStuff) {
-					closeNonLockedMenus(true, true, false);
-					delayTime = 0;
-				}
 
+		if (isModernProductionPanelActive()) {
+
+			Tile toggle = Game.isModernProductionPanelOpen()
+					? tileOpenProductionPanelON
+					: tileOpenProductionPanel;
+
+			if (isMouseOnProductionOpenClose(x, y, toggle)) {
 				return MOUSE_PRODUCTION_OPENCLOSE;
 			}
+		}
 
-			if (isMouseOnProductionPanel(x, y)) {
-				if (doEdgeMenusStuff) {
-					closeNonLockedMenus(true, true, false);
-					delayTime = 0;
-				}
+		if (!isModernProductionPanelActive()) {
 
-				Point p = isMouseOnProductionItems(x, y);
+			// Keep the entire existing production-panel
+			// hit-testing section here, unchanged.
 
-				if (p != null) {
-					return p.x;
-				}
-
-				return MOUSE_PRODUCTION_PANEL;
-			}
-
-			if (doEdgeMenusStuff) {
-				if (delayTime > (Game.FPS_INGAME / 8) * 6) {
-					if (!isProductionPanelLocked()
-							&& !isMouseOnProductionOpenClose(x, y, tileOpenProductionPanel)) {
+			if (isProductionPanelActive()) {
+				if (isMouseOnProductionOpenClose(x, y, tileOpenProductionPanelON)) {
+					if (doEdgeMenusStuff) {
+						closeNonLockedMenus(true, true, false);
 						delayTime = 0;
-						setProductionPanelActive(false);
 					}
-				}
-			}
-		} else {
-			if (doEdgeMenusStuff) {
-				if (isMouseOnProductionOpenClose(x, y, tileOpenProductionPanel)) {
-					setProductionPanelActive(true);
-
-					closeNonLockedMenus(true, true, false);
-					delayTime = 0;
 
 					return MOUSE_PRODUCTION_OPENCLOSE;
+				}
+
+				if (isMouseOnProductionPanel(x, y)) {
+					if (doEdgeMenusStuff) {
+						closeNonLockedMenus(true, true, false);
+						delayTime = 0;
+					}
+
+					Point p = isMouseOnProductionItems(x, y);
+
+					if (p != null) {
+						return p.x;
+					}
+
+					return MOUSE_PRODUCTION_PANEL;
+				}
+
+				if (doEdgeMenusStuff) {
+					if (delayTime > (Game.FPS_INGAME / 8) * 6) {
+						if (!isProductionPanelLocked()
+								&& !isMouseOnProductionOpenClose(x, y, tileOpenProductionPanel)) {
+							delayTime = 0;
+							setProductionPanelActive(false);
+						}
+					}
+				}
+			} else {
+				if (doEdgeMenusStuff) {
+					if (isMouseOnProductionOpenClose(x, y, tileOpenProductionPanel)) {
+						setProductionPanelActive(true);
+
+						closeNonLockedMenus(true, true, false);
+						delayTime = 0;
+
+						return MOUSE_PRODUCTION_OPENCLOSE;
+					}
 				}
 			}
 		}

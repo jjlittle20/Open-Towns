@@ -1,0 +1,294 @@
+
+package xaos.ui.integration;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.Test;
+
+import xaos.panels.menus.MenuDefinition;
+import xaos.panels.menus.MenuItemDefinition;
+import xaos.panels.menus.MenuManager;
+
+import xaos.ui.components.UiButton;
+import xaos.ui.components.UiLabel;
+import xaos.ui.core.UiContainer;
+import xaos.ui.core.UiSystem;
+import xaos.ui.layout.UiInsets;
+import xaos.ui.layout.UiSize;
+import xaos.ui.layout.UiWindowAnchor;
+import xaos.ui.layout.UiWindowDockMode;
+import xaos.ui.rendering.UiTextMetrics;
+
+class UiLeftProductionPreviewTest {
+
+    private static final UiTextMetrics FONT = text -> new UiSize(text.length() * 7, 16);
+
+    private static MenuItemDefinition item(
+            String id,
+            String type,
+            String target,
+            String command,
+            String parameter,
+            String title) {
+
+        return new MenuItemDefinition(
+                id, type, null, target, command,
+                false, true, null, null,
+                null, null, true,
+                title, null, parameter, null);
+    }
+
+    private static MenuManager menus() {
+
+        MenuManager manager = new MenuManager();
+
+        MenuDefinition root = new MenuDefinition(
+                "game.left.production.root",
+                null, "Production");
+
+        root.addItem(item(
+                "game.left.production.food",
+                "submenu",
+                "game.left.production.food",
+                null, null, "Food"));
+
+        MenuDefinition food = new MenuDefinition(
+                "game.left.production.food",
+                null, "Food");
+
+        food.addItem(item(
+                "game.left.production.food.bread",
+                "action", null,
+                "QUEUE", "qbread", null));
+
+        food.addItem(item(
+                "game.left.production.food.back",
+                "back", null,
+                null, null, "Back"));
+
+        manager.registerMenu(root);
+        manager.registerMenu(food);
+
+        return manager;
+    }
+
+    private static UiLeftProductionPreview preview(
+            UiSystem ui,
+            AtomicInteger regular) {
+
+        UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+                key -> key,
+                (command, parameter) -> new UiGameplayMenuResolver.DefinitionInfo(
+                        "Bread", "bread"));
+
+        UiProductionMenuModel model = new UiProductionMenuModel(
+                menus(),
+                resolver,
+                actionId -> new UiProductionQueueCounts(
+                        regular.get(), 2, 8));
+
+        return new UiLeftProductionPreview(
+                ui, model, FONT);
+    }
+
+    private static UiButton firstButton(
+            UiLeftProductionPreview preview) {
+
+        UiContainer row = (UiContainer) preview
+                .scroll().content()
+                .children().get(0);
+
+        var firstChild = row.children().get(0);
+
+        // Original layout: button directly in the row.
+        if (firstChild instanceof UiButton button) {
+            return button;
+        }
+
+        // New layout: button and world count share an overlay.
+        if (firstChild instanceof xaos.ui.core.UiContainer overlay) {
+
+            for (var child : overlay.children()) {
+
+                if (child instanceof UiButton button) {
+                    return button;
+                }
+            }
+        }
+
+        throw new AssertionError(
+                "Could not find production button in row");
+
+    }
+
+    @Test
+    void createsHiddenPreviewAndDocksLeft() {
+
+        UiSystem ui = new UiSystem();
+
+        UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
+
+        assertFalse(preview.window().isOpen());
+        assertFalse(preview.window().draggable());
+        assertFalse(preview.window().resizable());
+        assertFalse(preview.window().titleBar().visible());
+
+        preview.dockLeft(
+                new UiInsets(80, 0, 24, 12));
+
+        assertEquals(
+                UiWindowAnchor.LEFT,
+                preview.window().anchor());
+
+        assertEquals(
+                UiWindowDockMode.FILL_HEIGHT,
+                preview.window().dockMode());
+
+        preview.open();
+
+        ui.updateLayout(new UiSize(1280, 720));
+
+        assertEquals(
+                12,
+                preview.window().bounds().x());
+
+        assertEquals(
+                80,
+                preview.window().bounds().y());
+
+        assertEquals(
+                720 - 80 - 24,
+                preview.window().bounds().height());
+    }
+
+    @Test
+    void submenuButtonsNavigateAndBackWorks() {
+
+        UiLeftProductionPreview preview = preview(
+                new UiSystem(),
+                new AtomicInteger(3));
+
+        preview.open();
+
+        assertEquals(
+                "game.left.production.root",
+                preview.currentMenuId());
+
+        UiButton food = firstButton(preview);
+
+        assertTrue(food.enabled());
+
+        food.activate();
+
+        assertEquals(
+                "game.left.production.food",
+                preview.currentMenuId());
+
+        // Second row is the Back entry.
+        UiContainer backRow = (UiContainer) preview
+                .scroll().content()
+                .children().get(1);
+
+        UiButton back = (UiButton) backRow.children().get(0);
+
+        back.activate();
+
+        assertEquals(
+                "game.left.production.root",
+                preview.currentMenuId());
+    }
+
+    @Test
+    void countsUpdateWithoutRebuildingButtons() {
+
+        AtomicInteger regular = new AtomicInteger(3);
+
+        UiLeftProductionPreview preview = preview(
+                new UiSystem(), regular);
+
+        preview.open();
+        firstButton(preview).activate();
+
+        String actionId = "game.left.production.food.bread";
+
+        UiButton breadButton = firstButton(preview);
+
+        // Refresh the initial overlay values.
+        preview.refreshCounts();
+
+        UiLabel originalCountLabel = preview.countLabel(actionId);
+
+        UiLabel worldLabel = preview.worldCountLabelForTesting(actionId);
+
+        // Regular and automated counts.
+        assertNotNull(originalCountLabel);
+
+        assertEquals(
+                "Regular: 3  Automated: 2",
+                originalCountLabel.text());
+
+        // World count appears separately over the icon.
+        assertNotNull(worldLabel);
+        assertEquals("8", worldLabel.text());
+        assertTrue(worldLabel.visible());
+
+        // The isolated preview does not have a
+        // registered gameplay action binding.
+        assertFalse(breadButton.enabled());
+
+        // Simulate the regular queue changing.
+        regular.set(11);
+
+        preview.refreshCounts();
+
+        // Refreshing counts must not recreate buttons.
+        assertSame(
+                breadButton,
+                firstButton(preview));
+
+        // Regular count label must also be reused.
+        assertSame(
+                originalCountLabel,
+                preview.countLabel(actionId));
+
+        assertEquals(
+                "Regular: 11  Automated: 2",
+                originalCountLabel.text());
+
+        // The in-world overlay must also be reused.
+        assertSame(
+                worldLabel,
+                preview.worldCountLabelForTesting(actionId));
+
+        assertEquals("8", worldLabel.text());
+        assertTrue(worldLabel.visible());
+    }
+
+    @Test
+    void menuReloadResetsNavigation() {
+
+        UiLeftProductionPreview preview = preview(
+                new UiSystem(),
+                new AtomicInteger(0));
+
+        preview.open();
+        firstButton(preview).activate();
+
+        assertEquals(
+                "game.left.production.food",
+                preview.currentMenuId());
+
+        preview.setMenus(menus());
+
+        assertEquals(
+                "game.left.production.root",
+                preview.currentMenuId());
+
+        assertEquals(
+                1,
+                preview.scroll().content()
+                        .children().size());
+    }
+}

@@ -856,10 +856,6 @@ public final class UIPanel {
 		// Tutorial button
 		renderTutorialButton(mousePanel, blinkTurns >= MAX_BLINK_TURNS / 2);
 
-		/*
-		 * PANELS, PRODUCTION PANEL, PRIORITIES PANEL, TRADE_PANEL (este va encima de
-		 * todo siempre)
-		 */
 		LeftPanel.renderProductionPanel(mouseX, mouseY, mousePanel);
 
 		if (isPilePanelActive()) {

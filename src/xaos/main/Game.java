@@ -105,16 +105,21 @@ import xaos.ui.input.UiKey;
 import xaos.ui.input.UiScreenTransitionTracker;
 import xaos.ui.integration.BottomToolbarController;
 import xaos.ui.integration.GameplayUiController;
+import xaos.ui.integration.LeftProductionController;
 import xaos.ui.integration.LegacyGameplayUiLayout;
 import xaos.ui.integration.UiBottomMenuPreview;
 import xaos.ui.integration.UiBottomTaskSelection;
 import xaos.ui.integration.UiGameplayMenuResolver;
+import xaos.ui.integration.UiLeftProductionPreview;
 import xaos.ui.integration.UiLegacyBottomActionBinding;
 import xaos.ui.integration.UiLegacyGameplayActionBinding;
 import xaos.ui.integration.UiLegacyGameplayDefinitionLookup;
 import xaos.ui.integration.UiLegacyGameplayTooltipResolver;
 import xaos.ui.integration.UiLegacyIconSprites;
+import xaos.ui.integration.UiLegacyProductionQueueReader;
 import xaos.ui.integration.UiLegacyRightMenuCompatibility;
+import xaos.ui.integration.UiProductionMenuModel;
+import xaos.ui.integration.UiProductionQueueCounts;
 import xaos.ui.integration.UiRegisteredGameplayActionBinding;
 import xaos.ui.integration.UiRightMenuPreview;
 import xaos.ui.layout.UiInsets;
@@ -260,7 +265,8 @@ public final class Game {
 	// false = original Towns right-hand panel
 	// true = XML-driven right-hand panel
 	private static final boolean USE_XML_RIGHT_PANEL = true;
-
+	// Enable the modern left production panel.
+	private static final boolean USE_XML_LEFT_PANEL = true;
 	/**
 	 * True when the active game has legacy
 	 * campaign, mission or mod menu overrides.
@@ -294,6 +300,14 @@ public final class Game {
 	public static void toggleXmlRightPanel() {
 
 		UI_BRIDGE.toggleXmlRightPanel();
+	}
+
+	public static boolean isModernProductionPanelOpen() {
+		return GAMEPLAY_UI.isLeftProductionOpen();
+	}
+
+	public static void toggleModernProductionPanel() {
+		GAMEPLAY_UI.toggleLeftProduction();
 	}
 
 	/**
@@ -340,6 +354,39 @@ public final class Game {
 						tileOpenRightMenu.getTileWidth()));
 	}
 
+	private static UiInsets xmlLeftPanelInsets() {
+
+		// Match the space reserved above the original
+		// production panel for the top gameplay HUD.
+		int hudBottom = iconNumCitizensBackgroundPoint.y
+				+ tileBottomItem.getTileHeight()
+				+ tileBottomItem.getTileHeight() / 4;
+
+		int top = Math.max(96, hudBottom + 12);
+
+		int bottom = Math.max(
+				32,
+				BOTTOM_PANEL_HEIGHT + 24);
+
+		int viewportHeight = Math.max(
+				0, UtilsGL.getHeight());
+
+		// Keep enough usable space in smaller windows.
+		bottom = Math.min(
+				bottom,
+				Math.max(0, viewportHeight - 120));
+
+		top = Math.min(
+				top,
+				Math.max(0, viewportHeight - bottom - 120));
+
+		// Leave the original left-edge toggle uncovered.
+		int left = xaos.panels.UI.UIPanelScaler.ui(
+				tileOpenProductionPanel.getTileWidth()) + 8;
+
+		return new UiInsets(top, 8, bottom, left);
+	}
+
 	// ------------------------------------------------------------
 	// New UI framework
 	// ------------------------------------------------------------
@@ -373,7 +420,48 @@ public final class Game {
 							gameplayMenus));
 	private static final GameplayUiController GAMEPLAY_UI = new GameplayUiController(
 			RIGHT_MENU,
-			BOTTOM_TOOLBAR);
+			BOTTOM_TOOLBAR,
+			Game::createLeftProductionController);
+
+	private static LeftProductionController createLeftProductionController(
+			MenuManager menus) {
+
+		UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+				Messages::getString,
+				new UiLegacyGameplayDefinitionLookup());
+
+		UiProductionMenuModel model = new UiProductionMenuModel(
+				menus,
+				resolver,
+				actionId -> {
+
+					World currentWorld = Game.getWorld();
+
+					if (currentWorld == null) {
+						return new UiProductionQueueCounts(
+								0, 0, 0);
+					}
+
+					return new UiLegacyProductionQueueReader(
+							currentWorld.getTaskManager())
+							.read(actionId);
+				});
+
+		UiLeftProductionPreview preview = new UiLeftProductionPreview(
+				UI_SYSTEM,
+				model,
+				TownsUiTextMetrics.INSTANCE);
+
+		UiLegacyIconSprites icons = UiLegacyIconSprites.fromGraphicsIni();
+
+		preview.setIconResolver(icons::resolve);
+
+		preview.setClickFeedback(
+				() -> UtilsAL.play(
+						UtilsAL.SOURCE_FX_CLICK));
+
+		return new LeftProductionController(preview);
+	}
 
 	private static final LegacyGameplayUiBridge UI_BRIDGE = new LegacyGameplayUiBridge(
 			RIGHT_MENU,
@@ -2022,10 +2110,11 @@ public final class Game {
 							&& !getPanelMainMenu().isActive(),
 					USE_XML_RIGHT_PANEL,
 					legacyRightMenuOverridesPresent,
+					USE_XML_LEFT_PANEL && !MainPanel.bHideUION,
 					USE_XML_BOTTOM_PANEL,
 					UIPanel.isBottomMenuPanelActive()
 							&& !MainPanel.bHideUION,
-					Game::xmlRightPanelInsets);
+					Game::xmlRightPanelInsets, Game::xmlLeftPanelInsets);
 
 			// --------------------------------------------------------
 			// Application input focus

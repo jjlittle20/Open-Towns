@@ -95,7 +95,8 @@ public class LeftPanel {
 
         Point scaledProductionPanelPoint = getScaledProductionPanelPoint();
 
-        if (isProductionPanelActive()) {
+        if (isProductionPanelActive()
+                && !isModernProductionPanelActive()) {
             int iCurrentTexture = tileProductionPanel[0].getTextureID();
 
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, iCurrentTexture);
@@ -422,7 +423,9 @@ public class LeftPanel {
          */
         Point openClosePoint = getScaledOpenCloseProductionPoint(scaledProductionPanelPoint);
 
-        if (isProductionPanelLocked()) {
+        if (isProductionPanelLocked()
+                || (isModernProductionPanelActive()
+                        && Game.isModernProductionPanelOpen())) {
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, tileOpenProductionPanelON.getTextureID());
             GL11.glTexEnvf(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, GL11.GL_MODULATE);
             UtilsGL.glBegin(GL11.GL_QUADS);

@@ -26,5 +26,17 @@ public enum UiButtonAppearance {
      *
      * Classic Towns uses bottom_item_sm.
      */
-    MENU_SUBMENU
+    MENU_SUBMENU,
+    /**
+     * Add to a production queue.
+     * Classic Towns uses the original green plus icon.
+     */
+    PRODUCTION_ADD,
+
+    /**
+     * Remove from a production queue.
+     * Classic Towns uses the original red minus icon.
+     */
+    PRODUCTION_REMOVE
+
 }
