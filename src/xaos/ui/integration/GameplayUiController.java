@@ -187,7 +187,12 @@ public final class GameplayUiController {
                             : UiInsets.NONE);
 
             if (useLeft) {
+
                 leftProduction.refreshCounts();
+
+                // A mod may register or unregister an action
+                // while the game is running.
+                leftProduction.refreshActionAvailability();
             }
         }
     }

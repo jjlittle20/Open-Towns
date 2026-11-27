@@ -65,6 +65,20 @@ public final class LeftProductionController {
     }
 
     /**
+     * Refresh mod action availability without
+     * rebuilding the production menu.
+     *
+     * Called during gameplay while the
+     * modern production window is visible.
+     */
+    public void refreshActionAvailability() {
+
+        if (inGameplay && preview.window().isOpen()) {
+            preview.refreshActionAvailability();
+        }
+    }
+
+    /**
      * Explicit menu reload, including reloads where
      * the MenuManager instance has not changed.
      */
@@ -125,6 +139,7 @@ public final class LeftProductionController {
         } else {
             preview.open();
             preview.refreshCounts();
+            preview.refreshActionAvailability();
         }
     }
 

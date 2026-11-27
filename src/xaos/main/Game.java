@@ -455,7 +455,11 @@ public final class Game {
 		UiLegacyIconSprites icons = UiLegacyIconSprites.fromGraphicsIni();
 
 		preview.setIconResolver(icons::resolve);
-
+		// Use the same registered action system as
+		// the right-hand gameplay menu.
+		preview.setActionBinding(
+				new UiRegisteredGameplayActionBinding(
+						new UiLegacyGameplayActionBinding()));
 		preview.setClickFeedback(
 				() -> UtilsAL.play(
 						UtilsAL.SOURCE_FX_CLICK));

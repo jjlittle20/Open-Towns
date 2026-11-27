@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import xaos.api.ui.UiActionRegistration;
+import xaos.internal.api.ui.UiActionRegistry;
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
 import xaos.panels.menus.MenuManager;
@@ -616,6 +618,121 @@ class UiLeftProductionPreviewTest {
                 modButton.activate();
 
                 assertEquals(2, executions.get());
+        }
+
+        @Test
+        void xmlModActionExecutesAndDisablesOnUnload()
+                        throws Exception {
+
+                MenuManager manager = menus();
+
+                String actionId = "left-panel-test:run";
+
+                // ---------------------------------------------
+                // Mod contributes an action through XML.
+                // ---------------------------------------------
+
+                Path extension = tempDir.resolve(
+                                "mod-production-action.xml");
+
+                Files.writeString(extension, """
+                                <menu-extension
+                                    id="left-panel-test:extension"
+                                    targetMenu="game.left.production.root">
+
+                                    <item
+                                        id="left-panel-test:button"
+                                        type="action"
+                                        title="Run Test Mod Action"
+                                        command="MOD_ACTION"
+                                        parameter="left-panel-test:run"
+                                        after="game.left.production.food" />
+
+                                </menu-extension>
+                                """);
+
+                manager.applyExtension(extension.toFile());
+
+                UiLeftProductionPreview preview = preview(
+                                new UiSystem(),
+                                new AtomicInteger(0));
+
+                preview.setMenus(manager);
+
+                // Use the real registered mod action binding.
+                preview.setActionBinding(
+                                new UiRegisteredGameplayActionBinding(
+                                                UiGameplayActionBinding.disabled()));
+
+                preview.open();
+
+                UiContainer grid = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
+
+                UiContainer modCell = (UiContainer) grid.children().get(1);
+
+                UiButton modButton = findButton(modCell);
+
+                assertNotNull(modButton);
+
+                // No mod action registered yet.
+                assertFalse(modButton.enabled());
+
+                AtomicInteger executions = new AtomicInteger();
+
+                UiActionRegistration registration = null;
+
+                try {
+
+                        // -----------------------------------------
+                        // Simulate a mod registering its action.
+                        // -----------------------------------------
+
+                        registration = UiActionRegistry.register(
+                                        actionId,
+                                        "Run Test Mod Action",
+                                        executions::incrementAndGet);
+
+                        preview.refreshActionAvailability();
+
+                        assertTrue(modButton.enabled());
+
+                        // Clicking the XML-created button must
+                        // execute the registered Java callback.
+                        modButton.activate();
+
+                        assertEquals(1, executions.get());
+
+                        // -----------------------------------------
+                        // Simulate the mod unloading.
+                        // -----------------------------------------
+
+                        registration.unregister();
+
+                        preview.refreshActionAvailability();
+
+                        assertFalse(modButton.enabled());
+
+                        // Unregistered actions cannot execute.
+                        modButton.activate();
+
+                        assertEquals(1, executions.get());
+
+                        // Refreshing availability must not
+                        // recreate the original button.
+                        assertSame(
+                                        modButton,
+                                        findButton(modCell));
+
+                } finally {
+
+                        // Never leave a registered action behind,
+                        // even when an assertion fails.
+                        if (registration != null) {
+                                registration.unregister();
+                        }
+                }
         }
 
 }
