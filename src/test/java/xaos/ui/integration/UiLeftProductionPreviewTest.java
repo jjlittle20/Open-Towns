@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -27,514 +28,594 @@ import xaos.ui.rendering.UiTextMetrics;
 
 class UiLeftProductionPreviewTest {
 
-    private static final UiTextMetrics FONT = text -> new UiSize(text.length() * 7, 16);
+        private static final UiTextMetrics FONT = text -> new UiSize(text.length() * 7, 16);
 
-    private static MenuItemDefinition item(
-            String id,
-            String type,
-            String target,
-            String command,
-            String parameter,
-            String title) {
+        private static MenuItemDefinition item(
+                        String id,
+                        String type,
+                        String target,
+                        String command,
+                        String parameter,
+                        String title) {
 
-        return new MenuItemDefinition(
-                id, type, null, target, command,
-                false, true, null, null,
-                null, null, true,
-                title, null, parameter, null);
-    }
-
-    private static MenuManager menus() {
-
-        MenuManager manager = new MenuManager();
-
-        MenuDefinition root = new MenuDefinition(
-                "game.left.production.root",
-                null, "Production");
-
-        root.addItem(item(
-                "game.left.production.food",
-                "submenu",
-                "game.left.production.food",
-                null, null, "Food"));
-
-        MenuDefinition food = new MenuDefinition(
-                "game.left.production.food",
-                null, "Food");
-
-        food.addItem(item(
-                "game.left.production.food.bread",
-                "action", null,
-                "QUEUE", "qbread", null));
-
-        food.addItem(item(
-                "game.left.production.food.back",
-                "back", null,
-                null, null, "Back"));
-
-        manager.registerMenu(root);
-        manager.registerMenu(food);
-
-        return manager;
-    }
-
-    private static UiLeftProductionPreview preview(
-            UiSystem ui,
-            AtomicInteger regular) {
-
-        UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
-                key -> key,
-                (command, parameter) -> new UiGameplayMenuResolver.DefinitionInfo(
-                        "Bread", "bread"));
-
-        UiProductionMenuModel model = new UiProductionMenuModel(
-                menus(),
-                resolver,
-                actionId -> new UiProductionQueueCounts(
-                        regular.get(), 2, 8));
-
-        return new UiLeftProductionPreview(
-                ui, model, FONT);
-    }
-
-    private static UiButton firstButton(
-            UiLeftProductionPreview preview) {
-
-        UiContainer row = (UiContainer) preview
-                .scroll().content()
-                .children().get(0);
-
-        UiButton button = findButton(row);
-
-        if (button == null) {
-            throw new AssertionError(
-                    "Could not find production button");
+                return new MenuItemDefinition(
+                                id, type, null, target, command,
+                                false, true, null, null,
+                                null, null, true,
+                                title, null, parameter, null);
         }
 
-        return button;
-    }
+        private static MenuManager menus() {
 
-    /**
-     * Finds the first button inside a nested
-     * production UI container.
-     */
-    private static UiButton findButton(
-            UiContainer container) {
+                MenuManager manager = new MenuManager();
 
-        for (var child : container.children()) {
+                MenuDefinition root = new MenuDefinition(
+                                "game.left.production.root",
+                                null, "Production");
 
-            if (child instanceof UiButton button) {
-                return button;
-            }
+                root.addItem(item(
+                                "game.left.production.food",
+                                "submenu",
+                                "game.left.production.food",
+                                null, null, "Food"));
 
-            if (child instanceof UiContainer nested) {
+                MenuDefinition food = new MenuDefinition(
+                                "game.left.production.food",
+                                null, "Food");
 
-                UiButton found = findButton(nested);
+                food.addItem(item(
+                                "game.left.production.food.bread",
+                                "action", null,
+                                "QUEUE", "qbread", null));
 
-                if (found != null) {
-                    return found;
+                food.addItem(item(
+                                "game.left.production.food.back",
+                                "back", null,
+                                null, null, "Back"));
+
+                manager.registerMenu(root);
+                manager.registerMenu(food);
+
+                return manager;
+        }
+
+        private static UiLeftProductionPreview preview(
+                        UiSystem ui,
+                        AtomicInteger regular) {
+
+                UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+                                key -> key,
+                                (command, parameter) -> new UiGameplayMenuResolver.DefinitionInfo(
+                                                "Bread", "bread"));
+
+                UiProductionMenuModel model = new UiProductionMenuModel(
+                                menus(),
+                                resolver,
+                                actionId -> new UiProductionQueueCounts(
+                                                regular.get(), 2, 8));
+
+                return new UiLeftProductionPreview(
+                                ui, model, FONT);
+        }
+
+        private static UiButton firstButton(
+                        UiLeftProductionPreview preview) {
+
+                UiContainer row = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
+
+                UiButton button = findButton(row);
+
+                if (button == null) {
+                        throw new AssertionError(
+                                        "Could not find production button");
                 }
-            }
+
+                return button;
         }
 
-        return null;
-    }
+        /**
+         * Finds the first button inside a nested
+         * production UI container.
+         */
+        private static UiButton findButton(
+                        UiContainer container) {
 
-    @Test
-    void createsHiddenPreviewAndDocksLeft() {
+                for (var child : container.children()) {
 
-        UiSystem ui = new UiSystem();
+                        if (child instanceof UiButton button) {
+                                return button;
+                        }
 
-        UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
+                        if (child instanceof UiContainer nested) {
 
-        assertFalse(preview.window().isOpen());
-        assertFalse(preview.window().draggable());
-        assertFalse(preview.window().resizable());
-        assertFalse(preview.window().titleBar().visible());
+                                UiButton found = findButton(nested);
 
-        preview.dockLeft(
-                new UiInsets(80, 0, 24, 12));
+                                if (found != null) {
+                                        return found;
+                                }
+                        }
+                }
 
-        assertEquals(
-                UiWindowAnchor.LEFT,
-                preview.window().anchor());
+                return null;
+        }
 
-        assertEquals(
-                UiWindowDockMode.FILL_HEIGHT,
-                preview.window().dockMode());
+        @Test
+        void createsHiddenPreviewAndDocksLeft() {
 
-        preview.open();
+                UiSystem ui = new UiSystem();
 
-        ui.updateLayout(new UiSize(1280, 720));
+                UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
 
-        assertEquals(
-                12,
-                preview.window().bounds().x());
+                assertFalse(preview.window().isOpen());
+                assertFalse(preview.window().draggable());
+                assertFalse(preview.window().resizable());
+                assertFalse(preview.window().titleBar().visible());
 
-        assertEquals(
-                80,
-                preview.window().bounds().y());
+                preview.dockLeft(
+                                new UiInsets(80, 0, 24, 12));
 
-        assertEquals(
-                720 - 80 - 24,
-                preview.window().bounds().height());
-    }
+                assertEquals(
+                                UiWindowAnchor.LEFT,
+                                preview.window().anchor());
 
-    @Test
-    void submenuButtonsNavigateAndBackWorks() {
+                assertEquals(
+                                UiWindowDockMode.FILL_HEIGHT,
+                                preview.window().dockMode());
 
-        UiLeftProductionPreview preview = preview(
-                new UiSystem(),
-                new AtomicInteger(3));
+                preview.open();
 
-        preview.open();
+                ui.updateLayout(new UiSize(1280, 720));
 
-        assertEquals(
-                "game.left.production.root",
-                preview.currentMenuId());
+                assertEquals(
+                                12,
+                                preview.window().bounds().x());
 
-        UiButton food = firstButton(preview);
+                assertEquals(
+                                80,
+                                preview.window().bounds().y());
 
-        assertTrue(food.enabled());
+                assertEquals(
+                                720 - 80 - 24,
+                                preview.window().bounds().height());
+        }
 
-        food.activate();
+        @Test
+        void submenuButtonsNavigateAndBackWorks() {
 
-        assertEquals(
-                "game.left.production.food",
-                preview.currentMenuId());
+                UiLeftProductionPreview preview = preview(
+                                new UiSystem(),
+                                new AtomicInteger(3));
 
-        // Second row is the Back entry.
-        UiContainer backRow = (UiContainer) preview
-                .scroll().content()
-                .children().get(1);
+                preview.open();
 
-        UiButton back = (UiButton) backRow.children().get(0);
+                assertEquals(
+                                "game.left.production.root",
+                                preview.currentMenuId());
 
-        back.activate();
+                UiButton food = firstButton(preview);
 
-        assertEquals(
-                "game.left.production.root",
-                preview.currentMenuId());
-    }
+                assertTrue(food.enabled());
 
-    @Test
-    void countsUpdateWithoutRebuildingButtons() {
+                food.activate();
 
-        AtomicInteger regular = new AtomicInteger(3);
+                assertEquals(
+                                "game.left.production.food",
+                                preview.currentMenuId());
 
-        UiLeftProductionPreview preview = preview(
-                new UiSystem(), regular);
+                // Second row is the Back entry.
+                UiContainer backRow = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(1);
 
-        preview.open();
-        firstButton(preview).activate();
+                UiButton back = (UiButton) backRow.children().get(0);
+                assertTrue(back.enabled());
+                back.activate();
 
-        String actionId = "game.left.production.food.bread";
+                assertEquals(
+                                "game.left.production.root",
+                                preview.currentMenuId());
+        }
 
-        UiButton breadButton = firstButton(preview);
+        @Test
+        void countsUpdateWithoutRebuildingButtons() {
 
-        // Refresh the initial overlay values.
-        preview.refreshCounts();
+                AtomicInteger regular = new AtomicInteger(3);
 
-        UiLabel originalCountLabel = preview.countLabel(actionId);
+                UiLeftProductionPreview preview = preview(
+                                new UiSystem(), regular);
 
-        UiLabel worldLabel = preview.worldCountLabelForTesting(actionId);
-
-        // Regular and automated counts.
-        assertNotNull(originalCountLabel);
-
-        assertEquals("3", originalCountLabel.text());
-        UiLabel automatedLabel = preview.automatedCountLabel(actionId);
-
-        assertNotNull(automatedLabel);
-        assertEquals("2", automatedLabel.text());
-        assertEquals(32, automatedLabel.position().y());
-        // World count appears separately over the icon.
-        assertNotNull(worldLabel);
-        assertEquals("8", worldLabel.text());
-        assertTrue(worldLabel.visible());
+                preview.open();
+                firstButton(preview).activate();
 
-        // The isolated preview does not have a
-        // registered gameplay action binding.
-        assertFalse(breadButton.enabled());
+                String actionId = "game.left.production.food.bread";
 
-        // Simulate the regular queue changing.
-        regular.set(11);
+                UiButton breadButton = firstButton(preview);
 
-        preview.refreshCounts();
-        assertSame(
-                automatedLabel,
-                preview.automatedCountLabel(actionId));
+                // Refresh the initial overlay values.
+                preview.refreshCounts();
 
-        assertEquals("2", automatedLabel.text());
-        // Refreshing counts must not recreate buttons.
-        assertSame(
-                breadButton,
-                firstButton(preview));
+                UiLabel originalCountLabel = preview.countLabel(actionId);
 
-        // Regular count label must also be reused.
-        assertSame(
-                originalCountLabel,
-                preview.countLabel(actionId));
+                UiLabel worldLabel = preview.worldCountLabelForTesting(actionId);
 
-        assertEquals("11", originalCountLabel.text());
+                // Regular and automated counts.
+                assertNotNull(originalCountLabel);
 
-        // The in-world overlay must also be reused.
-        assertSame(
-                worldLabel,
-                preview.worldCountLabelForTesting(actionId));
+                assertEquals("3", originalCountLabel.text());
+                UiLabel automatedLabel = preview.automatedCountLabel(actionId);
 
-        assertEquals("8", worldLabel.text());
-        assertTrue(worldLabel.visible());
-    }
+                assertNotNull(automatedLabel);
+                assertEquals("2", automatedLabel.text());
+                assertEquals(32, automatedLabel.position().y());
+                // World count appears separately over the icon.
+                assertNotNull(worldLabel);
+                assertEquals("8", worldLabel.text());
+                assertTrue(worldLabel.visible());
 
-    @Test
-    void menuReloadResetsNavigation() {
+                // The isolated preview does not have a
+                // registered gameplay action binding.
+                assertFalse(breadButton.enabled());
 
-        UiLeftProductionPreview preview = preview(
-                new UiSystem(),
-                new AtomicInteger(0));
+                // Simulate the regular queue changing.
+                regular.set(11);
 
-        preview.open();
-        firstButton(preview).activate();
+                preview.refreshCounts();
+                assertSame(
+                                automatedLabel,
+                                preview.automatedCountLabel(actionId));
 
-        assertEquals(
-                "game.left.production.food",
-                preview.currentMenuId());
+                assertEquals("2", automatedLabel.text());
+                // Refreshing counts must not recreate buttons.
+                assertSame(
+                                breadButton,
+                                firstButton(preview));
 
-        preview.setMenus(menus());
+                // Regular count label must also be reused.
+                assertSame(
+                                originalCountLabel,
+                                preview.countLabel(actionId));
 
-        assertEquals(
-                "game.left.production.root",
-                preview.currentMenuId());
+                assertEquals("11", originalCountLabel.text());
 
-        assertEquals(
-                1,
-                preview.scroll().content()
-                        .children().size());
-    }
+                // The in-world overlay must also be reused.
+                assertSame(
+                                worldLabel,
+                                preview.worldCountLabelForTesting(actionId));
 
-    @Test
-    void usesTwoColumnGridWithoutHeading() {
+                assertEquals("8", worldLabel.text());
+                assertTrue(worldLabel.visible());
+        }
 
-        UiSystem ui = new UiSystem();
+        @Test
+        void menuReloadResetsNavigation() {
 
-        UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
+                UiLeftProductionPreview preview = preview(
+                                new UiSystem(),
+                                new AtomicInteger(0));
 
-        // Add a second root entry to test both columns.
-        MenuManager manager = menus();
+                preview.open();
+                firstButton(preview).activate();
 
-        manager.requireMenu(
-                "game.left.production.root")
-                .addItem(item(
-                        "game.left.production.more",
-                        "submenu",
-                        "game.left.production.food",
-                        null,
-                        null,
-                        "More"));
+                assertEquals(
+                                "game.left.production.food",
+                                preview.currentMenuId());
 
-        preview.setMenus(manager);
+                preview.setMenus(menus());
 
-        // The window content should contain only
-        // the scroll area, not a heading label.
-        assertEquals(
-                1,
-                preview.window().content()
-                        .children().size());
+                assertEquals(
+                                "game.left.production.root",
+                                preview.currentMenuId());
 
-        UiContainer grid = (UiContainer) preview
-                .scroll().content()
-                .children().get(0);
+                assertEquals(
+                                1,
+                                preview.scroll().content()
+                                                .children().size());
+        }
 
-        assertInstanceOf(
-                UiGridLayout.class,
-                grid.layoutStrategy());
+        @Test
+        void usesTwoColumnGridWithoutHeading() {
 
-        UiGridLayout layout = (UiGridLayout) grid.layoutStrategy();
+                UiSystem ui = new UiSystem();
 
-        assertEquals(2, layout.columns());
-        assertEquals(2, grid.children().size());
+                UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
 
-        preview.open();
-        ui.updateLayout(new UiSize(1280, 720));
+                // Add a second root entry to test both columns.
+                MenuManager manager = menus();
 
-        var first = grid.children().get(0).bounds();
-        var second = grid.children().get(1).bounds();
+                manager.requireMenu(
+                                "game.left.production.root")
+                                .addItem(item(
+                                                "game.left.production.more",
+                                                "submenu",
+                                                "game.left.production.food",
+                                                null,
+                                                null,
+                                                "More"));
 
-        assertEquals(first.y(), second.y());
-        assertTrue(second.x() > first.x());
-    }
+                preview.setMenus(manager);
 
-    @Test
-    void worldCountVisibilityUpdatesWithoutRebuilding() {
+                // The window content should contain only
+                // the scroll area, not a heading label.
+                assertEquals(
+                                1,
+                                preview.window().content()
+                                                .children().size());
 
-        AtomicInteger worldCount = new AtomicInteger(8);
+                UiContainer grid = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
 
-        UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
-                key -> key,
-                (command, parameter) -> new UiGameplayMenuResolver.DefinitionInfo(
-                        "Bread", "bread"));
+                assertInstanceOf(
+                                UiGridLayout.class,
+                                grid.layoutStrategy());
 
-        UiProductionMenuModel model = new UiProductionMenuModel(
-                menus(),
-                resolver,
-                actionId -> new UiProductionQueueCounts(
-                        3, 2, worldCount.get()));
+                UiGridLayout layout = (UiGridLayout) grid.layoutStrategy();
 
-        UiLeftProductionPreview preview = new UiLeftProductionPreview(
-                new UiSystem(), model, FONT);
+                assertEquals(2, layout.columns());
+                assertEquals(2, grid.children().size());
 
-        preview.open();
-        firstButton(preview).activate();
+                preview.open();
+                ui.updateLayout(new UiSize(1280, 720));
 
-        String id = "game.left.production.food.bread";
+                var first = grid.children().get(0).bounds();
+                var second = grid.children().get(1).bounds();
 
-        UiButton originalButton = firstButton(preview);
-        UiLabel label = preview.worldCountLabelForTesting(id);
+                assertEquals(first.y(), second.y());
+                assertTrue(second.x() > first.x());
+        }
 
-        assertNotNull(label);
-        assertTrue(label.visible());
-        assertEquals("8", label.text());
+        @Test
+        void worldCountVisibilityUpdatesWithoutRebuilding() {
 
-        // No items remaining in the world.
-        worldCount.set(0);
-        preview.refreshCounts();
+                AtomicInteger worldCount = new AtomicInteger(8);
 
-        assertFalse(label.visible());
-        assertSame(originalButton, firstButton(preview));
+                UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+                                key -> key,
+                                (command, parameter) -> new UiGameplayMenuResolver.DefinitionInfo(
+                                                "Bread", "bread"));
 
-        // Items become available again.
-        worldCount.set(12);
-        preview.refreshCounts();
+                UiProductionMenuModel model = new UiProductionMenuModel(
+                                menus(),
+                                resolver,
+                                actionId -> new UiProductionQueueCounts(
+                                                3, 2, worldCount.get()));
 
-        assertTrue(label.visible());
-        assertEquals("12", label.text());
+                UiLeftProductionPreview preview = new UiLeftProductionPreview(
+                                new UiSystem(), model, FONT);
 
-        // The existing label and icon are reused.
-        assertSame(
-                label,
-                preview.worldCountLabelForTesting(id));
+                preview.open();
+                firstButton(preview).activate();
 
-        assertSame(originalButton, firstButton(preview));
-    }
+                String id = "game.left.production.food.bread";
 
-    @TempDir
-    Path tempDir;
+                UiButton originalButton = firstButton(preview);
+                UiLabel label = preview.worldCountLabelForTesting(id);
 
-    @Test
-    void modCanExtendProductionPanel()
-            throws Exception {
+                assertNotNull(label);
+                assertTrue(label.visible());
+                assertEquals("8", label.text());
 
-        UiSystem ui = new UiSystem();
+                // No items remaining in the world.
+                worldCount.set(0);
+                preview.refreshCounts();
 
-        MenuManager manager = menus();
+                assertFalse(label.visible());
+                assertSame(originalButton, firstButton(preview));
 
-        UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
+                // Items become available again.
+                worldCount.set(12);
+                preview.refreshCounts();
 
-        preview.setMenus(manager);
-        preview.open();
+                assertTrue(label.visible());
+                assertEquals("12", label.text());
 
-        // Initially only the built-in Food submenu exists.
-        UiContainer grid = (UiContainer) preview
-                .scroll().content()
-                .children().get(0);
+                // The existing label and icon are reused.
+                assertSame(
+                                label,
+                                preview.worldCountLabelForTesting(id));
 
-        assertEquals(1, grid.children().size());
+                assertSame(originalButton, firstButton(preview));
+        }
 
-        // --------------------------------------------------
-        // Register a mod-defined production submenu.
-        // --------------------------------------------------
+        @TempDir
+        Path tempDir;
 
-        MenuDefinition modMenu = new MenuDefinition(
-                "examplemod:production",
-                null,
-                "Example Production");
+        @Test
+        void modCanExtendProductionPanel()
+                        throws Exception {
 
-        modMenu.addItem(item(
-                "examplemod:production.back",
-                "back",
-                null,
-                null,
-                null,
-                "Back"));
+                UiSystem ui = new UiSystem();
 
-        manager.registerMenu(modMenu);
+                MenuManager manager = menus();
 
-        // --------------------------------------------------
-        // Extend the built-in production root.
-        // --------------------------------------------------
+                UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
 
-        Path extension = tempDir.resolve(
-                "production-extension.xml");
+                preview.setMenus(manager);
+                preview.open();
 
-        Files.writeString(extension, """
-                <menu-extension
-                    id="examplemod:production-extension"
-                    targetMenu="game.left.production.root">
+                // Initially only the built-in Food submenu exists.
+                UiContainer grid = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
 
-                    <item
-                        id="examplemod:production-link"
-                        type="submenu"
-                        title="Example Production"
-                        targetMenu="examplemod:production"
-                        after="game.left.production.food" />
+                assertEquals(1, grid.children().size());
 
-                </menu-extension>
-                """);
+                // --------------------------------------------------
+                // Register a mod-defined production submenu.
+                // --------------------------------------------------
 
-        manager.applyExtension(extension.toFile());
+                MenuDefinition modMenu = new MenuDefinition(
+                                "examplemod:production",
+                                null,
+                                "Example Production");
 
-        // The menu registry is the same instance.
-        // Refresh without recreating the preview.
-        preview.refreshCurrentMenu();
+                modMenu.addItem(item(
+                                "examplemod:production.back",
+                                "back",
+                                null,
+                                null,
+                                null,
+                                "Back"));
 
-        grid = (UiContainer) preview
-                .scroll().content()
-                .children().get(0);
+                manager.registerMenu(modMenu);
 
-        assertEquals(2, grid.children().size());
+                // --------------------------------------------------
+                // Extend the built-in production root.
+                // --------------------------------------------------
 
-        // --------------------------------------------------
-        // Navigate into the mod's submenu.
-        // --------------------------------------------------
+                Path extension = tempDir.resolve(
+                                "production-extension.xml");
 
-        UiContainer modCell = (UiContainer) grid.children().get(1);
+                Files.writeString(extension, """
+                                <menu-extension
+                                    id="examplemod:production-extension"
+                                    targetMenu="game.left.production.root">
 
-        UiButton modButton = findButton(modCell);
+                                    <item
+                                        id="examplemod:production-link"
+                                        type="submenu"
+                                        title="Example Production"
+                                        targetMenu="examplemod:production"
+                                        after="game.left.production.food" />
 
-        assertNotNull(modButton);
-        assertTrue(modButton.enabled());
+                                </menu-extension>
+                                """);
 
-        modButton.activate();
+                manager.applyExtension(extension.toFile());
 
-        assertEquals(
-                "examplemod:production",
-                preview.currentMenuId());
+                // The menu registry is the same instance.
+                // Refresh without recreating the preview.
+                preview.refreshCurrentMenu();
 
-        // --------------------------------------------------
-        // Back must return to the production root.
-        // --------------------------------------------------
+                grid = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
 
-        UiContainer backRow = (UiContainer) preview
-                .scroll().content()
-                .children().get(1);
+                assertEquals(2, grid.children().size());
 
-        UiButton back = findButton(backRow);
+                // --------------------------------------------------
+                // Navigate into the mod's submenu.
+                // --------------------------------------------------
 
-        assertNotNull(back);
+                UiContainer modCell = (UiContainer) grid.children().get(1);
 
-        back.activate();
+                UiButton modButton = findButton(modCell);
 
-        assertEquals(
-                "game.left.production.root",
-                preview.currentMenuId());
+                assertNotNull(modButton);
+                assertTrue(modButton.enabled());
 
-        // The mod contribution remains registered.
-        grid = (UiContainer) preview
-                .scroll().content()
-                .children().get(0);
+                modButton.activate();
 
-        assertEquals(2, grid.children().size());
-    }
+                assertEquals(
+                                "examplemod:production",
+                                preview.currentMenuId());
+
+                // --------------------------------------------------
+                // Back must return to the production root.
+                // --------------------------------------------------
+
+                UiContainer backRow = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(1);
+
+                UiButton back = findButton(backRow);
+
+                assertNotNull(back);
+
+                back.activate();
+
+                assertEquals(
+                                "game.left.production.root",
+                                preview.currentMenuId());
+
+                // The mod contribution remains registered.
+                grid = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
+
+                assertEquals(2, grid.children().size());
+        }
+
+        @Test
+        void modActionUsesRegisteredGameplayBinding() {
+
+                MenuManager manager = menus();
+
+                manager.requireMenu(
+                                "game.left.production.root")
+                                .addItem(item(
+                                                "examplemod:production-action",
+                                                "action",
+                                                null,
+                                                "MOD_ACTION",
+                                                "examplemod:run",
+                                                "Run Mod Action"));
+
+                UiLeftProductionPreview preview = preview(new UiSystem(), new AtomicInteger(0));
+
+                preview.setMenus(manager);
+
+                AtomicBoolean available = new AtomicBoolean(false);
+                AtomicInteger executions = new AtomicInteger();
+
+                preview.setActionBinding(new UiGameplayActionBinding() {
+
+                        @Override
+                        public boolean isAvailable(MenuItemDefinition item) {
+                                return available.get();
+                        }
+
+                        @Override
+                        public void execute(MenuItemDefinition item) {
+                                executions.incrementAndGet();
+                        }
+                });
+
+                preview.open();
+
+                UiContainer grid = (UiContainer) preview
+                                .scroll().content()
+                                .children().get(0);
+
+                UiContainer modCell = (UiContainer) grid.children().get(1);
+
+                UiButton modButton = findButton(modCell);
+
+                assertNotNull(modButton);
+                assertFalse(modButton.enabled());
+
+                // Register or enable the action.
+                available.set(true);
+                preview.refreshActionAvailability();
+
+                assertTrue(modButton.enabled());
+
+                modButton.activate();
+
+                assertEquals(1, executions.get());
+
+                // Simulate the action becoming unavailable.
+                // A stale enabled button must still recheck
+                // availability before dispatching its click.
+                available.set(false);
+
+                modButton.activate();
+
+                assertEquals(1, executions.get());
+                assertFalse(modButton.enabled());
+
+                // Re-enable without replacing the button.
+                available.set(true);
+                preview.refreshActionAvailability();
+
+                assertSame(modButton, findButton(modCell));
+                assertTrue(modButton.enabled());
+
+                modButton.activate();
+
+                assertEquals(2, executions.get());
+        }
 
 }
