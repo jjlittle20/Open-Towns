@@ -362,4 +362,57 @@ class UiLeftProductionPreviewTest {
         assertTrue(second.x() > first.x());
     }
 
+    @Test
+    void worldCountVisibilityUpdatesWithoutRebuilding() {
+
+        AtomicInteger worldCount = new AtomicInteger(8);
+
+        UiGameplayMenuResolver resolver = new UiGameplayMenuResolver(
+                key -> key,
+                (command, parameter) -> new UiGameplayMenuResolver.DefinitionInfo(
+                        "Bread", "bread"));
+
+        UiProductionMenuModel model = new UiProductionMenuModel(
+                menus(),
+                resolver,
+                actionId -> new UiProductionQueueCounts(
+                        3, 2, worldCount.get()));
+
+        UiLeftProductionPreview preview = new UiLeftProductionPreview(
+                new UiSystem(), model, FONT);
+
+        preview.open();
+        firstButton(preview).activate();
+
+        String id = "game.left.production.food.bread";
+
+        UiButton originalButton = firstButton(preview);
+        UiLabel label = preview.worldCountLabelForTesting(id);
+
+        assertNotNull(label);
+        assertTrue(label.visible());
+        assertEquals("8", label.text());
+
+        // No items remaining in the world.
+        worldCount.set(0);
+        preview.refreshCounts();
+
+        assertFalse(label.visible());
+        assertSame(originalButton, firstButton(preview));
+
+        // Items become available again.
+        worldCount.set(12);
+        preview.refreshCounts();
+
+        assertTrue(label.visible());
+        assertEquals("12", label.text());
+
+        // The existing label and icon are reused.
+        assertSame(
+                label,
+                preview.worldCountLabelForTesting(id));
+
+        assertSame(originalButton, firstButton(preview));
+    }
+
 }

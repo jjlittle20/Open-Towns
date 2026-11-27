@@ -512,11 +512,13 @@ public final class UiLeftProductionPreview {
 
         } else {
 
-            // Read-only preview until production
-            // interactions are integrated.
+            // The production icon is informational.
+            // Queue changes are handled by the adjacent
+            // regular and automated +/- controls.
             button.setEnabled(false);
+
             button.setTooltip(
-                    title + "\nProduction controls not connected");
+                    title + "\nUse +/- to adjust production");
         }
 
         return button;
