@@ -46,7 +46,7 @@ public final class UiLeftProductionPreview {
     private static final int ICON_SIZE = 52;
 
     private static final int PRODUCTION_CELL_WIDTH = 128;
-    private static final int PRODUCTION_CELL_HEIGHT = 84;
+    private static final int PRODUCTION_CELL_HEIGHT = 80;
 
     private final UiSystem ui;
     private final UiProductionMenuModel model;
@@ -63,6 +63,11 @@ public final class UiLeftProductionPreview {
     private final UiProductionQueueAdapter queueAdapter = new UiProductionQueueAdapter();
     private final Map<String, UiLabel> countLabels = new HashMap<>();
     private final Map<String, UiLabel> worldCountLabels = new HashMap<>();
+    private final Map<String, UiLabel> automatedCountLabels = new HashMap<>();
+
+    UiLabel automatedCountLabel(String itemId) {
+        return automatedCountLabels.get(itemId);
+    }
 
     public UiLeftProductionPreview(
             UiSystem ui,
@@ -203,23 +208,39 @@ public final class UiLeftProductionPreview {
             }
 
             // Regular and automated queue counts.
-            UiLabel label = countLabels.get(id);
 
-            if (label != null) {
+            // Regular count, centred between left controls.
+            UiLabel regularLabel = countLabels.get(id);
 
-                String text = formatCounts(counts);
+            if (regularLabel != null) {
 
-                label.setText(text);
+                String value = Integer.toString(counts.regular());
 
-                // Keep the queue values centred beneath
-                // the production controls.
-                int x = Math.max(
-                        0,
-                        (PRODUCTION_CELL_WIDTH
-                                - metrics.measure(text).width()) / 2);
+                regularLabel.setText(value);
 
-                label.setPosition(
-                        new UiPoint(x, 66));
+                UiSize textSize = metrics.measure(value);
+
+                regularLabel.setPosition(
+                        new UiPoint(
+                                16 - textSize.width() / 2,
+                                32));
+            }
+
+            // Automated count, centred between right controls.
+            UiLabel automatedLabel = automatedCountLabels.get(id);
+
+            if (automatedLabel != null) {
+
+                String value = Integer.toString(counts.automated());
+
+                automatedLabel.setText(value);
+
+                UiSize textSize = metrics.measure(value);
+
+                automatedLabel.setPosition(
+                        new UiPoint(
+                                112 - textSize.width() / 2,
+                                32));
             }
 
             // In-world count displayed over the item icon.
@@ -277,7 +298,7 @@ public final class UiLeftProductionPreview {
     }
 
     private void rebuild() {
-
+        automatedCountLabels.clear();
         worldCountLabels.clear();
         countLabels.clear();
 
@@ -409,8 +430,7 @@ public final class UiLeftProductionPreview {
         // Centre the 64px icon horizontally in
         // its 128px grid cell.
         button.setPosition(
-                new UiPoint(32, 0));
-
+                new UiPoint(32, 8));
         cell.add(button);
 
         return cell;
@@ -503,13 +523,6 @@ public final class UiLeftProductionPreview {
 
     }
 
-    private static String formatCounts(
-            UiProductionQueueCounts counts) {
-
-        return "R: " + counts.regular()
-                + "   A: " + counts.automated();
-    }
-
     // Package-private access for isolated tests.
     UiScrollContainer scroll() {
         return scroll;
@@ -566,7 +579,7 @@ public final class UiLeftProductionPreview {
         UiContainer iconOverlay = createWorldCountIcon(entry, icon);
 
         iconOverlay.setPosition(
-                new UiPoint(32, 0));
+                new UiPoint(32, 8));
 
         cell.add(iconOverlay);
 
@@ -588,7 +601,7 @@ public final class UiLeftProductionPreview {
                 "Remove regular production",
                 UiProductionQueueAdapter.Action.REMOVE_REGULAR,
                 0,
-                32);
+                48);
 
         // --------------------------------------------------
         // Automated queue controls — right side
@@ -608,23 +621,26 @@ public final class UiLeftProductionPreview {
                 "Decrease automated target",
                 UiProductionQueueAdapter.Action.DECREASE_AUTOMATED,
                 96,
-                32);
+                48);
 
         // Compact queue counts beneath the item controls.
+
         if (entry.counts() != null) {
 
-            UiLabel counts = new UiLabel(
-                    formatCounts(entry.counts()),
-                    metrics);
+            UiLabel regularCount = new UiLabel("", metrics);
 
-            counts.setPosition(
-                    new UiPoint(0, 66));
+            UiLabel automatedCount = new UiLabel("", metrics);
 
-            cell.add(counts);
+            cell.add(regularCount);
+            cell.add(automatedCount);
 
             countLabels.put(
                     item.getId(),
-                    counts);
+                    regularCount);
+
+            automatedCountLabels.put(
+                    item.getId(),
+                    automatedCount);
         }
 
         return cell;

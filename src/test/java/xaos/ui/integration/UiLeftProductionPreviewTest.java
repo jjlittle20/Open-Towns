@@ -239,10 +239,12 @@ class UiLeftProductionPreviewTest {
         // Regular and automated counts.
         assertNotNull(originalCountLabel);
 
-        assertEquals(
-                "R: 3   A: 2",
-                originalCountLabel.text());
+        assertEquals("3", originalCountLabel.text());
+        UiLabel automatedLabel = preview.automatedCountLabel(actionId);
 
+        assertNotNull(automatedLabel);
+        assertEquals("2", automatedLabel.text());
+        assertEquals(32, automatedLabel.position().y());
         // World count appears separately over the icon.
         assertNotNull(worldLabel);
         assertEquals("8", worldLabel.text());
@@ -256,7 +258,11 @@ class UiLeftProductionPreviewTest {
         regular.set(11);
 
         preview.refreshCounts();
+        assertSame(
+                automatedLabel,
+                preview.automatedCountLabel(actionId));
 
+        assertEquals("2", automatedLabel.text());
         // Refreshing counts must not recreate buttons.
         assertSame(
                 breadButton,
@@ -267,9 +273,7 @@ class UiLeftProductionPreviewTest {
                 originalCountLabel,
                 preview.countLabel(actionId));
 
-        assertEquals(
-                "R: 11   A: 2",
-                originalCountLabel.text());
+        assertEquals("11", originalCountLabel.text());
 
         // The in-world overlay must also be reused.
         assertSame(
