@@ -3,9 +3,12 @@ package xaos.ui.integration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import xaos.panels.menus.MenuDefinition;
 import xaos.panels.menus.MenuItemDefinition;
@@ -413,6 +416,125 @@ class UiLeftProductionPreviewTest {
                 preview.worldCountLabelForTesting(id));
 
         assertSame(originalButton, firstButton(preview));
+    }
+
+    @TempDir
+    Path tempDir;
+
+    @Test
+    void modCanExtendProductionPanel()
+            throws Exception {
+
+        UiSystem ui = new UiSystem();
+
+        MenuManager manager = menus();
+
+        UiLeftProductionPreview preview = preview(ui, new AtomicInteger(3));
+
+        preview.setMenus(manager);
+        preview.open();
+
+        // Initially only the built-in Food submenu exists.
+        UiContainer grid = (UiContainer) preview
+                .scroll().content()
+                .children().get(0);
+
+        assertEquals(1, grid.children().size());
+
+        // --------------------------------------------------
+        // Register a mod-defined production submenu.
+        // --------------------------------------------------
+
+        MenuDefinition modMenu = new MenuDefinition(
+                "examplemod:production",
+                null,
+                "Example Production");
+
+        modMenu.addItem(item(
+                "examplemod:production.back",
+                "back",
+                null,
+                null,
+                null,
+                "Back"));
+
+        manager.registerMenu(modMenu);
+
+        // --------------------------------------------------
+        // Extend the built-in production root.
+        // --------------------------------------------------
+
+        Path extension = tempDir.resolve(
+                "production-extension.xml");
+
+        Files.writeString(extension, """
+                <menu-extension
+                    id="examplemod:production-extension"
+                    targetMenu="game.left.production.root">
+
+                    <item
+                        id="examplemod:production-link"
+                        type="submenu"
+                        title="Example Production"
+                        targetMenu="examplemod:production"
+                        after="game.left.production.food" />
+
+                </menu-extension>
+                """);
+
+        manager.applyExtension(extension.toFile());
+
+        // The menu registry is the same instance.
+        // Refresh without recreating the preview.
+        preview.refreshCurrentMenu();
+
+        grid = (UiContainer) preview
+                .scroll().content()
+                .children().get(0);
+
+        assertEquals(2, grid.children().size());
+
+        // --------------------------------------------------
+        // Navigate into the mod's submenu.
+        // --------------------------------------------------
+
+        UiContainer modCell = (UiContainer) grid.children().get(1);
+
+        UiButton modButton = findButton(modCell);
+
+        assertNotNull(modButton);
+        assertTrue(modButton.enabled());
+
+        modButton.activate();
+
+        assertEquals(
+                "examplemod:production",
+                preview.currentMenuId());
+
+        // --------------------------------------------------
+        // Back must return to the production root.
+        // --------------------------------------------------
+
+        UiContainer backRow = (UiContainer) preview
+                .scroll().content()
+                .children().get(1);
+
+        UiButton back = findButton(backRow);
+
+        assertNotNull(back);
+
+        back.activate();
+
+        assertEquals(
+                "game.left.production.root",
+                preview.currentMenuId());
+
+        // The mod contribution remains registered.
+        grid = (UiContainer) preview
+                .scroll().content()
+                .children().get(0);
+
+        assertEquals(2, grid.children().size());
     }
 
 }
